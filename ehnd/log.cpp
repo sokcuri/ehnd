@@ -1,0 +1,95 @@
+#include "stdafx.h"
+#include "log.h"
+
+HWND hLogWin, hLogRes;
+
+bool CreateLogWin(HINSTANCE hInst)
+{
+	LoadLibrary(TEXT("Msftedit.dll"));
+	WNDCLASSEX wc = { 0, };
+	wc.cbSize = sizeof(WNDCLASSEX);
+	wc.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
+	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+	wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+	wc.hInstance = hInst;
+	wc.lpfnWndProc = LogProc;
+	wc.lpszClassName = TEXT("EhndLogWin");
+	wc.style = CS_HREDRAW | CS_VREDRAW;
+
+	if (!RegisterClassEx(&wc)) MessageBox(0, L"log reg failed", 0, 0);
+
+	hLogWin = CreateWindowEx(0, L"EhndLogWin", L"title", WS_OVERLAPPEDWINDOW, 64, 64, 640, 480, 0, 0, hInst, 0);
+	if (!hLogWin) MessageBox(0, L"log win create failed", 0, 0);
+
+	hLogRes = CreateWindowEx(0, MSFTEDIT_CLASS, L"", WS_VISIBLE | WS_CHILD | WS_VSCROLL | ES_MULTILINE | ES_LEFT | ES_NOHIDESEL | ES_AUTOVSCROLL, 0, 0, 640, 480, hLogWin, NULL, hInst, NULL);
+	if (!hLogRes) MessageBox(0, L"log win textbox create failed", 0, 0);
+
+	CHARFORMAT2 cf;
+	cf.cbSize = sizeof(CHARFORMAT2);
+	cf.dwMask = CFM_COLOR | CFM_BACKCOLOR | CFM_EFFECTS2 | CFM_FACE | CFM_SIZE;
+	cf.crTextColor = RGB(255, 0, 0);
+	cf.crBackColor = RGB(255, 255, 255);
+	cf.yHeight = 12 * 20;
+
+	wcscpy_s(cf.szFaceName, L"±¼¸²");
+	cf.dwEffects = CFE_BOLD;
+	SendMessage(hLogRes, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&cf);
+	SendMessage(hLogRes, EM_REPLACESEL, TRUE, (LPARAM)L"");
+	return 0;
+}
+
+void SetLogText(LPCWSTR Text)
+{
+	SetLogText(Text, RGB(0, 0, 0), RGB(255, 255, 255));
+}
+
+
+void SetLogText(LPCWSTR Text, COLORREF crText, COLORREF crBackground)
+{
+	CHARRANGE cr = { LONG_MAX, LONG_MAX };
+	SendMessage(hLogRes, EM_EXSETSEL, 0, (LPARAM)&cr);
+
+	CHARFORMAT2 cf;
+	cf.cbSize = sizeof(CHARFORMAT2);
+	cf.dwMask = CFM_COLOR | CFM_BACKCOLOR | CFM_EFFECTS2 | CFM_FACE | CFM_SIZE;
+	cf.crTextColor = crText;
+	cf.crBackColor = crBackground;
+	cf.dwEffects = CFE_BOLD;
+
+	int nLogFntSize = 12;
+	cf.yHeight = nLogFntSize * 20;
+	wcscpy_s(cf.szFaceName, L"±¼¸²");
+	SendMessage(hLogRes, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
+
+	SendMessage(hLogRes, EM_REPLACESEL, TRUE, (LPARAM)Text);
+}
+
+void ClearLog(void)
+{
+	CHARRANGE cr = { 0, LONG_MAX };
+	SendMessage(hLogRes, EM_EXSETSEL, 0, (LPARAM)&cr);
+	SendMessage(hLogRes, EM_REPLACESEL, TRUE, NULL);
+}
+
+void ShowLogWin(bool bShow)
+{
+	if (!bShow) ClearLog();
+	ShowWindow(hLogWin, bShow);
+	ShowWindow(hLogRes, bShow);
+}
+
+LRESULT CALLBACK LogProc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam)
+{
+	switch (Message)
+	{
+	case WM_SIZE:
+		int w, h;
+		w = LOWORD(lParam);
+		h = HIWORD(lParam);
+		MoveWindow(hLogRes, 0, 0, w, h, true);
+		break;
+	case WM_CLOSE:
+		break;
+	}
+	return DefWindowProc(hWnd, Message, wParam, lParam);
+}
