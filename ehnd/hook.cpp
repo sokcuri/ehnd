@@ -171,6 +171,7 @@ bool hook_userdict(void)
 	if (r == 0)
 	{
 		SetLogText(L"j2kengine ptn search failed\n");
+		return false;
 	}
 	else if (r > 1)
 	{
@@ -224,6 +225,7 @@ bool hook_userdict2(void)
 	if (r == 0)
 	{
 		SetLogText(L"j2kengine ptn search failed\n");
+		return false;
 	}
 	else if (r > 1)
 	{
