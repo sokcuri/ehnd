@@ -73,6 +73,58 @@ bool filter::post_load()
 	return true;
 }
 
+bool filter::userdic_load()
+{
+	WCHAR lpEztPath[MAX_PATH];
+	WIN32_FIND_DATA FindFileData;
+	USERDICSTRUCT uds;
+	wstring Path;
+
+	GetLoadPath(lpEztPath, MAX_PATH);
+	Path = lpEztPath;
+	Path += L"\\Ehnd\\UserDict*.txt";
+
+	int userdic_line = 0;
+	UserDic.clear();
+
+	HANDLE hFind = FindFirstFile(Path.c_str(), &FindFileData);
+
+	do
+	{
+		if (hFind == INVALID_HANDLE_VALUE) break;
+		else if (FindFileData.dwFileAttributes == FILE_ATTRIBUTE_DIRECTORY)
+			continue;
+
+		Path = lpEztPath;
+		Path += L"\\Ehnd\\";
+
+		userdic_load2(UserDic, Path.c_str(), FindFileData.cFileName, userdic_line);
+
+	} while (FindNextFile(hFind, &FindFileData));
+	return true;
+}
+
+bool filter::skiplayer_load()
+{
+	WCHAR lpEztPath[MAX_PATH];
+	wstring Path;
+	FILE *fp;
+
+	GetLoadPath(lpEztPath, MAX_PATH);
+	Path = lpEztPath;
+	Path += L"\\Ehnd\\UserDict*.txt";
+
+	if (_wfopen_s(&fp, Path.c_str(), L"rt,ccs=UTF-8") != 0)
+	{
+		return false;
+	}
+	WriteLog(L"SkipLayerRead : SkipLayer ·Îµå.\n");
+	
+	fclose(fp);
+
+	return true;
+}
+
 bool filter::filter_load(vector<FILTERSTRUCT> &Filter, LPCWSTR lpPath, LPCWSTR lpFileName, int FilterType, int &g_line)
 {
 	FILE *fp;
@@ -107,7 +159,6 @@ bool filter::filter_load(vector<FILTERSTRUCT> &Filter, LPCWSTR lpPath, LPCWSTR l
 		{
 			if (Buffer[i] == L'\t' || Buffer[i] == L'\n' || (Buffer[i] == L'/' && Buffer[i - 1] == L'/') || i == wcslen(Buffer))
 			{
-
 				switch (tab)
 				{
 				case 0:
@@ -163,6 +214,10 @@ bool filter::filter_load(vector<FILTERSTRUCT> &Filter, LPCWSTR lpPath, LPCWSTR l
 	return true;
 }
 
+bool filter::userdic_load2(vector<USERDICSTRUCT> &Filter, LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
+{
+	return true;
+}
 bool filter::pre()
 {
 	return true;
