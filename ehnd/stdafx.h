@@ -11,6 +11,7 @@
 // Windows 헤더 파일:
 #include <windows.h>
 #include <stdlib.h>
+#include <Psapi.h>
 #include <iostream>
 
 using namespace std;

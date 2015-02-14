@@ -86,3 +86,117 @@ bool hook()
 
 	return true;
 }
+
+int search_ptn(LPWORD ptn, size_t ptn_size, LPBYTE *addr)
+{
+	HMODULE hDll = GetModuleHandle(L"j2kengine.dlx");
+	if (hDll == NULL) MessageBox(0, L"j2kengine can't get handle", 0, 0);
+
+	MODULEINFO dllInfo;
+	GetModuleInformation(GetCurrentProcess(), hDll, &dllInfo, sizeof(dllInfo));
+
+	UINT i;
+	int scan;
+	LPBYTE p;
+
+	UINT defSkipLen;
+	UINT skipLen[UCHAR_MAX + 1];
+	UINT searchSuccessCount;
+
+	UINT ptnEnd = ptn_size - 1;
+	while ((HIBYTE(ptn[ptnEnd]) != 0x00) && (ptnEnd > 0)) {
+		ptnEnd--;
+	}
+	defSkipLen = ptnEnd;
+	for (i = 0; i < ptnEnd; i++)
+	{
+		if (HIBYTE(ptn[i]) != 0x00) {
+			defSkipLen = ptnEnd - i;
+		}
+	}
+
+	for (i = 0; i < UCHAR_MAX + 1; i++)
+	{
+		skipLen[i] = defSkipLen;
+	}
+
+	for (i = 0; i < ptnEnd; i++)
+	{
+		if (HIBYTE(ptn[i]) == 0x00)
+		{
+			skipLen[LOBYTE(ptn[i])] = ptnEnd - i;
+		}
+	}
+
+	searchSuccessCount = 0;
+	p = (LPBYTE)dllInfo.lpBaseOfDll;
+	LPBYTE searchEnd = (LPBYTE)dllInfo.lpBaseOfDll + dllInfo.SizeOfImage;
+
+	while (p + ptn_size < searchEnd)
+	{
+		scan = ptnEnd;
+		while (scan >= 0)
+		{
+			WCHAR asdfd[100];
+			wsprintf(asdfd, L"ptn try search at 0x%08X\n", p);
+			//SetLogText(asdfd);
+			if ((HIBYTE(ptn[scan]) == 0x00) && (LOBYTE(ptn[scan]) != p[scan]))
+				break;
+			if (scan == 0)
+			{
+				*addr = p;
+				searchSuccessCount++;
+			}
+			scan--;
+		}
+		p += skipLen[p[ptnEnd]];
+	}
+	if (searchSuccessCount != 1) addr = 0;
+	return searchSuccessCount;
+}
+
+bool hook_userdict(void)
+{
+	WORD ptn[] = { 0x8B, 0x43, 0x14, 0x8B, 0x3D, -1, -1, -1, -1, 0x68, -1, -1, -1, -1, 0x50, 0xFF, 0xD7, 0x8B, 0xF0 };
+
+	LPBYTE addr = 0;
+	int r = search_ptn(ptn, _countof(ptn), &addr);
+
+	if (r == 0)
+	{
+		SetLogText(L"j2kengine ptn search failed\n");
+	}
+	else if (r > 1)
+	{
+		SetLogText(L"j2kengine ptn multi found\n");
+		return false;
+	}
+	else
+	{
+		WCHAR asdf[100];
+		wsprintf(asdf, L"ptn found at address 0x%08X\n", addr);
+		SetLogText(asdf);
+	}
+
+	return true;
+}
+
+__declspec(naked) void fopen_patch(void)
+{
+	LPSTR _path;
+	__asm
+	{
+		MOV EAX, DWORD PTR SS : [ESP+0x04]
+		MOV DWORD PTR DS : [_path], EAX
+	}
+	if (strstr(_path, "UserDict.jk") > 0)
+	{
+		__asm
+		{
+			LEA EAX, _path; // temp
+			MOV DWORD PTR SS : [ESP+0x14+0x04], EAX
+		}
+	}
+
+	__asm JMP msvcrt_fopen;
+}
