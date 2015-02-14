@@ -14,11 +14,12 @@ __declspec(naked) void J2K_Initialize(void)
 }
 void __stdcall J2K_InitializeEx(int data0, LPSTR key)
 {
+	SetLogText(L"J2K_InitializeEx.\n");
 	__asm
 	{
 		PUSH DWORD PTR DS : [key]
-			PUSH data0
-			CALL apfnEzt[4 * 1]
+		PUSH data0
+		CALL apfnEzt[4 * 1]
 	}
 }
 __declspec(naked) void J2K_FreeMem(void)
@@ -134,9 +135,9 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 		__asm
 		{
 			PUSH DWORD PTR DS : [szJPN]
-				PUSH data0
-				CALL apfnEzt[4 * 18]
-				MOV DWORD PTR DS : [szKOR], EAX
+			PUSH data0
+			CALL apfnEzt[4 * 18]
+			MOV DWORD PTR DS : [szKOR], EAX
 		}
 
 		msvcrt_free(szJPN);

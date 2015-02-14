@@ -1,7 +1,7 @@
 #pragma once
 #include <Richedit.h>
 
-//bool write_log(const wchar_t* format);
+void WriteLog(const wchar_t* format, ...);
 
 bool CreateLogWin(HINSTANCE);
 void SetLogText(LPCWSTR);

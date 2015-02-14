@@ -3,6 +3,26 @@
 
 HWND hLogWin, hLogRes;
 
+void WriteLog(const wchar_t *format, ...)
+{
+	va_list valist;
+	FILE *fp;
+	wchar_t lpBuffer[1024], lpTime[64];
+	
+	bool IsFileLog = false;
+	if (IsFileLog)
+	{
+		const char* szFileName = ".\\enhd_log.log";
+		if (fopen_s(&fp, szFileName, "a+t,ccs=UTF_8")) return;
+		_wstrtime_s(lpTime, 32);
+
+		fwprintf_s(fp, L"%s.%03d | ", lpBuffer, GetTickCount() % 1000);
+	}
+	va_start(valist, format);
+
+	_vsnwprintf_s(lpBuffer, _TRUNCATE, format, valist);
+}
+
 bool CreateLogWin(HINSTANCE hInst)
 {
 	LoadLibrary(TEXT("Msftedit.dll"));

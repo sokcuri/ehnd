@@ -157,6 +157,13 @@ int search_ptn(LPWORD ptn, size_t ptn_size, LPBYTE *addr)
 
 bool hook_userdict(void)
 {
+	// 101C4B00 . 8B43 14        MOV EAX,DWORD PTR DS:[EBX+14]
+	// 101C4B03 . 8B3D A4192A10  MOV EDI,DWORD PTR DS:[<&MSVCRT.fopen>]   ;  msvcrt.fopen << intercept here
+	// 101C4B09 . 68 60982110    PUSH J2KEngin.10219860                   ; /mode = "rb"
+	// 101C4B0E . 50             PUSH EAX                                 ; |path
+	// 101C4B0F . FFD7           CALL EDI                                 ; \fopen
+	// 101C4B11 . 8BF0           MOV ESI,EAX
+
 	WORD ptn[] = { 0x8B, 0x43, 0x14, 0x8B, 0x3D, -1, -1, -1, -1, 0x68, -1, -1, -1, -1, 0x50, 0xFF, 0xD7, 0x8B, 0xF0 };
 
 	LPBYTE addr = 0;
@@ -176,6 +183,25 @@ bool hook_userdict(void)
 		WCHAR asdf[100];
 		wsprintf(asdf, L"ptn found at address 0x%08X\n", addr);
 		SetLogText(asdf);
+		
+		addr += 5;
+		BYTE Patch[4];
+		int PatchSize = 4;
+		LPBYTE Offset = (LPBYTE)(fopen_patch);
+		Patch[0] = (WORD)LOBYTE(LOWORD(&Offset));
+		Patch[1] = (WORD)HIBYTE(LOWORD(&Offset));
+		Patch[2] = (WORD)LOBYTE(HIWORD(&Offset));
+		Patch[3] = (WORD)HIBYTE(HIWORD(&Offset));
+
+		DWORD OldProtect, OldProtect2;
+		HANDLE hHandle;
+		hHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, FALSE, GetCurrentProcessId());
+		VirtualProtectEx(hHandle, (void *)addr, 5, PAGE_EXECUTE_READWRITE, &OldProtect);
+		memcpy(addr, Patch, PatchSize);
+		hHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, FALSE, GetCurrentProcessId());
+		VirtualProtectEx(hHandle, (void *)addr, PatchSize, OldProtect, &OldProtect2);
+
+		SetLogText(L"success userdict hook.\n");
 	}
 
 	return true;
@@ -189,8 +215,10 @@ __declspec(naked) void fopen_patch(void)
 		MOV EAX, DWORD PTR SS : [ESP+0x04]
 		MOV DWORD PTR DS : [_path], EAX
 	}
-	if (strstr(_path, "UserDict.jk") > 0)
+	if (strstr(_path, "userdict.jk"))
 	{
+		SetLogText(L"fopen: userdict.jk\n");
+
 		__asm
 		{
 			LEA EAX, _path; // temp
