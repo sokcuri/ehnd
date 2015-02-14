@@ -36,7 +36,7 @@ bool filter::pre_load()
 		Path = lpEztPath;
 		Path += L"\\Ehnd\\";
 
-		filter_load(PreFilter, Path.c_str(), FindFileData.cFileName, 2, pre_line);
+		filter_load(PreFilter, Path.c_str(), FindFileData.cFileName, 1, pre_line);
 
 	} while (FindNextFile(hFind, &FindFileData));
 	return true;
