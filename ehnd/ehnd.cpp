@@ -100,6 +100,7 @@ __declspec(naked) void *msvcrt_fopen(char *path, char *mode)
 }
 void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 {
+	SetLogText(L"J2K_TranslateMMNT.\n");
 	LPSTR szOut;
 	wstring wsText, wsOriginal;
 	int i_len;

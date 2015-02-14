@@ -2,6 +2,7 @@
 #include "stdafx.h"
 HINSTANCE g_hInst;
 Cehnd *pEhnd;
+HMODULE hEzt, hMsv;
 
 BOOL APIENTRY DllMain(HINSTANCE hInstance,
 	DWORD  ul_reason_for_call,
@@ -25,10 +26,12 @@ BOOL APIENTRY DllMain(HINSTANCE hInstance,
 	}
 		break;
 	case DLL_THREAD_ATTACH:
+		break;
 	case DLL_THREAD_DETACH:
 		break;
 	case DLL_PROCESS_DETACH:
-		delete pEhnd;
+		FreeLibrary(hEzt);
+		FreeLibrary(hMsv);
 		break;
 	}
 	return TRUE;

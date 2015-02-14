@@ -2,7 +2,7 @@
 #include "hook.h"
 #include "ehnd.h"
 
-LPBYTE lpfnRetn;
+LPBYTE lpfnRetn, lpfnfopen;
 
 bool hook()
 {
@@ -84,6 +84,9 @@ bool hook()
 			return false;
 		}
 	}
+
+	hEzt = hDll;
+	hMsv = hDll2;
 
 	return true;
 }
@@ -236,11 +239,11 @@ bool hook_userdict2(void)
 		addr += 5;
 		BYTE Patch[4];
 		int PatchSize = _countof(Patch);
-		LPBYTE Offset = (LPBYTE)(fopen_patch);
-		Patch[0] = (WORD)LOBYTE(LOWORD(&Offset));
-		Patch[1] = (WORD)HIBYTE(LOWORD(&Offset));
-		Patch[2] = (WORD)LOBYTE(HIWORD(&Offset));
-		Patch[3] = (WORD)HIBYTE(HIWORD(&Offset));
+		lpfnfopen = (LPBYTE)(fopen_patch);
+		Patch[0] = (WORD)LOBYTE(LOWORD(&lpfnfopen));
+		Patch[1] = (WORD)HIBYTE(LOWORD(&lpfnfopen));
+		Patch[2] = (WORD)LOBYTE(HIWORD(&lpfnfopen));
+		Patch[3] = (WORD)HIBYTE(HIWORD(&lpfnfopen));
 
 		DWORD OldProtect, OldProtect2;
 		HANDLE hHandle;
@@ -256,26 +259,14 @@ bool hook_userdict2(void)
 	return true;
 }
 
-__declspec(naked) void fopen_patch(void)
+void *fopen_patch(char *path, char *mode)
 {
-	LPSTR _path;
-	__asm
+	if (strstr(path, "UserDict.jk"))
 	{
-		MOV EAX, DWORD PTR SS : [ESP+0x04]
-		MOV DWORD PTR DS : [_path], EAX
+		SetLogText(L"fopen: UserDict.jk\n");
+		path = path;
 	}
-	if (strstr(_path, "userdict.jk"))
-	{
-		SetLogText(L"fopen: userdict.jk\n");
-
-		__asm
-		{
-			LEA EAX, _path; // temp
-			MOV DWORD PTR SS : [ESP+0x14+0x04], EAX
-		}
-	}
-
-	__asm JMP msvcrt_fopen;
+	return msvcrt_fopen(path, mode);
 }
 
 __declspec(naked) void userdict_patch(void)

@@ -29,6 +29,8 @@ using namespace std;
 extern HINSTANCE g_hInst;
 extern Cehnd *pEhnd;
 extern LPBYTE lpfnRetn;
+extern LPBYTE lpfnfopen;
+extern HMODULE hEzt, hMsv;
 
 #ifdef _UNICODE
 #define WIDEN2(x) L ## x
