@@ -2,6 +2,7 @@
 #include "stdafx.h"
 HINSTANCE g_hInst;
 Cehnd *pEhnd;
+filter *pFilter;
 HMODULE hEzt, hMsv;
 
 BOOL APIENTRY DllMain(HINSTANCE hInstance,
@@ -14,15 +15,19 @@ BOOL APIENTRY DllMain(HINSTANCE hInstance,
 	case DLL_PROCESS_ATTACH:
 	{
 		pEhnd = new Cehnd();
+		pFilter = new filter();
 		CreateLogWin(g_hInst);
 		ShowLogWin(true);
-		SetLogText(L"Log Start.\n", RGB(0, 0, 0), RGB(255, 255, 255));
+		WriteLog(L"Log Start.\n", RGB(0, 0, 0), RGB(255, 255, 255));
 		g_hInst = hInstance;
 		hook();
 
-		SetLogText(L"Hook Success.\n", RGB(0, 0, 0), RGB(255, 255, 255));
+		WriteLog(L"Hook Success.\n", RGB(0, 0, 0), RGB(255, 255, 255));
 		hook_userdict();
 		hook_userdict2();
+
+		pFilter->pre_load();
+		pFilter->post_load();
 	}
 		break;
 	case DLL_THREAD_ATTACH:

@@ -174,6 +174,22 @@ __declspec(naked) void J2K_GetJ2KMainDir(void)
 	__asm JMP apfnEzt[4 * 19];
 }
 
+bool GetLoadPath(LPWSTR Path, int Size)
+{
+	GetModuleFileName(g_hInst, Path, Size);
+	if (Path[0] == 0) return false;
+	int i = wcslen(Path);
+	while (i--)
+	{
+		if (Path[i] == L'\\')
+		{
+			Path[i] = 0;
+			break;
+		}
+	}
+	return true;
+}
+
 // 내보낸 클래스의 생성자입니다.
 // 클래스 정의를 보려면 ehnd.h를 참조하십시오.
 Cehnd::Cehnd()

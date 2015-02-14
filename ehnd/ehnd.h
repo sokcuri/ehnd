@@ -37,6 +37,7 @@ extern "C"
 
 extern FARPROC apfnEzt[100];
 extern FARPROC apfnMsv[100];
+bool GetLoadPath(LPWSTR Path, int Size);
 
 class Cehnd {
 public:

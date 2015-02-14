@@ -14,9 +14,11 @@
 #include <windef.h>
 #include <stdarg.h>
 #include <stdlib.h>
-#include <vector>
 #include <Psapi.h>
+
 #include <iostream>
+#include <vector>
+#include <regex>
 
 using namespace std;
 
@@ -25,9 +27,12 @@ using namespace std;
 #include "ehnd.h"
 #include "hook.h"
 #include "log.h"
+#include "filter.h"
 
 extern HINSTANCE g_hInst;
 extern Cehnd *pEhnd;
+extern filter *pFilter;
+
 extern LPBYTE lpfnRetn;
 extern LPBYTE lpfnfopen;
 extern HMODULE hEzt, hMsv;

@@ -35,16 +35,7 @@ bool hook()
 		"fopen" };
 	int i;
 
-	GetModuleFileName(g_hInst, lpEztPath, MAX_PATH);
-	i = wcslen(lpEztPath);
-	while (i--)
-	{
-		if (lpEztPath[i] == L'\\')
-		{
-			lpEztPath[i] = 0;
-			break;
-		}
-	}
+	GetLoadPath(lpEztPath, MAX_PATH);
 
 	wcscpy_s(lpDllPath, lpEztPath);
 	wcscat_s(lpDllPath, L"\\j2kengine.dlx");
@@ -145,7 +136,7 @@ int search_ptn(LPWORD ptn, size_t ptn_size, LPBYTE *addr)
 		{
 			WCHAR asdfd[100];
 			wsprintf(asdfd, L"ptn try search at 0x%08X\n", p);
-			//SetLogText(asdfd);
+			//WriteLog(asdfd);
 			if ((HIBYTE(ptn[scan]) == 0x00) && (LOBYTE(ptn[scan]) != p[scan]))
 				break;
 			if (scan == 0)
@@ -170,21 +161,21 @@ bool hook_userdict(void)
 
 	if (r == 0)
 	{
-		SetLogText(L"j2kengine ptn search failed\n");
+		WriteLog(L"j2kengine ptn search failed\n");
 		return false;
 	}
 	else if (r > 1)
 	{
-		SetLogText(L"j2kengine ptn multi found\n");
+		WriteLog(L"j2kengine ptn multi found\n");
 		return false;
 	}
 	else
 	{
 		WCHAR asdf[100];
 		wsprintf(asdf, L"ptn found at address 0x%08X\n", addr);
-		SetLogText(asdf);
+		WriteLog(asdf);
 		wsprintf(asdf, L"userdict_patch 0x%08X\n", &userdict_patch);
-		SetLogText(asdf);
+		WriteLog(asdf);
 		BYTE Patch[] = { 0x90, 0x90, 0x90, 0x90, 0x90, 0xE9, -1, -1, -1, -1, 0x90, 0x90, 0x74, 0x08 };
 
 		int PatchSize = _countof(Patch);
@@ -202,7 +193,7 @@ bool hook_userdict(void)
 		memcpy(addr, Patch, PatchSize);
 		hHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, FALSE, GetCurrentProcessId());
 		VirtualProtectEx(hHandle, (void *)addr, PatchSize, OldProtect, &OldProtect2);
-		SetLogText(L"success userdict hook.\n");
+		WriteLog(L"success userdict hook.\n");
 	}
 
 	return true;
@@ -224,19 +215,19 @@ bool hook_userdict2(void)
 
 	if (r == 0)
 	{
-		SetLogText(L"j2kengine ptn search failed\n");
+		WriteLog(L"j2kengine ptn search failed\n");
 		return false;
 	}
 	else if (r > 1)
 	{
-		SetLogText(L"j2kengine ptn multi found\n");
+		WriteLog(L"j2kengine ptn multi found\n");
 		return false;
 	}
 	else
 	{
 		WCHAR asdf[100];
 		wsprintf(asdf, L"ptn found at address 0x%08X\n", addr);
-		SetLogText(asdf);
+		WriteLog(asdf);
 		
 		addr += 5;
 		BYTE Patch[4];
@@ -255,17 +246,27 @@ bool hook_userdict2(void)
 		hHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, FALSE, GetCurrentProcessId());
 		VirtualProtectEx(hHandle, (void *)addr, PatchSize, OldProtect, &OldProtect2);
 
-		SetLogText(L"success userdict2 hook.\n");
+		WriteLog(L"success userdict2 hook.\n");
 	}
 
 	return true;
+}
+
+void hook_wc2mb(void)
+{
+
+}
+
+void hook_mb2wc(void)
+{
+
 }
 
 void *fopen_patch(char *path, char *mode)
 {
 	if (strstr(path, "UserDict.jk"))
 	{
-		SetLogText(L"fopen: UserDict.jk\n");
+		WriteLog(L"fopen: UserDict.jk\n");
 		path = path;
 	}
 	return msvcrt_fopen(path, mode);
@@ -273,7 +274,7 @@ void *fopen_patch(char *path, char *mode)
 
 __declspec(naked) void userdict_patch(void)
 {
-	SetLogText(L"userdict_patch call\n");
+	WriteLog(L"userdict_patch call\n");
 
 	__asm
 	{

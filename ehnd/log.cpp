@@ -21,6 +21,15 @@ void WriteLog(const wchar_t *format, ...)
 	va_start(valist, format);
 
 	_vsnwprintf_s(lpBuffer, _TRUNCATE, format, valist);
+
+	if (wcslen(lpBuffer) > 1000)
+		wcscpy_s(lpBuffer + 1000, 1024, L"...\r\n");
+
+	SetLogText(lpBuffer);
+
+	va_end(valist);
+
+	if (IsFileLog) fclose(fp);
 }
 
 bool CreateLogWin(HINSTANCE hInst)
