@@ -112,7 +112,7 @@ bool filter::skiplayer_load()
 
 	GetLoadPath(lpEztPath, MAX_PATH);
 	Path = lpEztPath;
-	Path += L"\\Ehnd\\UserDict*.txt";
+	Path += L"\\Ehnd\\SkipLayer.txt";
 
 	if (_wfopen_s(&fp, Path.c_str(), L"rt,ccs=UTF-8") != 0)
 	{
