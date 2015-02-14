@@ -28,6 +28,8 @@ BOOL APIENTRY DllMain(HINSTANCE hInstance,
 
 		pFilter->pre_load();
 		pFilter->post_load();
+		pFilter->userdic_load();
+		pFilter->skiplayer_load();
 	}
 		break;
 	case DLL_THREAD_ATTACH:
