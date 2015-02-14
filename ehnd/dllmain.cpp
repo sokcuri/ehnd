@@ -21,6 +21,7 @@ BOOL APIENTRY DllMain(HINSTANCE hInstance,
 
 		SetLogText(L"Hook Success.\n", RGB(0, 0, 0), RGB(255, 255, 255));
 		hook_userdict();
+		hook_userdict2();
 	}
 		break;
 	case DLL_THREAD_ATTACH:

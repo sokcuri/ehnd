@@ -14,6 +14,7 @@
 #include <windef.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <vector>
 #include <Psapi.h>
 #include <iostream>
 
@@ -27,6 +28,7 @@ using namespace std;
 
 extern HINSTANCE g_hInst;
 extern Cehnd *pEhnd;
+extern LPBYTE lpfnRetn;
 
 #ifdef _UNICODE
 #define WIDEN2(x) L ## x
