@@ -23,6 +23,7 @@ struct USERDICSTRUCT
 };
 struct SKIPLAYERSTRUCT
 {
+	wstring wtype;
 	int type;
 	int layer;
 	int line;
@@ -48,6 +49,6 @@ public:
 	vector<SKIPLAYERSTRUCT> SkipLayer;
 
 private:
-	bool filter_load(vector<FILTERSTRUCT> &Filter, LPCWSTR lpPath, LPCWSTR lpFileName, int FilterType, int &g_line);
-	bool userdic_load2(vector<USERDICSTRUCT> &Filter, LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line);
+	bool filter_load(vector<FILTERSTRUCT> &Filter, LPCWSTR lpPath, LPCWSTR lpFileName, int FilterType, bool IsUnicode, int &g_line);
+	bool userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line);
 };
