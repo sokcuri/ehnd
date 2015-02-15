@@ -120,6 +120,10 @@ bool filter::userdic_load()
 	int userdic_line = 0;
 	UserDic.clear();
 
+	// load userdict.jk
+	bool use_jkdic = true;
+	if (use_jkdic) jkdic_load();
+
 	HANDLE hFind = FindFirstFile(Path.c_str(), &FindFileData);
 
 	do
@@ -142,6 +146,70 @@ bool filter::userdic_load()
 	// 소요시간 계산
 	dwEnd = GetTickCount();
 	WriteLog(L"UserDicRead : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
+
+	return true;
+}
+
+bool filter::jkdic_load()
+{
+	WCHAR lpEztPath[MAX_PATH], Buffer[1024];
+	FILE *fp;
+	wstring Path;
+
+	DWORD dwStart, dwEnd;
+	dwStart = GetTickCount();
+
+	GetLoadPath(lpEztPath, MAX_PATH);
+	Path = lpEztPath;
+	Path += L"\\Dat\\UserDict.jk";
+
+	if (_wfopen_s(&fp, Path.c_str(), L"rt,ccs=UTF-8") != 0)
+	{
+		WriteLog(L"JkDicLoad : DAT 사용자 사전 파일 \"UserDict.jk\"이 없습니다.\n");
+
+		// userdict.jk 파일이 없으면 빈 파일 만듦
+		if (_wfopen_s(&fp, Path.c_str(), L"wb") == 0) fclose(fp);
+		return false;
+	}
+
+	//
+	// ezTrans XP UserDict.jk Struct
+	// [0] hidden (1 byte)
+	// [1-31] jpn (31 bytes)
+	// [32-62] kor (31 bytes)
+	// [63-67] part of speech (5 bytes)
+	// [68-109] attributes (42 bytes)
+	//
+	USERDICSTRUCT us;
+	int vaild_line = 0;
+	while (1)
+	{
+		if (!fread(Buffer, sizeof(char), 1, fp)) break;
+		else
+			(Buffer[0] == 0x00) ? us.hidden = false : us.hidden = true;
+
+		if (!fread(Buffer, sizeof(char), 31, fp)) break;
+		else
+			memcpy(us.jpn, Buffer, 31);
+
+		if (!fread(Buffer, sizeof(char), 31, fp)) break;
+		else
+			memcpy(us.kor, Buffer, 31);
+
+		if (!fread(Buffer, sizeof(char), 5, fp)) break;
+		else
+			memcpy(us.part, Buffer, 5);
+
+		if (!fread(Buffer, sizeof(char), 42, fp)) break;
+		else
+			memcpy(us.attr, Buffer, 42);
+
+		UserDic.push_back(us);
+		vaild_line++;
+	}
+	fclose(fp);
+
+	WriteLog(L"JkDicRead : %d개의 DAT 사용자 사전 \"UserDict.jk\"를 읽었습니다.\n", vaild_line);
 
 	return true;
 }
@@ -229,7 +297,7 @@ bool filter::skiplayer_load()
 		SkipLayer.push_back(ss);
 	}
 	fclose(fp);
-	WriteLog(L"SkipLayerRead : 총 %d개의 스킵레이어를 읽었습니다.\n", vaild_line);
+	WriteLog(L"SkipLayerRead : %d개의 스킵레이어를 읽었습니다.\n", vaild_line);
 
 	// 소요시간 계산
 	dwEnd = GetTickCount();
@@ -331,10 +399,10 @@ bool filter::filter_load(vector<FILTERSTRUCT> &Filter, LPCWSTR lpPath, LPCWSTR l
 		Filter.push_back(fs);
 	}
 	fclose(fp);
-	if (FilterType == PREFILTER && IsUnicode) WriteLog(L"PreFilterRead : 총 %d개의 유니코드 전용 전처리 필터 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
-	if (FilterType == PREFILTER && !IsUnicode) WriteLog(L"PreFilterRead : 총 %d개의 전처리 필터 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
-	else if (FilterType == POSTFILTER && IsUnicode) WriteLog(L"PostFilterRead : 총 %d개의 유니코드 전용 후처리 필터 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
-	else if (FilterType == POSTFILTER && !IsUnicode) WriteLog(L"PostFilterRead : 총 %d개의 후처리 필터 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
+	if (FilterType == PREFILTER && IsUnicode) WriteLog(L"PreFilterRead : %d개의 유니코드 전용 전처리 필터 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
+	if (FilterType == PREFILTER && !IsUnicode) WriteLog(L"PreFilterRead : %d개의 전처리 필터 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
+	else if (FilterType == POSTFILTER && IsUnicode) WriteLog(L"PostFilterRead : %d개의 유니코드 전용 후처리 필터 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
+	else if (FilterType == POSTFILTER && !IsUnicode) WriteLog(L"PostFilterRead : %d개의 후처리 필터 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
 	return true;
 }
 
@@ -435,7 +503,7 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 		vaild_line++;
 		UserDic.push_back(us);
 	}
-	WriteLog(L"UserDictRead : 총 %d개의 사용자 사전 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
+	WriteLog(L"UserDictRead : %d개의 사용자 사전 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
 	fclose(fp);
 	return true;
 }
