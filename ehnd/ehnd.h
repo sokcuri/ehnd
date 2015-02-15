@@ -38,3 +38,4 @@ extern "C"
 extern FARPROC apfnEzt[100];
 extern FARPROC apfnMsv[100];
 bool GetLoadPath(LPWSTR Path, int Size);
+wstring replace_all(const wstring &str, const wstring &pattern, const wstring &replace);

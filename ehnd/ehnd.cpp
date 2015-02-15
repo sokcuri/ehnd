@@ -101,7 +101,7 @@ __declspec(naked) void *msvcrt_fopen(char *path, char *mode)
 void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 {
 	LPSTR szOut;
-	wstring wsText, wsOriginal;
+	wstring wsText, wsOriginal, wsLog;
 	int i_len;
 	LPWSTR lpJPN, lpKOR;
 	LPSTR szJPN, szKOR;
@@ -118,10 +118,16 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 	wsText = lpJPN;
 	msvcrt_free(lpJPN);
 
+	wsLog = replace_all(wsText, L"%", L"%%");
+	WriteLog(L"[REQUEST] %s\n\n", wsLog.c_str());
+
 	// 넘어온 문자열의 길이가 0이거나 명령어일때 번역 프로세스 스킵
 	if (wcslen(lpJPN) && !pFilter->cmd(wsText))
 	{
 		pFilter->pre(wsText);
+
+		wsLog = replace_all(wsText, L"%", L"%%");
+		WriteLog(L"[PRE] %s\n\n", wsLog.c_str());
 
 		i_len = WideCharToMultiByte(932, 0, wsText.c_str(), -1, NULL, NULL, NULL, NULL);
 		szJPN = (LPSTR)msvcrt_malloc((i_len + 1) * 3);
@@ -155,7 +161,13 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 		msvcrt_free(szKOR);
 		msvcrt_free(lpKOR);
 
+		wsLog = replace_all(wsText, L"%", L"%%");
+		WriteLog(L"[TRANS] %s\n\n", wsLog.c_str());
+
 		pFilter->post(wsText);
+
+		wsLog = replace_all(wsText, L"%", L"%%");
+		WriteLog(L"[POST] %s\n\n", wsLog.c_str());
 	}
 
 	i_len = WideCharToMultiByte(949, 0, wsText.c_str(), -1, NULL, NULL, NULL, NULL);
@@ -187,4 +199,17 @@ bool GetLoadPath(LPWSTR Path, int Size)
 		}
 	}
 	return true;
+}
+
+wstring replace_all(const wstring &str, const wstring &pattern, const wstring &replace)
+{
+	wstring result = str;
+	wstring::size_type pos = 0, offset = 0;
+
+	while ((pos = result.find(pattern, offset)) != wstring::npos)
+	{
+		result.replace(result.begin() + pos, result.begin() + pos + pattern.size(), replace);
+		offset = pos + replace.size();
+	}
+	return result;
 }

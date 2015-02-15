@@ -676,6 +676,7 @@ bool filter::filter_proc(vector<FILTERSTRUCT> &Filter, const int FilterType, wst
 
 		if (!Filter[i].regex)
 		{
+			Str = wsText;
 			wsText = replace_all(wsText, Filter[i].src, Filter[i].dest);
 			if (Str.compare(wsText))
 			{
@@ -686,6 +687,8 @@ bool filter::filter_proc(vector<FILTERSTRUCT> &Filter, const int FilterType, wst
 		}
 		else
 		{
+			Str = wsText;
+
 			try
 			{
 				wregex ex(Filter[i].src);
@@ -778,17 +781,4 @@ bool filter::cmd(wstring &wsText)
 		}
 	}
 	return false;
-}
-
-wstring filter::replace_all(const wstring &str, const wstring &pattern, const wstring &replace)
-{
-	wstring result = str;
-	wstring::size_type pos = 0, offset = 0;
-
-	while ((pos = result.find(pattern, offset)) != wstring::npos)
-	{
-		result.replace(result.begin() + pos, result.begin() + pos + pattern.size(), replace);
-		offset = pos + replace.size();
-	}
-	return result;
 }
