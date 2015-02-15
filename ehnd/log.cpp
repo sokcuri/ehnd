@@ -25,7 +25,7 @@ void WriteLog(const wchar_t *format, ...)
 	if (wcslen(lpBuffer) > 1000)
 		wcscpy_s(lpBuffer + 1000, 1024, L"...\r\n");
 
-	SetLogText(lpBuffer);
+	if (IsShownLogWin()) SetLogText(lpBuffer);
 	if (IsFileLog) fwprintf_s(fp, lpBuffer);
 
 	va_end(valist);
