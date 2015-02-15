@@ -333,7 +333,7 @@ bool filter::skiplayer_load()
 		SKIPLAYERSTRUCT ss;
 		ss.line = line;
 
-		for (UINT i = 0, prev = 0; i < wcslen(Buffer) + 1; i++)
+		for (UINT i = 0, prev = 0; i <= wcslen(Buffer) + 1; i++)
 		{
 			if (Buffer[i] == L'\t' || Buffer[i] == L'\n' || (Buffer[i] == L'/' && Buffer[i - 1] == L'/') || i == wcslen(Buffer))
 			{
@@ -429,7 +429,7 @@ bool filter::filter_load(vector<FILTERSTRUCT> &Filter, LPCWSTR lpPath, LPCWSTR l
 		fs.dest = L"";
 		
 		int tab = 0;
-		for (UINT i = 0, prev = 0; i < wcslen(Buffer); i++)
+		for (UINT i = 0, prev = 0; i <= wcslen(Buffer); i++)
 		{
 			if (Buffer[i] == L'\t' || Buffer[i] == L'\n' || (Buffer[i] == L'/' && Buffer[i - 1] == L'/') || i == wcslen(Buffer))
 			{
@@ -523,7 +523,7 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 		memset(us.attr, 0, sizeof(us.attr));
 
 		int tab = 0;
-		for (UINT i = 0, prev = 0; i < wcslen(Buffer); i++)
+		for (UINT i = 0, prev = 0; i <= wcslen(Buffer); i++)
 		{
 			if (Buffer[i] == L'\t' || Buffer[i] == L'\n' || (Buffer[i] == L'/' && Buffer[i - 1] == L'/') || i == wcslen(Buffer))
 			{
