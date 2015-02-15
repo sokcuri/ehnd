@@ -121,8 +121,6 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 	// 넘어온 문자열의 길이가 0이거나 명령어일때 번역 프로세스 스킵
 	if (wcslen(lpJPN) && !pFilter->cmd(wsText))
 	{
-		WriteLog(L"J2K_TranslateMMNT: %d, %s.\n", data0, wsText.c_str());
-
 		pFilter->pre(wsText);
 
 		i_len = WideCharToMultiByte(932, 0, wsText.c_str(), -1, NULL, NULL, NULL, NULL);
@@ -189,15 +187,4 @@ bool GetLoadPath(LPWSTR Path, int Size)
 		}
 	}
 	return true;
-}
-
-// 내보낸 클래스의 생성자입니다.
-// 클래스 정의를 보려면 ehnd.h를 참조하십시오.
-Cehnd::Cehnd()
-{
-	return;
-}
-Cehnd::~Cehnd()
-{
-	return;
 }

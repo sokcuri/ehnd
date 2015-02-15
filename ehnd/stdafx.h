@@ -31,8 +31,11 @@ using namespace std;
 #include "filter.h"
 
 extern HINSTANCE g_hInst;
-extern Cehnd *pEhnd;
 extern filter *pFilter;
+extern int g_initTick;
+extern char g_DicPath[MAX_PATH];
+extern bool g_PreUsable;
+extern bool g_PostUsable;
 
 extern LPBYTE lpfnRetn;
 extern LPBYTE lpfnfopen;

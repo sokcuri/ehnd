@@ -40,6 +40,8 @@ public:
 	bool post_load();
 	bool userdic_load();
 	bool jkdic_load();
+	bool ehnddic_cleanup();
+	bool ehnddic_create();
 	bool skiplayer_load();
 	bool pre(wstring &wsText);
 	bool post(wstring &wsText);

@@ -266,8 +266,8 @@ void *fopen_patch(char *path, char *mode)
 {
 	if (strstr(path, "UserDict.jk"))
 	{
-		WriteLog(L"fopen: UserDict.jk\n");
-		path = path;
+		path = g_DicPath;
+		//WriteLog(L"fopen_path\n");
 	}
 	return msvcrt_fopen(path, mode);
 }
@@ -301,7 +301,7 @@ __declspec(naked) void userdict_patch(void)
 		PUSH -1
 		PUSH ESI
 		CALL calculate_hash
-		ADD ESP, 0x04
+		ADD ESP, 0x08
 		PUSH EAX
 
 		PUSH ESI
@@ -349,8 +349,11 @@ UINT calculate_hash(LPCSTR s, int n)
 {
 	UINT hash = 5381;
 	int c = 0;
-	for (int i = 0; c = *s++ || i != n; i++)
+	for (int i = 0; c = *s++; i++)
+	{
 		hash = ((hash << 5) + hash) + c;
+		if (n != -1 && i == n) break;
+	}
 	return (hash & 0x7FFFFFFF);
 }
 

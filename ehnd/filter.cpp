@@ -123,7 +123,6 @@ bool filter::userdic_load()
 	// load userdict.jk
 	bool use_jkdic = true;
 	if (use_jkdic) jkdic_load();
-
 	HANDLE hFind = FindFirstFile(Path.c_str(), &FindFileData);
 
 	do
@@ -146,6 +145,12 @@ bool filter::userdic_load()
 	// 소요시간 계산
 	dwEnd = GetTickCount();
 	WriteLog(L"UserDicRead : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
+
+	// 엔드 임시파일 삭제
+	ehnddic_cleanup();
+
+	// 엔드 임시파일 생성
+	ehnddic_create();
 
 	return true;
 }
@@ -211,6 +216,88 @@ bool filter::jkdic_load()
 
 	WriteLog(L"JkDicRead : %d개의 DAT 사용자 사전 \"UserDict.jk\"를 읽었습니다.\n", vaild_line);
 
+	// 소요시간 계산
+	dwEnd = GetTickCount();
+	WriteLog(L"JkDicRead : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
+	return true;
+}
+
+bool filter::ehnddic_cleanup()
+{
+	WCHAR lpTmpPath[MAX_PATH];
+	WIN32_FIND_DATA FindFileData;
+	wstring Path;
+
+	DWORD dwStart, dwEnd;
+	dwStart = GetTickCount();
+
+	GetTempPath(MAX_PATH, lpTmpPath);
+	Path = lpTmpPath;
+	Path += L"\\UserDict*.ehnd";
+
+	HANDLE hFind = FindFirstFile(Path.c_str(), &FindFileData);
+
+	do
+	{
+		WriteLog(L"EhndDicCleanUp : %s\n", FindFileData.cFileName);
+		if (hFind == INVALID_HANDLE_VALUE) break;
+		else if (FindFileData.dwFileAttributes == FILE_ATTRIBUTE_DIRECTORY)
+			continue;
+
+		int i = wcslen(FindFileData.cFileName) - 1;
+		while (i--)
+		{
+			if (FindFileData.cFileName[i] == L'.' && 
+				!wcscmp(FindFileData.cFileName + i, L".ehnd"))
+			{
+				wstring DelFile = lpTmpPath;
+				DelFile += FindFileData.cFileName;
+				DeleteFile(DelFile.c_str());
+				break;
+			}
+		}
+
+	} while (FindNextFile(hFind, &FindFileData));
+
+	// 소요시간 계산
+	dwEnd = GetTickCount();
+	WriteLog(L"EhndDicCleanup : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
+
+	return true;
+}
+
+bool filter::ehnddic_create()
+{
+	WCHAR lpTmpPath[MAX_PATH], lpText[12];
+	wstring Path;
+	FILE *fp;
+	DWORD dwStart, dwEnd;
+	_itow_s(g_initTick, lpText, 10);
+	dwStart = GetTickCount();
+
+	GetTempPath(MAX_PATH, lpTmpPath);
+	Path = lpTmpPath;
+	Path += L"\\UserDict_";
+	Path += lpText;
+	Path += L".ehnd";
+
+	if (_wfopen_s(&fp, Path.c_str(), L"wb") != 0)
+		WriteLog(L"EhndDicCreate : 사용자사전 바이너리 \"UserDict_%s.ehnd\" 파일을 생성하는데 실패했습니다.\n", lpText);
+
+	for (UINT i = 0; i < UserDic.size(); i++)
+	{
+		fwrite(&UserDic[i].hidden, sizeof(char), 1, fp);
+		fwrite(&UserDic[i].jpn, sizeof(char), 31, fp);
+		fwrite(&UserDic[i].kor, sizeof(char), 31, fp);
+		fwrite(&UserDic[i].part, sizeof(char), 5, fp);
+		fwrite(&UserDic[i].attr, sizeof(char), 42, fp);
+	}
+	WriteLog(L"EhndDicCreate : 사용자사전 바이너리 \"UserDict_%s.ehnd\" 생성 완료.\n", lpText);
+	fclose(fp);
+
+	// 소요시간 계산
+	dwEnd = GetTickCount();
+	WriteLog(L"EhndDicCreate : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
 	return true;
 }
 
@@ -410,6 +497,7 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 {
 	FILE *fp;
 	WCHAR Buffer[1024], Context[1024];
+	char szBuffer[128];
 	wstring Path, Jpn, Kor, Part, Attr;
 	int vaild_line = 0;
 	Path = lpPath;
@@ -417,11 +505,11 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 
 	if (_wfopen_s(&fp, Path.c_str(), L"rt,ccs=UTF-8") != 0)
 	{
-		WriteLog(L"UserDictRead : 사용자 사전 '%s' 로드 실패!\n", lpFileName);
+		WriteLog(L"UserDicRead : 사용자 사전 '%s' 로드 실패!\n", lpFileName);
 		return false;
 	}
 
-	WriteLog(L"UserDictRead : 사용자 사전 \"%s\" 로드.\n", lpFileName);
+	WriteLog(L"UserDicRead : 사용자 사전 \"%s\" 로드.\n", lpFileName);
 
 	for (int line = 0; fgetws(Buffer, 1000, fp) != NULL; line++, g_line++)
 	{
@@ -481,24 +569,28 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 			WriteLog(L"UserDicRead : 오류 : 원문 단어의 길이는 15자(30Byte)를 초과할 수 없습니다.\n");
 			WriteLog(L"UserDicRead : 오류 : [%s:%d] : <<%s>> | %s | %s | %s\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
 		}
-		WideCharToMultiByte(932, 0, Jpn.c_str(), -1, us.jpn, len, NULL, NULL);
+		WideCharToMultiByte(932, 0, Jpn.c_str(), -1, szBuffer, len, NULL, NULL);
+		strcpy_s(us.jpn, szBuffer);
 
 		if ((len = WideCharToMultiByte(949, 0, Kor.c_str(), -1, NULL, NULL, NULL, NULL)) > 31)
 		{
 			WriteLog(L"UserDicRead : 오류 : 역문 단어의 길이는 15자(30Byte)를 초과할 수 없습니다.\n");
 			WriteLog(L"UserDicRead : 오류 : [%s:%d] : %s | <<%s>> | %s | %s\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
 		}
-		WideCharToMultiByte(949, 0, Kor.c_str(), -1, us.kor, len, NULL, NULL);
+		WideCharToMultiByte(949, 0, Kor.c_str(), -1, szBuffer, len, NULL, NULL);
+		strcpy_s(us.kor, szBuffer);
 
 		if ((len = WideCharToMultiByte(932, 0, Attr.c_str(), -1, NULL, NULL, NULL, NULL)) > 31)
 		{
 			WriteLog(L"UserDicRead : 오류 :  단어 속성은 42Byte를 초과할 수 없습니다.\n");
 			WriteLog(L"UserDicRead : 오류 : [%s:%d] : %s | %s | %s | <<%s>>\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
 		}
-		WideCharToMultiByte(932, 0, Kor.c_str(), -1, us.kor, len, NULL, NULL);
+		WideCharToMultiByte(932, 0, Attr.c_str(), -1, szBuffer, len, NULL, NULL);
+		strcpy_s(us.attr, szBuffer);
 
 		len = WideCharToMultiByte(932, 0, Part.c_str(), -1, NULL, NULL, NULL, NULL);
-		WideCharToMultiByte(932, 0, Part.c_str(), -1, us.part, len, NULL, NULL);
+		WideCharToMultiByte(932, 0, Part.c_str(), -1, szBuffer, len, NULL, NULL);
+		strcpy_s(us.part, szBuffer);
 
 		vaild_line++;
 		UserDic.push_back(us);
@@ -509,7 +601,6 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 }
 bool filter::pre(wstring &wsText)
 {
-	bool g_PreUsable = true;
 	if (g_PreUsable == false)
 	{
 		WriteLog(L"PreFilter : 전처리가 꺼져 있습니다.\n");
@@ -520,10 +611,9 @@ bool filter::pre(wstring &wsText)
 
 bool filter::post(wstring &wsText)
 {
-	bool g_PostUsable = true;
 	if (g_PostUsable == false)
 	{
-		WriteLog(L"PostFilter : 전처리가 꺼져 있습니다.\n");
+		WriteLog(L"PostFilter : 후처리가 꺼져 있습니다.\n");
 		return false;
 	}
 	return filter_proc(PostFilter, POSTFILTER, wsText);
@@ -660,6 +750,32 @@ bool filter::cmd(wstring &wsText)
 		wsText = L"Log Window.\r\n";
 		ShowLogWin(!IsShownLogWin());
 		return true;
+	}
+	else if (!wsText.compare(L"/pre"))
+	{
+		if (g_PreUsable)
+		{
+			g_PreUsable = false;
+			wsText = L"전처리 끔.";
+		}
+		else
+		{
+			g_PreUsable = true;
+			wsText = L"전처리 켬.";
+		}
+	}
+	else if (!wsText.compare(L"/post"))
+	{
+		if (g_PostUsable)
+		{
+			g_PostUsable = false;
+			wsText = L"후처리 끔.";
+		}
+		else
+		{
+			g_PostUsable = true;
+			wsText = L"후처리 켬.";
+		}
 	}
 	return false;
 }

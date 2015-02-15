@@ -1,9 +1,12 @@
 // dllmain.cpp : DLL 응용 프로그램의 진입점을 정의합니다.
 #include "stdafx.h"
 HINSTANCE g_hInst;
-Cehnd *pEhnd;
 filter *pFilter;
 HMODULE hEzt, hMsv;
+int g_initTick;
+char g_DicPath[MAX_PATH];
+bool g_PreUsable = true;
+bool g_PostUsable = true;
 
 BOOL APIENTRY DllMain(HINSTANCE hInstance,
 	DWORD  ul_reason_for_call,
@@ -14,7 +17,17 @@ BOOL APIENTRY DllMain(HINSTANCE hInstance,
 	{
 	case DLL_PROCESS_ATTACH:
 	{
-		pEhnd = new Cehnd();
+		// init ehnd dic path
+		char szInitTick[12];
+		g_initTick = GetTickCount() + rand();
+		_itoa_s(g_initTick, szInitTick, 10);
+
+		GetTempPathA(MAX_PATH, g_DicPath);
+		strcat_s(g_DicPath, "UserDict_");
+		strcat_s(g_DicPath, szInitTick);
+		strcat_s(g_DicPath, ".ehnd");
+
+		// init
 		pFilter = new filter();
 		CreateLogWin(g_hInst);
 		ShowLogWin(true);
