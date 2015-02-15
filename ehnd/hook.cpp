@@ -326,11 +326,11 @@ __declspec(naked) void userdict_patch(void)
 		MOV DWORD PTR SS : [ESP+0x10], EAX
 
 		JL CntLoop
-		XOR AL, AL
+		MOV AL, 0
 		TEST AL, AL
 		JMP lpfnRetn
 	Match:
-		AND AL, AL
+		MOV AL, 1
 		TEST AL, AL
 		MOV EAX, DWORD PTR SS : [ESP+0x10]	// addr
 		ADD EAX, DWORD PTR SS : [EBP+0x04]
@@ -339,7 +339,7 @@ __declspec(naked) void userdict_patch(void)
 	Finish:
 		MOV EDX, DWORD PTR SS : [EBP+0x08]
 		MOV DWORD PTR SS : [ESP+0x18], EDX
-		XOR AL, AL
+		MOV AL, 0
 		TEST AL, AL
 		JMP lpfnRetn
 	}
@@ -348,11 +348,12 @@ __declspec(naked) void userdict_patch(void)
 UINT calculate_hash(LPCSTR s, int n)
 {
 	UINT hash = 5381;
-	int c = 0;
-	for (int i = 0; c = *s++; i++)
+	UINT c = 0;
+	UINT i = 0; 
+	while(c = *s++)
 	{
 		hash = ((hash << 5) + hash) + c;
-		if (n != -1 && i == n) break;
+		if (++i == n) break;
 	}
 	return (hash & 0x7FFFFFFF);
 }
