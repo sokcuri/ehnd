@@ -274,7 +274,7 @@ void *fopen_patch(char *path, char *mode)
 
 __declspec(naked) void userdict_patch(void)
 {
-	WriteLog(L"userdict_patch call\n");
+	//WriteLog(L"userdict_patch call\n");
 
 	__asm
 	{

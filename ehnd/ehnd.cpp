@@ -100,7 +100,6 @@ __declspec(naked) void *msvcrt_fopen(char *path, char *mode)
 }
 void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 {
-	SetLogText(L"J2K_TranslateMMNT.\n");
 	LPSTR szOut;
 	wstring wsText, wsOriginal;
 	int i_len;
@@ -119,10 +118,12 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 	wsText = lpJPN;
 	msvcrt_free(lpJPN);
 
-
-	if (!pEhnd->cmd(wsText))
+	// 넘어온 문자열의 길이가 0이거나 명령어일때 번역 프로세스 스킵
+	if (wcslen(lpJPN) && !pFilter->cmd(wsText))
 	{
-		pEhnd->pre(wsText);
+		WriteLog(L"J2K_TranslateMMNT: %d, %s.\n", data0, wsText.c_str());
+
+		pFilter->pre(wsText);
 
 		i_len = WideCharToMultiByte(932, 0, wsText.c_str(), -1, NULL, NULL, NULL, NULL);
 		szJPN = (LPSTR)msvcrt_malloc((i_len + 1) * 3);
@@ -156,7 +157,7 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 		msvcrt_free(szKOR);
 		msvcrt_free(lpKOR);
 
-		pEhnd->post(wsText);
+		//pFilter->post(wsText);
 	}
 
 	i_len = WideCharToMultiByte(949, 0, wsText.c_str(), -1, NULL, NULL, NULL, NULL);
@@ -199,30 +200,4 @@ Cehnd::Cehnd()
 Cehnd::~Cehnd()
 {
 	return;
-}
-bool Cehnd::pre(wstring &wsText)
-{
-	return true;
-}
-bool Cehnd::post(wstring &wsText)
-{
-	return true;
-}
-bool Cehnd::cmd(wstring &wsText)
-{
-	if (wsText[0] != L'/') return false;
-	if (!wsText.compare(L"/ver") || !wsText.compare(L"/version"))
-	{
-		wsText = L"Ehnd ";
-		wsText += WIDEN(MARI_VERSION);
-		wsText += L", ";
-		wsText += WIDEN(__DATE__);
-		wsText += L", ";
-		wsText += WIDEN(__TIME__);
-		wsText += L"\r\n";
-
-		SetLogText(wsText.c_str(), RGB(168, 25, 25), RGB(255, 255, 255));
-		return true;
-	}
-	return false;
 }

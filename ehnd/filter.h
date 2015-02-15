@@ -40,15 +40,18 @@ public:
 	bool post_load();
 	bool userdic_load();
 	bool skiplayer_load();
-	bool pre();
-	bool post();
+	bool pre(wstring &wsText);
+	bool post(wstring &wsText);
+	bool cmd(wstring &wsText);
+
+private:
+	bool filter_load(vector<FILTERSTRUCT> &Filter, LPCWSTR lpPath, LPCWSTR lpFileName, int FilterType, bool IsUnicode, int &g_line);
+	bool userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line);
+	wstring filter::replace_all(const wstring &str, const wstring &pattern, const wstring &replace);
+	bool filter_proc(vector<FILTERSTRUCT> &Filter, const int FilterType, wstring &wsText);
 
 	vector<FILTERSTRUCT> PreFilter;
 	vector<FILTERSTRUCT> PostFilter;
 	vector<USERDICSTRUCT> UserDic;
 	vector<SKIPLAYERSTRUCT> SkipLayer;
-
-private:
-	bool filter_load(vector<FILTERSTRUCT> &Filter, LPCWSTR lpPath, LPCWSTR lpFileName, int FilterType, bool IsUnicode, int &g_line);
-	bool userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line);
 };

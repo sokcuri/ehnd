@@ -43,8 +43,6 @@ class Cehnd {
 public:
 	Cehnd(void);
 	~Cehnd(void);
-	bool pre(wstring &wsText);
-	bool post(wstring &wsText);
 	bool cmd(wstring &wsText);
 };
 

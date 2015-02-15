@@ -6,17 +6,17 @@ HWND hLogWin, hLogRes;
 void WriteLog(const wchar_t *format, ...)
 {
 	va_list valist;
-	FILE *fp;
+	FILE *fp = NULL;
 	wchar_t lpBuffer[1024], lpTime[64];
 	
-	bool IsFileLog = false;
+	bool IsFileLog = true;
 	if (IsFileLog)
 	{
 		const char* szFileName = ".\\enhd_log.log";
-		if (fopen_s(&fp, szFileName, "a+t,ccs=UTF_8")) return;
+		if (fopen_s(&fp, szFileName, "a+t,ccs=UTF-8")) return;
 		_wstrtime_s(lpTime, 32);
 
-		fwprintf_s(fp, L"%s.%03d | ", lpBuffer, GetTickCount() % 1000);
+		fwprintf_s(fp, L"%s.%03d | ", lpTime, GetTickCount() % 1000);
 	}
 	va_start(valist, format);
 
@@ -26,6 +26,7 @@ void WriteLog(const wchar_t *format, ...)
 		wcscpy_s(lpBuffer + 1000, 1024, L"...\r\n");
 
 	SetLogText(lpBuffer);
+	if (IsFileLog) fwprintf_s(fp, lpBuffer);
 
 	va_end(valist);
 
