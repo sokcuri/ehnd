@@ -9,7 +9,7 @@ void WriteLog(const wchar_t *format, ...)
 	FILE *fp = NULL;
 	wchar_t lpBuffer[1024], lpTime[64];
 	
-	bool IsFileLog = true;
+	bool IsFileLog = false;
 	if (IsFileLog)
 	{
 		const char* szFileName = ".\\enhd_log.log";
@@ -124,7 +124,8 @@ LRESULT CALLBACK LogProc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam)
 		MoveWindow(hLogRes, 0, 0, w, h, true);
 		break;
 	case WM_CLOSE:
-		break;
+		ShowLogWin(false);
+		return 0;
 	}
 	return DefWindowProc(hWnd, Message, wParam, lParam);
 }
