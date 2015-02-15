@@ -521,8 +521,8 @@ bool filter::filter_proc(vector<FILTERSTRUCT> &Filter, const int FilterType, wst
 			wsText = replace_all(wsText, Filter[i].src, Filter[i].dest);
 			if (Str.compare(wsText))
 			{
-				if (FilterType == PREFILTER) WriteLog(L"PreFilter : [%s:%d] | %s | %s | %d | %d\n", Filter[i].db, Filter[i].line, Filter[i].src, Filter[i].dest, Filter[i].layer, Filter[i].regex);
-				else if (FilterType == POSTFILTER) WriteLog(L"PostFIlter : [%s:%d] | %s | %s | %d | %d\n", Filter[i].db, Filter[i].line, Filter[i].src, Filter[i].dest, Filter[i].layer, Filter[i].regex);
+				if (FilterType == PREFILTER) WriteLog(L"PreFilter : [%s:%d] | %s | %s | %d | %d\n", Filter[i].db.c_str(), Filter[i].line, Filter[i].src.c_str(), Filter[i].dest.c_str(), Filter[i].layer, Filter[i].regex);
+				else if (FilterType == POSTFILTER) WriteLog(L"PostFIlter : [%s:%d] | %s | %s | %d | %d\n", Filter[i].db.c_str(), Filter[i].line, Filter[i].src.c_str(), Filter[i].dest.c_str(), Filter[i].layer, Filter[i].regex);
 			}
 				
 		}
@@ -534,9 +534,7 @@ bool filter::filter_proc(vector<FILTERSTRUCT> &Filter, const int FilterType, wst
 
 				if (regex_search(wsText, ex))
 				{
-					WriteLog(L"X\n");
 					wsText = regex_replace(wsText, ex, Filter[i].dest, regex_constants::match_default);
-					WriteLog(L"F : [%s:%d] %s | %s | %d | %d\n", Filter[i].db.c_str(), Filter[i].line, Filter[i].src.c_str(), Filter[i].dest.c_str(), Filter[i].layer, Filter[i].regex);
 				}
 			}
 			catch (regex_error ex)
@@ -587,6 +585,12 @@ bool filter::cmd(wstring &wsText)
 		wsText += L"\r\n";
 
 		SetLogText(wsText.c_str(), RGB(168, 25, 25), RGB(255, 255, 255));
+		return true;
+	}
+	else if (!wsText.compare(L"/log"))
+	{
+		wsText = L"Log Window.\r\n";
+		ShowLogWin(!IsShownLogWin());
 		return true;
 	}
 	return false;

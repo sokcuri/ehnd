@@ -108,6 +108,11 @@ void ShowLogWin(bool bShow)
 	ShowWindow(hLogRes, bShow);
 }
 
+bool IsShownLogWin(void)
+{
+	return (GetWindowLong(hLogWin, GWL_STYLE) & WS_VISIBLE);
+}
+
 LRESULT CALLBACK LogProc(HWND hWnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
 	switch (Message)

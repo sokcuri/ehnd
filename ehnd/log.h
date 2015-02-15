@@ -8,5 +8,6 @@ void SetLogText(LPCWSTR);
 void SetLogText(LPCWSTR, COLORREF, COLORREF);
 void ClearLog(void);
 void ShowLogWin(bool bShow);
+bool IsShownLogWin(void);
 LRESULT CALLBACK LogProc(HWND, UINT, WPARAM, LPARAM);
 extern HWND hLogRes, hLogWin;

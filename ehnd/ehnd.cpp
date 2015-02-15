@@ -157,7 +157,7 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 		msvcrt_free(szKOR);
 		msvcrt_free(lpKOR);
 
-		//pFilter->post(wsText);
+		pFilter->post(wsText);
 	}
 
 	i_len = WideCharToMultiByte(949, 0, wsText.c_str(), -1, NULL, NULL, NULL, NULL);
