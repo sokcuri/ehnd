@@ -326,11 +326,11 @@ __declspec(naked) void userdict_patch(void)
 		MOV DWORD PTR SS : [ESP+0x10], EAX
 
 		JL CntLoop
-		MOV AL, 0
+		XOR AL, AL
 		TEST AL, AL
 		JMP lpfnRetn
 	Match:
-		MOV AL, 1
+		AND AL, AL
 		TEST AL, AL
 		MOV EAX, DWORD PTR SS : [ESP+0x10]	// addr
 		ADD EAX, DWORD PTR SS : [EBP+0x04]
@@ -339,7 +339,7 @@ __declspec(naked) void userdict_patch(void)
 	Finish:
 		MOV EDX, DWORD PTR SS : [EBP+0x08]
 		MOV DWORD PTR SS : [ESP+0x18], EDX
-		MOV AL, 0
+		XOR AL, AL
 		TEST AL, AL
 		JMP lpfnRetn
 	}
