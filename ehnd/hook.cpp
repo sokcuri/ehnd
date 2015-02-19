@@ -333,22 +333,24 @@ __declspec(naked) void userdict_patch(void)
 
 		// compare
 		XOR ECX, ECX
-
+	
 	sCompare:
-		CMP ECX, 31
-		JAE zMatch
-
 		MOV AL, BYTE PTR DS : [ESI+ECX]
 		MOV BL, BYTE PTR DS : [EDX+ECX]
+		INC ECX
+
+		CMP AL, 0x7E
+		JA sCompare2
+		CMP AL, 0
+		JE zUpper
 		CMP AL, BL
 		JA zLower
 		JB zUpper
-
-		INC ECX
-		CMP AL, 0
-		JE zMatch
-		CMP AL, 0x7E
-		JLE sCompare
+		JMP sCompare
+	sCompare2:
+		CMP AL, BL
+		JA zLower
+		JB zUpper
 
 		MOV AL, BYTE PTR DS : [ESI + ECX]
 		MOV BL, BYTE PTR DS : [EDX + ECX]
@@ -356,7 +358,6 @@ __declspec(naked) void userdict_patch(void)
 		CMP AL, BL
 		JA zLower
 		JB zUpper
-
 		JMP sCompare
 
 	zLower:
@@ -365,7 +366,6 @@ __declspec(naked) void userdict_patch(void)
 		JMP zLoop
 
 	zUpper:
-		INC EDI
 		MOV DWORD PTR SS : [ESP + 0x18], EDI
 		JMP zLoop
 
@@ -385,19 +385,23 @@ __declspec(naked) void userdict_patch(void)
 		JAE zMatchEnd
 		MOV AL, BYTE PTR DS : [ESI+ECX]
 		MOV BL, BYTE PTR DS : [EDX+ECX]
+		CMP AL, 0x7E
+		JA zCompare2
+		CMP AL, 0
+		JE zMatchEnd
 		CMP AL, BL
 		JNE zFinish
 		INC ECX
-		CMP AL, 0
-		JE zMatchEnd
-
-		CMP AL, 0x7E
-		JLE zCompare
+		JMP zCompare
+	zCompare2:
+		CMP AL, BL
+		JNE zFinish
+		MOV AL, BYTE PTR DS : [ESI+ECX]
+		MOV BL, BYTE PTR DS : [EDX+ECX]
 		INC ECX
 		CMP AL, BL
 		JNE zFinish
 		JMP zCompare
-
 	zMatchEnd:
 		// addr=base+point*0x6E
 		MOV DWORD PTR SS : [ESP + 0x18], EDI
