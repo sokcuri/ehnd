@@ -384,14 +384,14 @@ __declspec(naked) void userdict_patch(void)
 		CMP ECX, 31
 		JAE zMatchEnd
 		MOV AL, BYTE PTR DS : [ESI+ECX]
-		MOV BL, BYTE PTR DS : [EDX+ECX]
+		MOV BL, BYTE PTR DS : [EDX + ECX]
+		INC ECX
 		CMP AL, 0x7E
 		JA zCompare2
 		CMP AL, 0
 		JE zMatchEnd
 		CMP AL, BL
 		JNE zFinish
-		INC ECX
 		JMP zCompare
 	zCompare2:
 		CMP AL, BL
