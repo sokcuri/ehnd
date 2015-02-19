@@ -276,73 +276,152 @@ __declspec(naked) void userdict_patch(void)
 {
 	//WriteLog(L"userdict_patch call\n");
 
+	//
+	// [ESP + 0x18]	// current count - start
+	// [ESP + 0x10]	// current addr - end
+	// [EBP + 0x08]	// total count
+	// [ESP + 0x38] // word_string
+	//
+	// [EBP + 0x04] + 0x6E * cnt + 0x01 = USERDICT_JPN
+	//
+
 	__asm
 	{
-		MOV EDI, DWORD PTR SS : [EBP+0x04]
-		MOV EBX, DWORD PTR SS : [ESP+0x38]
-		MOV EAX, DWORD PTR SS : [ESP+0x10]
+		// word_string
+		MOV ESI, DWORD PTR SS : [ESP + 0x38]
 
-	CntLoop:
-		ADD EAX, EDI
-		LEA ESI, DWORD PTR DS : [EAX+1]
+		// end=total_cnt
+		MOV EAX, DWORD PTR SS : [EBP + 0x08]
+		
+		// if total_cnt = 0 goto zFinish
+		CMP EAX, 0
+		JE zFinish
 
-		MOV AX, WORD PTR DS : [ESI] // userdict
-		MOV CX, WORD PTR DS : [EBX] // word
+		// store end (total_cnt-1)
+		SUB EAX, 1
+		MOV DWORD PTR SS : [ESP + 0x10], EAX
 
-		XCHG AL, AH
-		XCHG CL, CH
+	zLoop:
+		// if start = end goto zMatch
+		// if start > end goto zFinish
+		MOV ECX, DWORD PTR SS : [ESP + 0x18]
+		MOV EAX, DWORD PTR SS : [ESP + 0x10]
+		MOV EDI, DWORD PTR SS : [ESP + 0x18]
+		CMP ECX, EAX
+		JE zMatch
+		JA zFinish
 
-		TEST AL, AL
-		JE Mismatch
-		CMP AX, CX
-		JA Mismatch
-		JB Finish
+		// check=celi(end-start/2)+start
+		SUB EAX, ECX
+		XOR EDX, EDX
+		MOV ECX, 2
+		DIV ECX
+		ADD EAX, EDX
+		ADD EAX, DWORD PTR SS : [ESP + 0x18]
 
-		PUSH -1
-		PUSH ESI
-		CALL calculate_hash
-		ADD ESP, 0x08
-		PUSH EAX
+		// store check
+		MOV EDI, EAX
 
-		PUSH ESI
-		CALL strlen_inline
-		ADD ESP, 0x04
+		// check_addr=check*0x6e
+		MOV ECX, 0x6E
+		MUL ECX
 
-		PUSH EAX
-		PUSH EBX
-		CALL calculate_hash
-		ADD ESP, 0x08
+		// dic_string=base+check_addr+1
+		ADD EAX, DWORD PTR SS : [EBP + 0x04]
+		ADD EAX, 1
+		MOV EDX, EAX
 
-		POP ECX
-		CMP EAX, ECX
-		JE Match
+		// compare
+		XOR ECX, ECX
 
-	Mismatch:
-		INC DWORD PTR SS : [ESP+0x18]		// cur
-		MOV EAX, DWORD PTR SS : [ESP+0x10]	// addr
-		MOV EDX, DWORD PTR SS : [EBP+0x08]	// total
-		ADD EAX, 0x6E
-		CMP DWORD PTR DS : [ESP+0x18], EDX
-		MOV DWORD PTR SS : [ESP+0x10], EAX
+	sCompare:
+		CMP ECX, 31
+		JAE zMatch
 
-		JL CntLoop
-		XOR AL, AL
-		TEST AL, AL
+		MOV AL, BYTE PTR DS : [ESI+ECX]
+		MOV BL, BYTE PTR DS : [EDX+ECX]
+		CMP AL, BL
+		JB zLower
+		JA zUpper
+
+		INC ECX
+		CMP AL, 0
+		JE zMatch
+		CMP AL, 0x7E
+		JLE sCompare
+
+		MOV AL, BYTE PTR DS : [ESI + ECX]
+		MOV BL, BYTE PTR DS : [EDX + ECX]
+		INC ECX
+		CMP AL, BL
+		JB zLower
+		JA zUpper
+		JMP sCompare
+
+	zLower:
+		DEC EDI
+		MOV DWORD PTR SS : [ESP + 0x10], EDI
+		JMP zLoop
+
+	zUpper:
+		INC EDI
+		MOV DWORD PTR SS : [ESP + 0x18], EDI
+		JMP zLoop
+
+	zMatch:
+		XOR ECX, ECX
+
+		MOV EAX, EDI
+		MOV ECX, 0x6E
+		MUL ECX
+		
+		ADD EAX, DWORD PTR SS : [EBP + 0x04]
+		ADD EAX, 1
+		MOV EDX, EAX
+
+	zCompare :
+		CMP ECX, 31
+		JAE zMatchEnd
+		MOV AL, BYTE PTR DS : [ESI+ECX]
+		MOV BL, BYTE PTR DS : [EDX+ECX]
+		CMP AL, BL
+		JNE zFinish
+		INC ECX
+		CMP AL, 0
+		JE zMatchEnd
+
+		CMP AL, 0x7E
+		JLE zCompare
+		INC ECX
+		CMP AL, BL
+		JNE zFinish
+		JMP zCompare
+
+	zMatchEnd:
+		// addr=base+point*0x6E
+		MOV DWORD PTR SS : [ESP + 0x18], EDI
+		MOV EAX, DWORD PTR SS : [ESP + 0x18]
+		MOV ECX, 0x6E
+		MUL ECX
+		MOV DWORD PTR SS : [ESP + 0x10], EAX
+		ADD EAX, DWORD PTR SS : [EBP + 0x04]
+
+
+		MOV EDI, DWORD PTR SS : [EBP + 0x04]
+		MOV EBX, DWORD PTR SS : [ESP + 0x38]
+		MOV EDX, DWORD PTR SS : [EBP + 0x08]
+
+		MOV ECX, 1
+		TEST CL, CL
 		JMP lpfnRetn
-	Match:
-		AND AL, AL
-		TEST AL, AL
-		MOV EAX, DWORD PTR SS : [ESP+0x10]	// addr
-		ADD EAX, DWORD PTR SS : [EBP+0x04]
-		JMP lpfnRetn
-
-	Finish:
-		MOV EDX, DWORD PTR SS : [EBP+0x08]
-		MOV DWORD PTR SS : [ESP+0x18], EDX
-		XOR AL, AL
-		TEST AL, AL
+	zFinish:
+		MOV EDX, DWORD PTR SS : [EBP + 0x08]
+		MOV DWORD PTR SS : [ESP + 0x18], EDX
+		XOR ECX, ECX
+		TEST CL, CL
 		JMP lpfnRetn
 	}
+
 }
 
 UINT calculate_hash(LPCSTR s, int n)

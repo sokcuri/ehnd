@@ -33,6 +33,28 @@ void WriteLog(const wchar_t *format, ...)
 	if (IsFileLog) fclose(fp);
 }
 
+void WriteTextLog(const wchar_t *format, ...)
+{
+	va_list valist;
+	FILE *fp = NULL;
+	wchar_t lpBuffer[1024], lpTime[64];
+
+	const char* szFileName = ".\\ehnd_text.log";
+	if (fopen_s(&fp, szFileName, "a+t,ccs=UTF-8")) return;
+	va_start(valist, format);
+
+	_vsnwprintf_s(lpBuffer, _TRUNCATE, format, valist);
+
+	if (wcslen(lpBuffer) > 1000)
+		wcscpy_s(lpBuffer + 1000, 1024, L"...\r\n");
+
+	fwprintf_s(fp, lpBuffer);
+
+	va_end(valist);
+
+	fclose(fp);
+}
+
 bool CreateLogWin(HINSTANCE hInst)
 {
 	LoadLibrary(TEXT("Msftedit.dll"));

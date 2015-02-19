@@ -119,11 +119,18 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 	msvcrt_free(lpJPN);
 
 	wsLog = replace_all(wsText, L"%", L"%%");
+	wsLog = replace_all(wsText, L"%", L"%%");
 	WriteLog(L"[REQUEST] %s\n\n", wsLog.c_str());
 
 	// 넘어온 문자열의 길이가 0이거나 명령어일때 번역 프로세스 스킵
 	if (wcslen(lpJPN) && !pFilter->cmd(wsText))
 	{
+		wsLog = wsText;
+		wsLog = replace_all(wsLog, L"%", L"%%");
+		wsLog = replace_all(wsLog, L"\t", L" ");
+		wsLog = replace_all(wsLog, L"\r\n", L"");
+		WriteTextLog(L"%s\t", wsLog.c_str());
+
 		pFilter->pre(wsText);
 
 		wsLog = replace_all(wsText, L"%", L"%%");
@@ -168,6 +175,12 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 
 		wsLog = replace_all(wsText, L"%", L"%%");
 		WriteLog(L"[POST] %s\n\n", wsLog.c_str());
+
+		wsLog = wsText;
+		wsLog = replace_all(wsLog, L"%", L"%%");
+		wsLog = replace_all(wsLog, L"\t", L" ");
+		wsLog = replace_all(wsLog, L"\r\n", L"");
+		WriteTextLog(L"%s\r\n", wsLog.c_str());
 	}
 
 	i_len = WideCharToMultiByte(949, 0, wsText.c_str(), -1, NULL, NULL, NULL, NULL);
