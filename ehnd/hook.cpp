@@ -341,8 +341,8 @@ __declspec(naked) void userdict_patch(void)
 		MOV AL, BYTE PTR DS : [ESI+ECX]
 		MOV BL, BYTE PTR DS : [EDX+ECX]
 		CMP AL, BL
-		JB zLower
-		JA zUpper
+		JA zLower
+		JB zUpper
 
 		INC ECX
 		CMP AL, 0
@@ -354,8 +354,9 @@ __declspec(naked) void userdict_patch(void)
 		MOV BL, BYTE PTR DS : [EDX + ECX]
 		INC ECX
 		CMP AL, BL
-		JB zLower
-		JA zUpper
+		JA zLower
+		JB zUpper
+
 		JMP sCompare
 
 	zLower:
@@ -405,12 +406,6 @@ __declspec(naked) void userdict_patch(void)
 		MUL ECX
 		MOV DWORD PTR SS : [ESP + 0x10], EAX
 		ADD EAX, DWORD PTR SS : [EBP + 0x04]
-
-
-		MOV EDI, DWORD PTR SS : [EBP + 0x04]
-		MOV EBX, DWORD PTR SS : [ESP + 0x38]
-		MOV EDX, DWORD PTR SS : [EBP + 0x08]
-
 		MOV ECX, 1
 		TEST CL, CL
 		JMP lpfnRetn
