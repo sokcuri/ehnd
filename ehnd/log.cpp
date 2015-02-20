@@ -71,6 +71,23 @@ bool CreateLogWin(HINSTANCE hInst)
 	RegisterClassEx(&wc);
 	//if (!) MessageBox(0, L"log reg failed", 0, 0);
 
+	SECURITY_ATTRIBUTES thAttr;
+	thAttr.bInheritHandle = false;
+	thAttr.lpSecurityDescriptor = NULL;
+	thAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
+
+	HANDLE hThread = CreateThread(&thAttr, 0, LogThreadMain, NULL, 0, NULL);
+	if (hThread == NULL)
+	{
+		WriteLog(L"cannot create log thread\n");
+	}
+	return 0;
+}
+
+DWORD WINAPI LogThreadMain(LPVOID lpParam)
+{
+	HINSTANCE hInst = g_hInst;
+
 	hLogWin = CreateWindowEx(0, L"EhndLogWin", L"title", WS_OVERLAPPEDWINDOW, 64, 64, 640, 480, 0, 0, hInst, 0);
 	if (!hLogWin) MessageBox(0, L"log win create failed", 0, 0);
 
@@ -88,7 +105,18 @@ bool CreateLogWin(HINSTANCE hInst)
 	cf.dwEffects = CFE_BOLD;
 	SendMessage(hLogRes, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&cf);
 	SendMessage(hLogRes, EM_REPLACESEL, TRUE, (LPARAM)L"");
-	return 0;
+
+	ShowWindow(hLogWin, true);
+	ShowWindow(hLogRes, true);
+	
+	MSG msg;
+	BOOL bRet;
+	while ((bRet = GetMessage(&msg, NULL, 0, 0)) != 0)
+	{
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+	return msg.wParam;
 }
 
 void SetLogText(LPCWSTR Text)
