@@ -16,7 +16,8 @@ BOOL APIENTRY DllMain(HINSTANCE hInstance,
 	switch (ul_reason_for_call)
 	{
 	case DLL_PROCESS_ATTACH:
-	{
+		g_hInst = hInstance;
+
 		// init ehnd dic path
 		char szInitTick[12];
 		g_initTick = GetTickCount() + rand();
@@ -26,27 +27,6 @@ BOOL APIENTRY DllMain(HINSTANCE hInstance,
 		strcat_s(g_DicPath, "UserDict_");
 		strcat_s(g_DicPath, szInitTick);
 		strcat_s(g_DicPath, ".ehnd");
-
-		// init
-		pFilter = new filter();
-		CreateLogWin(g_hInst);
-		ShowLogWin(true);
-		WriteLog(L"Log Start.\n", RGB(0, 0, 0), RGB(255, 255, 255));
-		g_hInst = hInstance;
-		hook_wc2mb();
-		hook_mb2wc();
-
-		hook();
-		hook_userdict();
-		hook_userdict2();
-
-		WriteLog(L"Hook Success.\n", RGB(0, 0, 0), RGB(255, 255, 255));
-
-		pFilter->pre_load();
-		pFilter->post_load();
-		pFilter->userdic_load();
-		pFilter->skiplayer_load();
-	}
 		break;
 	case DLL_THREAD_ATTACH:
 		break;
@@ -59,4 +39,3 @@ BOOL APIENTRY DllMain(HINSTANCE hInstance,
 	}
 	return TRUE;
 }
-

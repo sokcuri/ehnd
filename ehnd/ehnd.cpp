@@ -7,6 +7,29 @@
 FARPROC apfnEzt[100];
 FARPROC apfnMsv[100];
 
+bool EhndInit(void)
+{
+	// init
+	pFilter = new filter();
+	CreateLogWin(g_hInst);
+	ShowLogWin(true);
+	WriteLog(L"Log Start.\n", RGB(0, 0, 0), RGB(255, 255, 255));
+	hook_wc2mb();
+	hook_mb2wc();
+
+	hook();
+	hook_userdict();
+	hook_userdict2();
+
+	WriteLog(L"Hook Success.\n", RGB(0, 0, 0), RGB(255, 255, 255));
+
+	pFilter->pre_load();
+	pFilter->post_load();
+	pFilter->userdic_load();
+	pFilter->skiplayer_load();
+	return true;
+}
+
 // 이지트랜스 API
 __declspec(naked) void J2K_Initialize(void)
 {
@@ -14,6 +37,7 @@ __declspec(naked) void J2K_Initialize(void)
 }
 void __stdcall J2K_InitializeEx(int data0, LPSTR key)
 {
+	EhndInit();
 	SetLogText(L"J2K_InitializeEx.\n");
 	__asm
 	{

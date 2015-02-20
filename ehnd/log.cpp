@@ -68,7 +68,8 @@ bool CreateLogWin(HINSTANCE hInst)
 	wc.lpszClassName = TEXT("EhndLogWin");
 	wc.style = CS_HREDRAW | CS_VREDRAW;
 
-	if (!RegisterClassEx(&wc)) MessageBox(0, L"log reg failed", 0, 0);
+	RegisterClassEx(&wc);
+	//if (!) MessageBox(0, L"log reg failed", 0, 0);
 
 	hLogWin = CreateWindowEx(0, L"EhndLogWin", L"title", WS_OVERLAPPEDWINDOW, 64, 64, 640, 480, 0, 0, hInst, 0);
 	if (!hLogWin) MessageBox(0, L"log win create failed", 0, 0);
