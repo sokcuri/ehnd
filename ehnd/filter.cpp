@@ -373,8 +373,8 @@ bool filter::skiplayer_load()
 		catch (regex_error ex)
 		{
 			WCHAR lpWhat[255];
-			int len = MultiByteToWideChar(949, MB_PRECOMPOSED, ex.what(), -1, NULL, NULL);
-			MultiByteToWideChar(949, MB_PRECOMPOSED, ex.what(), -1, lpWhat, len);
+			int len = _MultiByteToWideChar(949, MB_PRECOMPOSED, ex.what(), -1, NULL, NULL);
+			_MultiByteToWideChar(949, MB_PRECOMPOSED, ex.what(), -1, lpWhat, len);
 
 			WriteLog(L"SkipLayerRead : 정규식 오류! : [%s:%d] %s | %s | %s\n", L"SkipLayer.txt", line, ss.wtype, ss.wlayer, ss.cond);
 
@@ -474,8 +474,8 @@ bool filter::filter_load(vector<FILTERSTRUCT> &Filter, LPCWSTR lpPath, LPCWSTR l
 			catch (regex_error ex)
 			{
 				WCHAR lpWhat[255];
-				int len = MultiByteToWideChar(949, MB_PRECOMPOSED, ex.what(), -1, NULL, NULL);
-				MultiByteToWideChar(949, MB_PRECOMPOSED, ex.what(), -1, lpWhat, len);
+				int len = _MultiByteToWideChar(949, MB_PRECOMPOSED, ex.what(), -1, NULL, NULL);
+				_MultiByteToWideChar(949, MB_PRECOMPOSED, ex.what(), -1, lpWhat, len);
 
 				if (FilterType == 1) WriteLog(L"PreFilterRead : 정규식 오류! : [%s:%d] %s | %s | %d | %d\n", lpFileName, line, fs.src.c_str(), fs.dest.c_str(), fs.layer, fs.regex);
 				else if (FilterType == 2) WriteLog(L"PostFilterRead : 정규식 오류! : [%s:%d] %s | %s | %d | %d\n", lpFileName, line, fs.src.c_str(), fs.dest.c_str(), fs.layer, fs.regex);
@@ -564,32 +564,32 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 		if (tab < 3) continue;
 		int len;
 
-		if ((len = WideCharToMultiByte(932, 0, Jpn.c_str(), -1, NULL, NULL, NULL, NULL)) > 31)
+		if ((len = _WideCharToMultiByte(932, 0, Jpn.c_str(), -1, NULL, NULL, NULL, NULL)) > 31)
 		{
 			WriteLog(L"UserDicRead : 오류 : 원문 단어의 길이는 15자(30Byte)를 초과할 수 없습니다.\n");
 			WriteLog(L"UserDicRead : 오류 : [%s:%d] : <<%s>> | %s | %s | %s\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
 		}
-		WideCharToMultiByte(932, 0, Jpn.c_str(), -1, szBuffer, len, NULL, NULL);
+		_WideCharToMultiByte(932, 0, Jpn.c_str(), -1, szBuffer, len, NULL, NULL);
 		strcpy_s(us.jpn, szBuffer);
 
-		if ((len = WideCharToMultiByte(949, 0, Kor.c_str(), -1, NULL, NULL, NULL, NULL)) > 31)
+		if ((len = _WideCharToMultiByte(949, 0, Kor.c_str(), -1, NULL, NULL, NULL, NULL)) > 31)
 		{
 			WriteLog(L"UserDicRead : 오류 : 역문 단어의 길이는 15자(30Byte)를 초과할 수 없습니다.\n");
 			WriteLog(L"UserDicRead : 오류 : [%s:%d] : %s | <<%s>> | %s | %s\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
 		}
-		WideCharToMultiByte(949, 0, Kor.c_str(), -1, szBuffer, len, NULL, NULL);
+		_WideCharToMultiByte(949, 0, Kor.c_str(), -1, szBuffer, len, NULL, NULL);
 		strcpy_s(us.kor, szBuffer);
 
-		if ((len = WideCharToMultiByte(932, 0, Attr.c_str(), -1, NULL, NULL, NULL, NULL)) > 31)
+		if ((len = _WideCharToMultiByte(932, 0, Attr.c_str(), -1, NULL, NULL, NULL, NULL)) > 31)
 		{
 			WriteLog(L"UserDicRead : 오류 :  단어 속성은 42Byte를 초과할 수 없습니다.\n");
 			WriteLog(L"UserDicRead : 오류 : [%s:%d] : %s | %s | %s | <<%s>>\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
 		}
-		WideCharToMultiByte(932, 0, Attr.c_str(), -1, szBuffer, len, NULL, NULL);
+		_WideCharToMultiByte(932, 0, Attr.c_str(), -1, szBuffer, len, NULL, NULL);
 		strcpy_s(us.attr, szBuffer);
 
-		len = WideCharToMultiByte(932, 0, Part.c_str(), -1, NULL, NULL, NULL, NULL);
-		WideCharToMultiByte(932, 0, Part.c_str(), -1, szBuffer, len, NULL, NULL);
+		len = _WideCharToMultiByte(932, 0, Part.c_str(), -1, NULL, NULL, NULL, NULL);
+		_WideCharToMultiByte(932, 0, Part.c_str(), -1, szBuffer, len, NULL, NULL);
 		strcpy_s(us.part, szBuffer);
 
 		vaild_line++;
@@ -662,8 +662,8 @@ bool filter::filter_proc(vector<FILTERSTRUCT> &Filter, const int FilterType, wst
 					catch (regex_error ex)
 					{
 						WCHAR lpWhat[255];
-						int len = MultiByteToWideChar(949, MB_PRECOMPOSED, ex.what(), -1, NULL, NULL);
-						MultiByteToWideChar(949, MB_PRECOMPOSED, ex.what(), -1, lpWhat, len);
+						int len = _MultiByteToWideChar(949, MB_PRECOMPOSED, ex.what(), -1, NULL, NULL);
+						_MultiByteToWideChar(949, MB_PRECOMPOSED, ex.what(), -1, lpWhat, len);
 
 						WriteLog(L"SkipLayerRead : 정규식 오류! : [%s:%d] %s | %d | %s\n", L"SkipLayer.txt", SkipLayer[i].line, SkipLayer[i].wtype.c_str(), SkipLayer[i].layer, SkipLayer[i].cond.c_str());
 						continue;
@@ -701,8 +701,8 @@ bool filter::filter_proc(vector<FILTERSTRUCT> &Filter, const int FilterType, wst
 			catch (regex_error ex)
 			{
 				WCHAR lpWhat[255];
-				int len = MultiByteToWideChar(949, MB_PRECOMPOSED, ex.what(), -1, NULL, NULL);
-				MultiByteToWideChar(949, MB_PRECOMPOSED, ex.what(), -1, lpWhat, len);
+				int len = _MultiByteToWideChar(949, MB_PRECOMPOSED, ex.what(), -1, NULL, NULL);
+				_MultiByteToWideChar(949, MB_PRECOMPOSED, ex.what(), -1, lpWhat, len);
 
 				if (FilterType == PREFILTER) WriteLog(L"PreFilter : 정규식 오류! : [%s:%d] %s | %s | %d | %d\n", Filter[i].db.c_str(), Filter[i].line, Filter[i].src.c_str(), Filter[i].dest.c_str(), Filter[i].layer, Filter[i].regex);
 				else if (FilterType == POSTFILTER) WriteLog(L"PostFilter : 정규식 오류! : [%s:%d] %s | %s | %d | %d\n", Filter[i].db.c_str(), Filter[i].line, Filter[i].src.c_str(), Filter[i].dest.c_str(), Filter[i].layer, Filter[i].regex);

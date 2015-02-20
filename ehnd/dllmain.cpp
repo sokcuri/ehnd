@@ -33,11 +33,14 @@ BOOL APIENTRY DllMain(HINSTANCE hInstance,
 		ShowLogWin(true);
 		WriteLog(L"Log Start.\n", RGB(0, 0, 0), RGB(255, 255, 255));
 		g_hInst = hInstance;
-		hook();
+		hook_wc2mb();
+		hook_mb2wc();
 
-		WriteLog(L"Hook Success.\n", RGB(0, 0, 0), RGB(255, 255, 255));
+		hook();
 		hook_userdict();
 		hook_userdict2();
+
+		WriteLog(L"Hook Success.\n", RGB(0, 0, 0), RGB(255, 255, 255));
 
 		pFilter->pre_load();
 		pFilter->post_load();

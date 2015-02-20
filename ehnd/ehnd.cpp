@@ -105,14 +105,14 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 	int i_len;
 	LPWSTR lpJPN, lpKOR;
 	LPSTR szJPN, szKOR;
-	i_len = MultiByteToWideChar(932, MB_PRECOMPOSED, szIn, -1, NULL, NULL);
+	i_len = _MultiByteToWideChar(932, MB_PRECOMPOSED, szIn, -1, NULL, NULL);
 	lpJPN = (LPWSTR)msvcrt_malloc((i_len + 1) * 3);
 	if (lpJPN == NULL)
 	{
 		SetLogText(L"memory allocation error.\n");
 		return 0;
 	}
-	MultiByteToWideChar(932, 0, szIn, -1, lpJPN, i_len);
+	_MultiByteToWideChar(932, 0, szIn, -1, lpJPN, i_len);
 
 	wsOriginal = lpJPN;
 	wsText = lpJPN;
@@ -136,14 +136,14 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 		wsLog = replace_all(wsText, L"%", L"%%");
 		WriteLog(L"[PRE] %s\n\n", wsLog.c_str());
 
-		i_len = WideCharToMultiByte(932, 0, wsText.c_str(), -1, NULL, NULL, NULL, NULL);
+		i_len = _WideCharToMultiByte(932, 0, wsText.c_str(), -1, NULL, NULL, NULL, NULL);
 		szJPN = (LPSTR)msvcrt_malloc((i_len + 1) * 3);
 		if (szJPN == NULL)
 		{
 			SetLogText(L"memory allocation error.\n");
 			return 0;
 		}
-		WideCharToMultiByte(932, 0, wsText.c_str(), -1, szJPN, i_len, NULL, NULL);
+		_WideCharToMultiByte(932, 0, wsText.c_str(), -1, szJPN, i_len, NULL, NULL);
 
 		__asm
 		{
@@ -155,14 +155,14 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 
 		msvcrt_free(szJPN);
 
-		i_len = MultiByteToWideChar(949, MB_PRECOMPOSED, szKOR, -1, NULL, NULL);
+		i_len = _MultiByteToWideChar(949, MB_PRECOMPOSED, szKOR, -1, NULL, NULL);
 		lpKOR = (LPWSTR)msvcrt_malloc((i_len + 1) * 3);
 		if (lpKOR == NULL)
 		{
 			SetLogText(L"memory allocation error.\n");
 			return 0;
 		}
-		MultiByteToWideChar(949, 0, szKOR, -1, lpKOR, i_len);
+		_MultiByteToWideChar(949, 0, szKOR, -1, lpKOR, i_len);
 
 		wsText = lpKOR;
 		msvcrt_free(szKOR);
@@ -183,14 +183,14 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 		WriteTextLog(L"%s\r\n", wsLog.c_str());
 	}
 
-	i_len = WideCharToMultiByte(949, 0, wsText.c_str(), -1, NULL, NULL, NULL, NULL);
+	i_len = _WideCharToMultiByte(949, 0, wsText.c_str(), -1, NULL, NULL, NULL, NULL);
 	szOut = (LPSTR)msvcrt_malloc((i_len + 1) * 3);
 	if (szOut == NULL)
 	{
 		SetLogText(L"memory allocation error.\n");
 		return 0;
 	}
-	WideCharToMultiByte(949, 0, wsText.c_str(), -1, szOut, i_len, NULL, NULL);
+	_WideCharToMultiByte(949, 0, wsText.c_str(), -1, szOut, i_len, NULL, NULL);
 	return (void *)szOut;
 }
 __declspec(naked) void J2K_GetJ2KMainDir(void)

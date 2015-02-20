@@ -37,7 +37,7 @@ void WriteTextLog(const wchar_t *format, ...)
 {
 	va_list valist;
 	FILE *fp = NULL;
-	wchar_t lpBuffer[1024], lpTime[64];
+	wchar_t lpBuffer[1024];
 
 	const char* szFileName = ".\\ehnd_text.log";
 	if (fopen_s(&fp, szFileName, "a+t,ccs=UTF-8")) return;

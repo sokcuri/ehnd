@@ -39,6 +39,8 @@ extern bool g_PostUsable;
 
 extern LPBYTE lpfnRetn;
 extern LPBYTE lpfnfopen;
+extern LPBYTE lpfnwc2mb;
+extern LPBYTE lpfnmb2wc;
 extern HMODULE hEzt, hMsv;
 
 #ifdef _UNICODE

@@ -3,6 +3,7 @@
 #include "ehnd.h"
 
 LPBYTE lpfnRetn, lpfnfopen;
+LPBYTE lpfnwc2mb, lpfnmb2wc;
 
 bool hook()
 {
@@ -254,12 +255,60 @@ bool hook_userdict2(void)
 
 void hook_wc2mb(void)
 {
+	HMODULE hDll = GetModuleHandle(L"kernel32.dll");
+	lpfnwc2mb = (LPBYTE)GetProcAddress(hDll, "WideCharToMultiByte");
+	WriteLog(L"hook_wc2mb : %08X\n", lpfnwc2mb);
+
+	for (int i = 0; i < 0x10; i++)
+	{
+		if (*(lpfnwc2mb + i) == 0xFF && *(lpfnwc2mb + i + 1) == 0x25)
+		{
+			WriteLog(L"_wc2mb : %08X\n", lpfnwc2mb + i);
+			lpfnwc2mb += i;
+			break;
+		}
+	}
 
 }
 
 void hook_mb2wc(void)
 {
+	HMODULE hDll = GetModuleHandle(L"kernel32.dll");
+	lpfnmb2wc = (LPBYTE)GetProcAddress(hDll, "MultiByteToWideChar");
+	WriteLog(L"hook_mb2wc : %08X\n", lpfnmb2wc);
 
+	for (int i = 0; i < 0x10; i++)
+	{
+		if (*(lpfnmb2wc + i) == 0xFF && *(lpfnmb2wc + i + 1) == 0x25)
+		{
+			WriteLog(L"_mb2wc : %08X\n", lpfnmb2wc + i);
+			lpfnmb2wc += i;
+			break;
+		}
+	}
+
+}
+
+__declspec(naked) int __stdcall _WideCharToMultiByte(UINT a, DWORD b, LPCWSTR c, int d, LPSTR e, int f, LPCSTR g, LPBOOL h)
+{
+	__asm
+	{
+		PUSH EBP
+		MOV EBP, ESP
+		POP EBP
+		JMP lpfnwc2mb
+	}
+}
+
+__declspec(naked) int __stdcall _MultiByteToWideChar(UINT a, DWORD b, LPCSTR c, int d, LPWSTR e, int f)
+{
+	__asm
+	{
+		PUSH EBP
+		MOV EBP, ESP
+		POP EBP
+		JMP lpfnmb2wc
+	}
 }
 
 void *fopen_patch(char *path, char *mode)
