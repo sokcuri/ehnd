@@ -69,14 +69,15 @@ bool filter::pre_load()
 
 	// 정렬
 	sort(Filter.begin(), Filter.end());
-	WriteLog(NORMAL_LOG, L"PreFilterRead : 필터 정렬을 완료했습니다.\n");
+	//WriteLog(NORMAL_LOG, L"PreFilterRead : 필터 정렬을 완료했습니다.\n");
 
 	// 필터 대체
 	PreFilter = Filter;
 	WriteLog(NORMAL_LOG, L"PreFilterRead : 총 %d개의 전처리 필터를 읽었습니다.\n", PreFilter.size());
 
 	// 소요시간 계산
-	dwEnd = GetTickCount(); WriteLog(TIME_LOG, L"PreFilterRead : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
+	dwEnd = GetTickCount();
+	WriteLog(TIME_LOG, L"PreFilterRead : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
 	return true;
 }
 
@@ -120,7 +121,7 @@ bool filter::post_load()
 
 	// 정렬
 	sort(Filter.begin(), Filter.end());
-	WriteLog(NORMAL_LOG, L"PostFilterRead : 필터 정렬을 완료했습니다.\n");
+	//WriteLog(NORMAL_LOG, L"PostFilterRead : 필터 정렬을 완료했습니다.\n");
 
 	// 필터 대체
 	PostFilter = Filter;
@@ -167,7 +168,7 @@ bool filter::skiplayer_load()
 
 	// 정렬
 	sort(_SkipLayer.begin(), _SkipLayer.end());
-	WriteLog(NORMAL_LOG, L"SkipLayerRead : 스킵레이어 정렬을 완료했습니다.\n");
+	//WriteLog(NORMAL_LOG, L"SkipLayerRead : 스킵레이어 정렬을 완료했습니다.\n");
 
 	// 스킵레이어 대체
 	SkipLayer = _SkipLayer;
@@ -213,7 +214,7 @@ bool filter::userdic_load()
 
 	// 정렬
 	sort(UserDic.begin(), UserDic.end());
-	WriteLog(NORMAL_LOG, L"UserDicRead : 사용자 사전 정렬을 완료했습니다.\n");
+	//WriteLog(NORMAL_LOG, L"UserDicRead : 사용자 사전 정렬을 완료했습니다.\n");
 
 	// 소요시간 계산
 	dwEnd = GetTickCount();
@@ -266,7 +267,7 @@ bool filter::userdic_anedic_load()
 
 	// 정렬
 	sort(UserDic.begin(), UserDic.end());
-	WriteLog(NORMAL_LOG, L"UserDicRead : 사용자 사전 정렬을 완료했습니다.\n");
+	//WriteLog(NORMAL_LOG, L"UserDicRead : 사용자 사전 정렬을 완료했습니다.\n");
 
 	// 소요시간 계산
 	dwEnd = GetTickCount();
@@ -387,7 +388,7 @@ bool filter::ehnddic_cleanup()
 
 	// 소요시간 계산
 	dwEnd = GetTickCount();
-	WriteLog(TIME_LOG, L"EhndDicCleanup : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
+	WriteLog(TIME_LOG, L"EhndDicCleanUp : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
 
 	return true;
 }
@@ -418,7 +419,7 @@ bool filter::ehnddic_create()
 		fwrite(&UserDic[i].part, sizeof(char), 5, fp);
 		fwrite(&UserDic[i].attr, sizeof(char), 42, fp);
 	}
-	WriteLog(NORMAL_LOG, L"EhndDicCreate : 사용자사전 바이너리 \"UserDict_%s.ehnd\" 생성 완료.\n", lpText);
+	WriteLog(NORMAL_LOG, L"EhndDicCreate : 사용자사전 바이너리 \"UserDict_%s.ehnd\" 생성.\n", lpText);
 	fclose(fp);
 
 	// 소요시간 계산
@@ -442,7 +443,7 @@ bool filter::skiplayer_load2(vector<SKIPLAYERSTRUCT> &SkipLayer, LPCWSTR lpPath,
 		WriteLog(NORMAL_LOG, L"SkipLayerRead : 스킵레이어 %s 로드 실패.\n", lpFileName);
 		return false;
 	}
-	WriteLog(NORMAL_LOG, L"SkipLayerRead : 스킵레이어 %s 로드.\n", lpFileName);
+	//WriteLog(NORMAL_LOG, L"SkipLayerRead : 스킵레이어 %s 로드.\n", lpFileName);
 	
 	for (int line = 0; fgetws(Buffer, 1000, fp) != NULL; line++, g_line++)
 	{
@@ -526,11 +527,12 @@ bool filter::filter_load(vector<FILTERSTRUCT> &Filter, LPCWSTR lpPath, LPCWSTR l
 		return false;
 	}
 
+	/*
 	if (FilterType == PREFILTER && IsUnicode) WriteLog(NORMAL_LOG, L"PreFilterRead : 전처리 유니코드 전용 필터 \"%s\" 로드.\n", lpFileName);
 	if (FilterType == PREFILTER && !IsUnicode) WriteLog(NORMAL_LOG, L"PreFilterRead : 전처리 필터 \"%s\" 로드.\n", lpFileName);
 	else if (FilterType == POSTFILTER && IsUnicode) WriteLog(NORMAL_LOG, L"PostFilterRead : 후처리 유니코드 전용 필터 \"%s\" 로드.\n", lpFileName);
 	else if (FilterType == POSTFILTER && !IsUnicode) WriteLog(NORMAL_LOG, L"PostFilterRead : 후처리 필터 \"%s\" 로드.\n", lpFileName);
-
+	*/
 	for (int line = 0; fgetws(Buffer, 1000, fp) != NULL; line++, g_line++)
 	{
 		if (Buffer[0] == L'/' && Buffer[1] == L'/') continue;	// 주석
@@ -624,7 +626,7 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 		return false;
 	}
 
-	WriteLog(NORMAL_LOG, L"UserDicRead : 사용자 사전 \"%s\" 로드.\n", lpFileName);
+	//WriteLog(NORMAL_LOG, L"UserDicRead : 사용자 사전 \"%s\" 로드.\n", lpFileName);
 
 	for (int line = 0; fgetws(Buffer, 1000, fp) != NULL; line++, g_line++)
 	{
@@ -730,7 +732,6 @@ bool filter::anedic_load()
 	HWND hwnd;
 	DWORD pid;
 	hwnd = FindWindow(L"AneParentClass", NULL);
-	WriteLog(NORMAL_LOG, L"AneParentClass: %d\n", hwnd);
 	if (hwnd)
 	{
 		GetWindowThreadProcessId(hwnd, &pid);
@@ -757,7 +758,7 @@ bool filter::anedic_load()
 		return false;
 	}
 
-	WriteLog(NORMAL_LOG, L"UserDicRead : 사용자 사전 \"%s\" 로드.\n", lpFileName);
+	//WriteLog(NORMAL_LOG, L"UserDicRead : 사용자 사전 \"%s\" 로드.\n", lpFileName);
 
 	for (int line = 0; fgetws(Buffer, 1000, fp) != NULL; line++)
 	{
