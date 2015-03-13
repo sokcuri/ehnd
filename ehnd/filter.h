@@ -26,9 +26,11 @@ struct SKIPLAYERSTRUCT
 	wstring wtype;
 	int type;
 	int layer;
+	int g_line;
 	int line;
 	wstring wlayer;
 	wstring cond;
+	int operator<(SKIPLAYERSTRUCT ss) { return (layer) < (ss.layer) || ((layer) == (ss.layer) && (g_line < ss.g_line)); }
 };
 class filter
 {
@@ -37,18 +39,23 @@ public:
 	~filter();
 
 	bool load();
+	bool load_dic();
+
 	bool pre_load();
 	bool post_load();
 	bool userdic_load();
+	bool userdic_anedic_load();
 	bool jkdic_load();
+	bool skiplayer_load();
 	bool ehnddic_cleanup();
 	bool ehnddic_create();
-	bool skiplayer_load();
+	bool anedic_load();
 	bool pre(wstring &wsText);
 	bool post(wstring &wsText);
 	bool cmd(wstring &wsText);
 
 private:
+	bool skiplayer_load2(vector<SKIPLAYERSTRUCT> &SkipLayer, LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line);
 	bool filter_load(vector<FILTERSTRUCT> &Filter, LPCWSTR lpPath, LPCWSTR lpFileName, int FilterType, bool IsUnicode, int &g_line);
 	bool userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line);
 	bool filter_proc(vector<FILTERSTRUCT> &Filter, const int FilterType, wstring &wsText);

@@ -11,6 +11,7 @@ bool EhndInit(void)
 {
 	// init
 	pFilter = new filter();
+	pWatch = new watch();
 	CreateLogWin(g_hInst);
 	ShowLogWin(true);
 	hook_wc2mb();
@@ -31,7 +32,7 @@ __declspec(naked) void J2K_Initialize(void)
 {
 	__asm JMP apfnEzt[4 * 0];
 }
-void __stdcall J2K_InitializeEx(int data0, LPSTR key)
+int __stdcall J2K_InitializeEx(int data0, LPSTR key)
 {
 	EhndInit();
 	SetLogText(L"J2K_InitializeEx.\n");
@@ -41,6 +42,7 @@ void __stdcall J2K_InitializeEx(int data0, LPSTR key)
 		PUSH data0
 		CALL apfnEzt[4 * 1]
 	}
+	return g_initTick;
 }
 __declspec(naked) void J2K_FreeMem(void)
 {
@@ -56,9 +58,13 @@ __declspec(naked) void J2K_GetProperty(void)
 }
 void __stdcall J2K_ReloadUserDict(void)
 {
-	pFilter->load();
+	pFilter->load_dic();
 	__asm CALL apfnEzt[4 * 5];
 	return;
+}
+__declspec(naked) void J2K_ReloadUserDict2(void)
+{
+	__asm JMP apfnEzt[4 * 5];
 }
 __declspec(naked) void J2K_SetDelJPN(void)
 {
@@ -223,6 +229,22 @@ __declspec(naked) void J2K_GetJ2KMainDir(void)
 bool GetLoadPath(LPWSTR Path, int Size)
 {
 	GetModuleFileName(g_hInst, Path, Size);
+	if (Path[0] == 0) return false;
+	int i = wcslen(Path);
+	while (i--)
+	{
+		if (Path[i] == L'\\')
+		{
+			Path[i] = 0;
+			break;
+		}
+	}
+	return true;
+}
+
+bool GetExecutePath(LPWSTR Path, int Size)
+{
+	GetModuleFileName(GetModuleHandle(NULL), Path, Size);
 	if (Path[0] == 0) return false;
 	int i = wcslen(Path);
 	while (i--)

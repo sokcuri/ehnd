@@ -11,11 +11,12 @@
 extern "C"
 {
 	EHND_EXPORT void J2K_Initialize(void);
-	EHND_EXPORT void __stdcall J2K_InitializeEx(int data0, LPSTR key);
+	EHND_EXPORT int __stdcall J2K_InitializeEx(int data0, LPSTR key);
 	EHND_EXPORT void J2K_FreeMem(void);
 	EHND_EXPORT void J2K_GetPriorDict(void);
 	EHND_EXPORT void J2K_GetProperty(void);
 	EHND_EXPORT void __stdcall J2K_ReloadUserDict(void);
+	EHND_EXPORT void J2K_ReloadUserDict2(void);
 	EHND_EXPORT void J2K_SetDelJPN(void);
 	EHND_EXPORT void J2K_SetField(void);
 	EHND_EXPORT void J2K_SetHnj2han(void);
@@ -39,4 +40,5 @@ extern FARPROC apfnEzt[100];
 extern FARPROC apfnMsv[100];
 bool EhndInit();
 bool GetLoadPath(LPWSTR Path, int Size);
+bool GetExecutePath(LPWSTR Path, int Size);
 wstring replace_all(const wstring &str, const wstring &pattern, const wstring &replace);

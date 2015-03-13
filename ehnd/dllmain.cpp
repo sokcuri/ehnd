@@ -2,6 +2,7 @@
 #include "stdafx.h"
 HINSTANCE g_hInst;
 filter *pFilter;
+watch *pWatch;
 HMODULE hEzt, hMsv;
 int g_initTick;
 char g_DicPath[MAX_PATH];

@@ -14,9 +14,17 @@ filter::~filter()
 
 bool filter::load()
 {
-	WaitForSingleObject(hLoadEvent, INFINITE);
+	if (WaitForSingleObject(hLoadEvent, 1000) == WAIT_TIMEOUT) return false;
 	if (!pre_load() || !post_load() ||
 		!userdic_load() || skiplayer_load()) return false;
+	SetEvent(hLoadEvent);
+	return true;
+}
+
+bool filter::load_dic()
+{
+	if (WaitForSingleObject(hLoadEvent, 1000) == WAIT_TIMEOUT) return false;
+	if (!userdic_load()) return false;
 	SetEvent(hLoadEvent);
 	return true;
 }
@@ -65,7 +73,7 @@ bool filter::pre_load()
 
 	// 필터 대체
 	PreFilter = Filter;
-	WriteLog(L"총 %d개의 전처리 필터가 있습니다.\n", PreFilter.size());
+	WriteLog(L"PreFilterRead : 총 %d개의 전처리 필터를 읽었습니다.\n", PreFilter.size());
 
 	// 소요시간 계산
 	dwEnd = GetTickCount(); WriteLog(L"PreFilterRead : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
@@ -116,7 +124,7 @@ bool filter::post_load()
 
 	// 필터 대체
 	PostFilter = Filter;
-	WriteLog(L"총 %d개의 후처리 필터가 있습니다.\n", PostFilter.size());
+	WriteLog(L"PostFilterRead : 총 %d개의 후처리 필터를 읽었습니다.\n", PostFilter.size());
 
 	// 소요시간 계산
 	dwEnd = GetTickCount();
@@ -124,6 +132,52 @@ bool filter::post_load()
 	return true;
 }
 
+bool filter::skiplayer_load()
+{
+	WCHAR lpEztPath[MAX_PATH];
+	WIN32_FIND_DATA FindFileData;
+	FILTERSTRUCT fs;
+	wstring Path;
+
+	DWORD dwStart, dwEnd;
+	dwStart = GetTickCount();
+
+	GetLoadPath(lpEztPath, MAX_PATH);
+	Path = lpEztPath;
+	Path += L"\\Ehnd\\SkipLayer*.txt";
+
+	int skiplayer_line = 0;
+
+	vector<SKIPLAYERSTRUCT> _SkipLayer;
+
+	HANDLE hFind = FindFirstFile(Path.c_str(), &FindFileData);
+
+	do
+	{
+		if (hFind == INVALID_HANDLE_VALUE) break;
+		else if (FindFileData.dwFileAttributes == FILE_ATTRIBUTE_DIRECTORY)
+			continue;
+
+		Path = lpEztPath;
+		Path += L"\\Ehnd\\";
+
+		skiplayer_load2(_SkipLayer, Path.c_str(), FindFileData.cFileName, skiplayer_line);
+
+	} while (FindNextFile(hFind, &FindFileData));
+
+	// 정렬
+	sort(_SkipLayer.begin(), _SkipLayer.end());
+	WriteLog(L"SkipLayerRead : 스킵레이어 정렬을 완료했습니다.\n");
+
+	// 스킵레이어 대체
+	SkipLayer = _SkipLayer;
+	WriteLog(L"SkipLayerRead : 총 %d개의 스킵레이어를 읽었습니다.\n", SkipLayer.size());
+
+	// 소요시간 계산
+	dwEnd = GetTickCount();
+	WriteLog(L"SkipLayerRead : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
+	return true;
+}
 bool filter::userdic_load()
 {
 	WCHAR lpEztPath[MAX_PATH];
@@ -143,6 +197,59 @@ bool filter::userdic_load()
 	// load userdict.jk
 	bool use_jkdic = true;
 	if (use_jkdic) jkdic_load();
+	HANDLE hFind = FindFirstFile(Path.c_str(), &FindFileData);
+
+	do
+	{
+		if (hFind == INVALID_HANDLE_VALUE) break;
+		else if (FindFileData.dwFileAttributes == FILE_ATTRIBUTE_DIRECTORY)
+			continue;
+
+		Path = lpEztPath;
+		Path += L"\\Ehnd\\";
+
+		userdic_load2(Path.c_str(), FindFileData.cFileName, userdic_line);
+
+	} while (FindNextFile(hFind, &FindFileData));
+
+	// 정렬
+	sort(UserDic.begin(), UserDic.end());
+	WriteLog(L"UserDicRead : 사용자 사전 정렬을 완료했습니다.\n");
+
+	// 소요시간 계산
+	dwEnd = GetTickCount();
+	WriteLog(L"UserDicRead : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
+
+	// 엔드 임시파일 삭제
+	ehnddic_cleanup();
+
+	// 엔드 임시파일 생성
+	ehnddic_create();
+
+	return true;
+}
+
+bool filter::userdic_anedic_load()
+{
+	WCHAR lpEztPath[MAX_PATH];
+	WIN32_FIND_DATA FindFileData;
+	wstring Path;
+
+	DWORD dwStart, dwEnd;
+	dwStart = GetTickCount();
+
+	GetLoadPath(lpEztPath, MAX_PATH);
+	Path = lpEztPath;
+	Path += L"\\Ehnd\\UserDict*.txt";
+
+	int userdic_line = 0;
+	UserDic.clear();
+
+	// load userdict.jk
+	bool use_jkdic = true;
+	if (use_jkdic) jkdic_load();
+	anedic_load();
+
 	HANDLE hFind = FindFirstFile(Path.c_str(), &FindFileData);
 
 	do
@@ -321,31 +428,24 @@ bool filter::ehnddic_create()
 	return true;
 }
 
-bool filter::skiplayer_load()
+bool filter::skiplayer_load2(vector<SKIPLAYERSTRUCT> &SkipLayer, LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 {
-	WCHAR lpEztPath[MAX_PATH], Buffer[1024], Context[1024];
-	wstring Path;
+	WCHAR Buffer[1024], Context[1024];
 	FILE *fp;
 
-	DWORD dwStart, dwEnd;
-	dwStart = GetTickCount();
-
-	GetLoadPath(lpEztPath, MAX_PATH);
-	Path = lpEztPath;
-	Path += L"\\Ehnd\\SkipLayer.txt";
-
+	wstring Path;
+	Path = lpPath;
+	Path += lpFileName;
 	int vaild_line = 0;
-
-	SkipLayer.clear();
 
 	if (_wfopen_s(&fp, Path.c_str(), L"rt,ccs=UTF-8") != 0)
 	{
-		WriteLog(L"[SkipLayerRead] 스킵레이어 로드 실패.\n");
+		WriteLog(L"SkipLayerRead : 스킵레이어 %s 로드 실패.\n", lpFileName);
 		return false;
 	}
-	WriteLog(L"SkipLayerRead : SkipLayer 로드.\n");
+	WriteLog(L"SkipLayerRead : 스킵레이어 %s 로드.\n", lpFileName);
 	
-	for (int line = 0; fgetws(Buffer, 1000, fp) != NULL; line++)
+	for (int line = 0; fgetws(Buffer, 1000, fp) != NULL; line++, g_line++)
 	{
 		int tab = 0;
 		if (Buffer[0] == L'/' && Buffer[1] == L'/') continue;
@@ -404,11 +504,7 @@ bool filter::skiplayer_load()
 		SkipLayer.push_back(ss);
 	}
 	fclose(fp);
-	WriteLog(L"SkipLayerRead : %d개의 스킵레이어를 읽었습니다.\n", vaild_line);
-
-	// 소요시간 계산
-	dwEnd = GetTickCount();
-	WriteLog(L"SkipLayerRead : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
+	WriteLog(L"SkipLayerRead : %d개의 스킵레이어 %s를 읽었습니다.\n", vaild_line, lpFileName);
 	return true;
 }
 
@@ -619,6 +715,115 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 	fclose(fp);
 	return true;
 }
+
+bool filter::anedic_load()
+{
+	WCHAR lpFileName[MAX_PATH];
+	FILE *fp;
+	WCHAR Buffer[1024], Context[1024];
+	char szBuffer[128];
+	wstring Path, Jpn, Kor, Part, Attr;
+	int vaild_line = 0;
+	GetExecutePath(lpFileName, MAX_PATH);
+	wcscat_s(lpFileName, L"\\anedic.txt");
+
+	if (_wfopen_s(&fp, Path.c_str(), L"rt,ccs=UTF-8") != 0)
+	{
+		WriteLog(L"UserDicRead : 사용자 사전 '%s' 로드 실패!\n", lpFileName);
+		return false;
+	}
+
+	WriteLog(L"UserDicRead : 사용자 사전 \"%s\" 로드.\n", lpFileName);
+
+	for (int line = 0; fgetws(Buffer, 1000, fp) != NULL; line++)
+	{
+		if (Buffer[0] == L'/' && Buffer[1] == L'/') continue;	// 주석
+
+		USERDICSTRUCT us;
+		us.hidden = 0x00;
+		memset(us.jpn, 0, sizeof(us.jpn));
+		memset(us.kor, 0, sizeof(us.kor));
+		memset(us.part, 0, sizeof(us.part));
+		memset(us.attr, 0, sizeof(us.attr));
+
+		int tab = 0;
+		for (UINT i = 0, prev = 0; i <= wcslen(Buffer); i++)
+		{
+			if (Buffer[i] == L'\t' || Buffer[i] == L'\n' || (Buffer[i] == L'/' && Buffer[i - 1] == L'/') || i == wcslen(Buffer))
+			{
+				switch (tab)
+				{
+				case 0:
+					wcsncpy_s(Context, Buffer + prev, i - prev);
+					prev = i + 1;
+					tab++;
+					Jpn = Context;
+					break;
+				case 1:
+					wcsncpy_s(Context, Buffer + prev, i - prev);
+					prev = i + 1;
+					tab++;
+					Kor = Context;
+					break;
+				case 2:
+					wcsncpy_s(Context, Buffer + prev, i - prev);
+					prev = i + 1;
+					tab++;
+					if (_wtoi(Context))
+						Part = L"I110";
+					else
+						Part = L"A9D0";
+					break;
+				case 3:
+					wcsncpy_s(Context, Buffer + prev, i - prev);
+					prev = i + 1;
+					tab++;
+					Attr = Context;
+					break;
+				}
+				if (Buffer[i] == L'/' && Buffer[i - 1] == L'/') break;
+			}
+		}
+
+		if (tab < 3) continue;
+		int len;
+
+		if ((len = _WideCharToMultiByte(932, 0, Jpn.c_str(), -1, NULL, NULL, NULL, NULL)) > 31)
+		{
+			WriteLog(L"UserDicRead : 오류 : 원문 단어의 길이는 15자(30Byte)를 초과할 수 없습니다.\n");
+			WriteLog(L"UserDicRead : 오류 : [%s:%d] : <<%s>> | %s | %s | %s\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
+		}
+		_WideCharToMultiByte(932, 0, Jpn.c_str(), -1, szBuffer, len, NULL, NULL);
+		strcpy_s(us.jpn, szBuffer);
+
+		if ((len = _WideCharToMultiByte(949, 0, Kor.c_str(), -1, NULL, NULL, NULL, NULL)) > 31)
+		{
+			WriteLog(L"UserDicRead : 오류 : 역문 단어의 길이는 15자(30Byte)를 초과할 수 없습니다.\n");
+			WriteLog(L"UserDicRead : 오류 : [%s:%d] : %s | <<%s>> | %s | %s\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
+		}
+		_WideCharToMultiByte(949, 0, Kor.c_str(), -1, szBuffer, len, NULL, NULL);
+		strcpy_s(us.kor, szBuffer);
+
+		if ((len = _WideCharToMultiByte(932, 0, Attr.c_str(), -1, NULL, NULL, NULL, NULL)) > 31)
+		{
+			WriteLog(L"UserDicRead : 오류 :  단어 속성은 42Byte를 초과할 수 없습니다.\n");
+			WriteLog(L"UserDicRead : 오류 : [%s:%d] : %s | %s | %s | <<%s>>\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
+		}
+		_WideCharToMultiByte(932, 0, Attr.c_str(), -1, szBuffer, len, NULL, NULL);
+		strcpy_s(us.attr, szBuffer);
+
+		len = _WideCharToMultiByte(932, 0, Part.c_str(), -1, NULL, NULL, NULL, NULL);
+		_WideCharToMultiByte(932, 0, Part.c_str(), -1, szBuffer, len, NULL, NULL);
+		strcpy_s(us.part, szBuffer);
+
+		vaild_line++;
+		UserDic.push_back(us);
+	}
+	WriteLog(L"UserDictRead : %d개의 사용자 사전 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
+	fclose(fp);
+	return true;
+}
+
 bool filter::pre(wstring &wsText)
 {
 	if (g_PreUsable == false)

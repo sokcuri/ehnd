@@ -7,7 +7,6 @@
 
 #include "targetver.h"
 #define EHND_VER "V3.00.150219"
-#define WIN32_LEAN_AND_MEAN             // 거의 사용되지 않는 내용은 Windows 헤더에서 제외합니다.
 // Windows 헤더 파일:
 #include <windows.h>
 #include <WinBase.h>
@@ -29,9 +28,11 @@ using namespace std;
 #include "hook.h"
 #include "log.h"
 #include "filter.h"
+#include "watch.h"
 
 extern HINSTANCE g_hInst;
 extern filter *pFilter;
+extern watch *pWatch;
 extern int g_initTick;
 extern char g_DicPath[MAX_PATH];
 extern bool g_PreUsable;
