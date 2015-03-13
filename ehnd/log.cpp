@@ -35,6 +35,7 @@ void WriteLog(int LogType, const wchar_t *format, ...)
 		wcscpy_s(lpBuffer + 1000, 1024, L"...\r\n");
 
 	if (IsShownLogWin()) SetLogText(lpBuffer);
+	if (IsFileLog) fwprintf_s(fp, lpBuffer);
 
 	va_end(valist);
 
@@ -147,7 +148,6 @@ void SetLogText(LPCWSTR Text)
 	SetLogText(Text, RGB(0, 0, 0), RGB(255, 255, 255));
 }
 
-
 void SetLogText(LPCWSTR Text, COLORREF crText, COLORREF crBackground)
 {
 	CHARRANGE cr = { LONG_MAX, LONG_MAX };
@@ -160,14 +160,13 @@ void SetLogText(LPCWSTR Text, COLORREF crText, COLORREF crBackground)
 	cf.crBackColor = crBackground;
 	cf.dwEffects = CFE_BOLD;
 
-	int nLogFntSize = 12;
+	int nLogFntSize = pConfig->GetConsoleFontSize();
 	cf.yHeight = nLogFntSize * 20;
-	wcscpy_s(cf.szFaceName, L"±¼¸²");
+	wcscpy_s(cf.szFaceName, pConfig->GetConsoleFontName());
 	SendMessage(hLogRes, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
 
 	SendMessage(hLogRes, EM_REPLACESEL, TRUE, (LPARAM)Text);
 }
-
 void ClearLog(void)
 {
 	CHARRANGE cr = { 0, LONG_MAX };

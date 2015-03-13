@@ -1015,47 +1015,106 @@ bool filter::cmd(wstring &wsText)
 		}
 		bChanged = true;
 	}
-	else if (!wsText.compare(L"/log_detail"))
+	else if (!wsText.compare(L"/command"))
 	{
-		if (IsShownLogWin())
+		if (pConfig->GetCommandSwitch())
 		{
-			pConfig->SetLogDetail(false);
-			wsText = L"/log_detail : Detail Log Off.";
+			pConfig->SetCommandSwitch(false);
+			wsText = L"/command : Command Off.";
 		}
 		else
 		{
-			pConfig->SetLogDetail(true);
-			wsText = L"/log_detail : Detail Log On.";
+			pConfig->SetCommandSwitch(true);
+			wsText = L"/command : Command On.";
 		}
 		bChanged = true;
 	}
-	else if (!wsText.compare(L"/pre"))
+	else if (pConfig->GetCommandSwitch())
 	{
-		if (pConfig->GetPreSwitch())
+		if (!wsText.compare(L"/log_detail"))
 		{
-			pConfig->SetPreSwitch(false);
-			wsText = L"/pre : PreFilter Off.";
+			if (pConfig->GetLogDetail())
+			{
+				pConfig->SetLogDetail(false);
+				wsText = L"/log_detail : Detail Log Off.";
+			}
+			else
+			{
+				pConfig->SetLogDetail(true);
+				wsText = L"/log_detail : Detail Log On.";
+			}
+			bChanged = true;
 		}
-		else
+		else if (!wsText.compare(L"/log_time"))
 		{
-			pConfig->SetPreSwitch(true);
-			wsText = L"/pre : PreFilter On.";
+			if (pConfig->GetLogTime())
+			{
+				pConfig->SetLogTime(false);
+				wsText += L"/log_time : Time Log Off.";
+			}
+			else
+			{
+				pConfig->SetLogTime(true);
+				wsText += L"/log_time : Time Log On.";
+			}
+			bChanged = true;
 		}
-		bChanged = true;
-	}
-	else if (!wsText.compare(L"/post"))
-	{
-		if (pConfig->GetPostSwitch())
+		else if (!wsText.compare(L"/log_skiplayer"))
 		{
-			pConfig->SetPostSwitch(false);
-			wsText = L"/post : PostFilter Off.";
+			if (pConfig->GetLogSkipLayer())
+			{
+				pConfig->SetLogSkipLayer(false);
+				wsText += L"/log_skiplayer : SkipLayer Log Off.";
+			}
+			else
+			{
+				pConfig->SetLogSkipLayer(true);
+				wsText += L"/log_skiplayer : SkipLayer Log On.";
+			}
+			bChanged = true;
 		}
-		else
+		else if (!wsText.compare(L"/pre"))
 		{
-			pConfig->SetPostSwitch(true);
-			wsText = L"/post : PostFilter On.";
+			if (pConfig->GetPreSwitch())
+			{
+				pConfig->SetPreSwitch(false);
+				wsText = L"/pre : PreFilter Off.";
+			}
+			else
+			{
+				pConfig->SetPreSwitch(true);
+				wsText = L"/pre : PreFilter On.";
+			}
+			bChanged = true;
 		}
-		bChanged = true;
+		else if (!wsText.compare(L"/post"))
+		{
+			if (pConfig->GetPostSwitch())
+			{
+				pConfig->SetPostSwitch(false);
+				wsText = L"/post : PostFilter Off.";
+			}
+			else
+			{
+				pConfig->SetPostSwitch(true);
+				wsText = L"/post : PostFilter On.";
+			}
+			bChanged = true;
+		}
+		else if (!wsText.compare(L"/jkdic"))
+		{
+			if (pConfig->GetJKDICSwitch())
+			{
+				pConfig->SetJKDICSwitch(false);
+				wsText = L"/jkdic : JKDIC Off.";
+			}
+			else
+			{
+				pConfig->SetJKDICSwitch(true);
+				wsText = L"/jkdic : JKDIC On.";
+			}
+			bChanged = true;
+		}
 	}
 
 	if (bChanged) pConfig->SaveConfig();
