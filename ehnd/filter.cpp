@@ -637,6 +637,8 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 		memset(us.kor, 0, sizeof(us.kor));
 		memset(us.part, 0, sizeof(us.part));
 		memset(us.attr, 0, sizeof(us.attr));
+		Part = L"I110";
+		Attr = L"";
 
 		int tab = 0;
 		for (UINT i = 0, prev = 0; i <= wcslen(Buffer); i++)
@@ -661,10 +663,10 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 					wcsncpy_s(Context, Buffer + prev, i - prev);
 					prev = i + 1;
 					tab++;
-					if (_wtoi(Context))
-						Part = L"I110";
-					else
+					if (Context[0] == L'0' || Context[0] == L'2')
 						Part = L"A9D0";
+					else
+						Part = L"I110";
 					break;
 				case 3:
 					wcsncpy_s(Context, Buffer + prev, i - prev);
@@ -770,6 +772,7 @@ bool filter::anedic_load()
 		memset(us.attr, 0, sizeof(us.attr));
 
 		Part = L"I110";
+		Attr = L"";
 
 		int tab = 0;
 		for (UINT i = 0, prev = 0; i <= wcslen(Buffer); i++)
