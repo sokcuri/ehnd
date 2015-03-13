@@ -3,11 +3,10 @@
 HINSTANCE g_hInst;
 filter *pFilter;
 watch *pWatch;
+config *pConfig;
 HMODULE hEzt, hMsv;
 int g_initTick;
 char g_DicPath[MAX_PATH];
-bool g_PreUsable = true;
-bool g_PostUsable = true;
 
 BOOL APIENTRY DllMain(HINSTANCE hInstance,
 	DWORD  ul_reason_for_call,

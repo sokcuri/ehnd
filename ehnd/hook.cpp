@@ -162,21 +162,16 @@ bool hook_userdict(void)
 
 	if (r == 0)
 	{
-		WriteLog(L"j2kengine ptn search failed\n");
+		WriteLog(NORMAL_LOG, L"j2kengine ptn search failed\n");
 		return false;
 	}
 	else if (r > 1)
 	{
-		WriteLog(L"j2kengine ptn multi found\n");
+		WriteLog(NORMAL_LOG, L"j2kengine ptn multi found\n");
 		return false;
 	}
 	else
 	{
-		WCHAR asdf[100];
-		wsprintf(asdf, L"ptn found at address 0x%08X\n", addr);
-		WriteLog(asdf);
-		wsprintf(asdf, L"userdict_patch 0x%08X\n", &userdict_patch);
-		WriteLog(asdf);
 		BYTE Patch[] = { 0x90, 0x90, 0x90, 0x90, 0x90, 0xE9, -1, -1, -1, -1, 0x90, 0x90, 0x74, 0x08 };
 
 		int PatchSize = _countof(Patch);
@@ -194,7 +189,7 @@ bool hook_userdict(void)
 		memcpy(addr, Patch, PatchSize);
 		hHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, FALSE, GetCurrentProcessId());
 		VirtualProtectEx(hHandle, (void *)addr, PatchSize, OldProtect, &OldProtect2);
-		WriteLog(L"success userdict hook.\n");
+		WriteLog(NORMAL_LOG, L"success userdict hook.\n");
 	}
 
 	return true;
@@ -216,20 +211,16 @@ bool hook_userdict2(void)
 
 	if (r == 0)
 	{
-		WriteLog(L"j2kengine ptn search failed\n");
+		WriteLog(NORMAL_LOG, L"j2kengine ptn search failed\n");
 		return false;
 	}
 	else if (r > 1)
 	{
-		WriteLog(L"j2kengine ptn multi found\n");
+		WriteLog(NORMAL_LOG, L"j2kengine ptn multi found\n");
 		return false;
 	}
 	else
 	{
-		WCHAR asdf[100];
-		wsprintf(asdf, L"ptn found at address 0x%08X\n", addr);
-		WriteLog(asdf);
-		
 		addr += 5;
 		BYTE Patch[4];
 		int PatchSize = _countof(Patch);
@@ -247,7 +238,7 @@ bool hook_userdict2(void)
 		hHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, FALSE, GetCurrentProcessId());
 		VirtualProtectEx(hHandle, (void *)addr, PatchSize, OldProtect, &OldProtect2);
 
-		WriteLog(L"success userdict2 hook.\n");
+		WriteLog(NORMAL_LOG, L"success userdict2 hook.\n");
 	}
 
 	return true;
@@ -257,13 +248,13 @@ void hook_wc2mb(void)
 {
 	HMODULE hDll = GetModuleHandle(L"kernel32.dll");
 	lpfnwc2mb = (LPBYTE)GetProcAddress(hDll, "WideCharToMultiByte");
-	WriteLog(L"hook_wc2mb : %08X\n", lpfnwc2mb);
+	WriteLog(NORMAL_LOG, L"hook_wc2mb : %08X\n", lpfnwc2mb);
 
 	for (int i = 0; i < 0x10; i++)
 	{
 		if (*(lpfnwc2mb + i) == 0xFF && *(lpfnwc2mb + i + 1) == 0x25)
 		{
-			WriteLog(L"_wc2mb : %08X\n", lpfnwc2mb + i);
+			WriteLog(NORMAL_LOG, L"_wc2mb : %08X\n", lpfnwc2mb + i);
 			lpfnwc2mb += i;
 			break;
 		}
@@ -275,13 +266,13 @@ void hook_mb2wc(void)
 {
 	HMODULE hDll = GetModuleHandle(L"kernel32.dll");
 	lpfnmb2wc = (LPBYTE)GetProcAddress(hDll, "MultiByteToWideChar");
-	WriteLog(L"hook_mb2wc : %08X\n", lpfnmb2wc);
+	WriteLog(NORMAL_LOG, L"hook_mb2wc : %08X\n", lpfnmb2wc);
 
 	for (int i = 0; i < 0x10; i++)
 	{
 		if (*(lpfnmb2wc + i) == 0xFF && *(lpfnmb2wc + i + 1) == 0x25)
 		{
-			WriteLog(L"_mb2wc : %08X\n", lpfnmb2wc + i);
+			WriteLog(NORMAL_LOG, L"_mb2wc : %08X\n", lpfnmb2wc + i);
 			lpfnmb2wc += i;
 			break;
 		}
@@ -316,14 +307,14 @@ void *fopen_patch(char *path, char *mode)
 	if (strstr(path, "UserDict.jk"))
 	{
 		path = g_DicPath;
-		//WriteLog(L"fopen_path\n");
+		//WriteLog(NORMAL_LOG, L"fopen_path\n");
 	}
 	return msvcrt_fopen(path, mode);
 }
 
 __declspec(naked) void userdict_patch(void)
 {
-	//WriteLog(L"userdict_patch call\n");
+	//WriteLog(NORMAL_LOG, L"userdict_patch call\n");
 
 	//
 	// [ESP + 0x18]	// current count - start

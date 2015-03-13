@@ -4,17 +4,25 @@
 HWND hLogWin, hLogRes;
 HANDLE hLogEvent;
 
-void WriteLog(const wchar_t *format, ...)
+void WriteLog(int LogType, const wchar_t *format, ...)
 {
+	if (!pConfig->GetLogTime() && LogType == TIME_LOG) return;
+	if (!pConfig->GetLogDetail() && LogType == DETAIL_LOG) return;
+	if (!pConfig->GetLogSkipLayer() && LogType == SKIPLAYER_LOG) return;
+
 	va_list valist;
 	FILE *fp = NULL;
 	wchar_t lpBuffer[1024], lpTime[64];
-	
-	bool IsFileLog = false;
+	BOOL IsFileLog = pConfig->GetFileLogSwitch();
 	if (IsFileLog)
 	{
-		const char* szFileName = ".\\enhd_log.log";
-		if (fopen_s(&fp, szFileName, "a+t,ccs=UTF-8")) return;
+		wchar_t lpFileName[MAX_PATH];
+		if (pConfig->GetFileLogEztLoc())
+			GetLoadPath(lpFileName, MAX_PATH);
+		else GetExecutePath(lpFileName, MAX_PATH);
+		wcscat_s(lpFileName, L"\\ehnd_log.log");
+
+		if (_wfopen_s(&fp, lpFileName, L"a+t,ccs=UTF-8")) return;
 		_wstrtime_s(lpTime, 32);
 
 		fwprintf_s(fp, L"%s.%03d | ", lpTime, GetTickCount() % 1000);
@@ -27,7 +35,6 @@ void WriteLog(const wchar_t *format, ...)
 		wcscpy_s(lpBuffer + 1000, 1024, L"...\r\n");
 
 	if (IsShownLogWin()) SetLogText(lpBuffer);
-	if (IsFileLog) fwprintf_s(fp, lpBuffer);
 
 	va_end(valist);
 
@@ -86,13 +93,13 @@ bool CreateLogWin(HINSTANCE hInst)
 	HANDLE hThread = CreateThread(&thAttr, 0, LogThreadMain, NULL, 0, NULL);
 	if (hThread == NULL)
 	{
-		WriteLog(L"cannot create log thread\n");
+		WriteLog(NORMAL_LOG, L"cannot create log thread\n");
 	}
 
 	// 로그 윈도우가 초기화될때까지 기다림
 	WaitForSingleObject(hLogEvent, INFINITE);
 
-	WriteLog(L"Log Start.\n");
+	WriteLog(NORMAL_LOG, L"Log Start.\n");
 	return 0;
 }
 

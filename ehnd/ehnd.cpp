@@ -11,10 +11,14 @@ bool EhndInit(void)
 {
 	// init
 	CreateLogWin(g_hInst);
-	ShowLogWin(true);
 
 	pFilter = new filter();
 	pWatch = new watch();
+	pConfig = new config();
+
+	pConfig->LoadConfig();
+	ShowLogWin(pConfig->GetConsoleSwitch());
+
 	hook_wc2mb();
 	hook_mb2wc();
 
@@ -22,7 +26,7 @@ bool EhndInit(void)
 	hook_userdict();
 	hook_userdict2();
 
-	WriteLog(L"Hook Success.\n");
+	WriteLog(NORMAL_LOG, L"Hook Success.\n");
 
 	pFilter->load();
 	return true;
@@ -129,6 +133,7 @@ __declspec(naked) void *msvcrt_fopen(char *path, char *mode)
 }
 void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 {
+	DWORD dwStart, dwEnd;
 	LPSTR szOut;
 	wstring wsText, wsOriginal, wsLog;
 	int i_len;
@@ -149,7 +154,7 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 
 	wsLog = replace_all(wsText, L"%", L"%%");
 	wsLog = replace_all(wsText, L"%", L"%%");
-	WriteLog(L"[REQUEST] %s\n\n", wsLog.c_str());
+	WriteLog(NORMAL_LOG, L"[REQUEST] %s\n\n", wsLog.c_str());
 
 	// 넘어온 문자열의 길이가 0이거나 명령어일때 번역 프로세스 스킵
 	if (wcslen(lpJPN) && !pFilter->cmd(wsText))
@@ -158,12 +163,11 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 		wsLog = replace_all(wsLog, L"%", L"%%");
 		wsLog = replace_all(wsLog, L"\t", L" ");
 		wsLog = replace_all(wsLog, L"\r\n", L"");
-		WriteTextLog(L"%s\t", wsLog.c_str());
 
 		pFilter->pre(wsText);
 
 		wsLog = replace_all(wsText, L"%", L"%%");
-		WriteLog(L"[PRE] %s\n\n", wsLog.c_str());
+		WriteLog(NORMAL_LOG, L"[PRE] %s\n\n", wsLog.c_str());
 
 		i_len = _WideCharToMultiByte(932, 0, wsText.c_str(), -1, NULL, NULL, NULL, NULL);
 		szJPN = (LPSTR)msvcrt_malloc((i_len + 1) * 3);
@@ -174,6 +178,8 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 		}
 		_WideCharToMultiByte(932, 0, wsText.c_str(), -1, szJPN, i_len, NULL, NULL);
 
+		dwStart = GetTickCount();
+
 		__asm
 		{
 			PUSH DWORD PTR DS : [szJPN]
@@ -181,6 +187,10 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 			CALL apfnEzt[4 * 18]
 			MOV DWORD PTR DS : [szKOR], EAX
 		}
+
+		dwEnd = GetTickCount();
+
+		WriteLog(TIME_LOG, L"J2K_TranslateMMNT : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
 
 		msvcrt_free(szJPN);
 
@@ -198,18 +208,17 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 		msvcrt_free(lpKOR);
 
 		wsLog = replace_all(wsText, L"%", L"%%");
-		WriteLog(L"[TRANS] %s\n\n", wsLog.c_str());
+		WriteLog(NORMAL_LOG, L"[TRANS] %s\n\n", wsLog.c_str());
 
 		pFilter->post(wsText);
 
 		wsLog = replace_all(wsText, L"%", L"%%");
-		WriteLog(L"[POST] %s\n\n", wsLog.c_str());
+		WriteLog(NORMAL_LOG, L"[POST] %s\n\n", wsLog.c_str());
 
 		wsLog = wsText;
 		wsLog = replace_all(wsLog, L"%", L"%%");
 		wsLog = replace_all(wsLog, L"\t", L" ");
 		wsLog = replace_all(wsLog, L"\r\n", L"");
-		WriteTextLog(L"%s\r\n", wsLog.c_str());
 	}
 
 	i_len = _WideCharToMultiByte(949, 0, wsText.c_str(), -1, NULL, NULL, NULL, NULL);

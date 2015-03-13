@@ -45,7 +45,7 @@ DWORD watch::_NotifyThread(LPVOID lpParam)
 	Path = lpEztPath;
 	Path += L"\\Ehnd";
 
-	WriteLog(L"watch to %s directory\n", Path.c_str());
+	WriteLog(NORMAL_LOG, L"watch to %s directory\n", Path.c_str());
 
 	HANDLE hDir = CreateFile(Path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
 		0, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
@@ -126,7 +126,7 @@ MMRESULT watch::_NotifyProc(UINT m_nTimerID, UINT uiMsg, DWORD dwUser, DWORD dw1
 	std::vector<std::wstring>::iterator it = fileList_Temp.begin();
 	for (; it != fileList_Temp.end(); it++)
 	{
-		if ((*it).rfind(L".txt") != -1)
+		if ((*it).rfind(L".txt") != -1 && pConfig->GetEhndWatchSwitch())
 		{
 			if ((*it).find(L"prefilter") != -1)
 				c_prefilter = true;
@@ -137,40 +137,40 @@ MMRESULT watch::_NotifyProc(UINT m_nTimerID, UINT uiMsg, DWORD dwUser, DWORD dw1
 			else if ((*it).find(L"skiplayer") != -1)
 				c_skiplayer = true;
 		}
-		else if (!(*it).compare(L"ehnd_config.ini"))
+		else if (!(*it).compare(L"ehnd_conf.ini"))
 			c_config = true;
 	}
 
 	if (c_prefilter == true)
 	{
-		WriteLog(L"PreFilter : 전처리 필터 파일 변경사항 감지.\n");
+		WriteLog(NORMAL_LOG, L"PreFilter : 전처리 필터 파일 변경사항 감지.\n");
 		pFilter->pre_load();
 	}
 
 	if (c_postfilter == true)
 	{
-		WriteLog(L"PostFilter : 후처리 필터 파일 변경사항 감지.\n");
+		WriteLog(NORMAL_LOG, L"PostFilter : 후처리 필터 파일 변경사항 감지.\n");
 		pFilter->post_load();
 	}
 
 
 	if (c_skiplayer == true)
 	{
-		WriteLog(L"SkipLayer : 스킵 레이어 파일 변경사항 감지.\n");
+		WriteLog(NORMAL_LOG, L"SkipLayer : 스킵 레이어 파일 변경사항 감지.\n");
 		pFilter->skiplayer_load();
 	}
 
 	if (c_userdic == true)
 	{
-		WriteLog(L"UserDic : 사용자 사전 파일 변경사항 감지.\n");
+		WriteLog(NORMAL_LOG, L"UserDic : 사용자 사전 파일 변경사항 감지.\n");
 		pFilter->userdic_anedic_load();
 		J2K_ReloadUserDict2();
 	}
 
 	if (c_config == true)
 	{
-		WriteLog(L"Config : 설정파일 변경사항 감지.\n");
-		
+		WriteLog(NORMAL_LOG, L"Config : 설정파일 변경사항 감지.\n");
+		pConfig->LoadConfig();
 	}
 
 	return 0;

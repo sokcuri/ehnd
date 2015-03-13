@@ -69,14 +69,14 @@ bool filter::pre_load()
 
 	// 정렬
 	sort(Filter.begin(), Filter.end());
-	WriteLog(L"PreFilterRead : 필터 정렬을 완료했습니다.\n");
+	WriteLog(NORMAL_LOG, L"PreFilterRead : 필터 정렬을 완료했습니다.\n");
 
 	// 필터 대체
 	PreFilter = Filter;
-	WriteLog(L"PreFilterRead : 총 %d개의 전처리 필터를 읽었습니다.\n", PreFilter.size());
+	WriteLog(NORMAL_LOG, L"PreFilterRead : 총 %d개의 전처리 필터를 읽었습니다.\n", PreFilter.size());
 
 	// 소요시간 계산
-	dwEnd = GetTickCount(); WriteLog(L"PreFilterRead : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
+	dwEnd = GetTickCount(); WriteLog(TIME_LOG, L"PreFilterRead : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
 	return true;
 }
 
@@ -120,15 +120,15 @@ bool filter::post_load()
 
 	// 정렬
 	sort(Filter.begin(), Filter.end());
-	WriteLog(L"PostFilterRead : 필터 정렬을 완료했습니다.\n");
+	WriteLog(NORMAL_LOG, L"PostFilterRead : 필터 정렬을 완료했습니다.\n");
 
 	// 필터 대체
 	PostFilter = Filter;
-	WriteLog(L"PostFilterRead : 총 %d개의 후처리 필터를 읽었습니다.\n", PostFilter.size());
+	WriteLog(NORMAL_LOG, L"PostFilterRead : 총 %d개의 후처리 필터를 읽었습니다.\n", PostFilter.size());
 
 	// 소요시간 계산
 	dwEnd = GetTickCount();
-	WriteLog(L"PostFilterRead : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
+	WriteLog(TIME_LOG, L"PostFilterRead : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
 	return true;
 }
 
@@ -167,15 +167,15 @@ bool filter::skiplayer_load()
 
 	// 정렬
 	sort(_SkipLayer.begin(), _SkipLayer.end());
-	WriteLog(L"SkipLayerRead : 스킵레이어 정렬을 완료했습니다.\n");
+	WriteLog(NORMAL_LOG, L"SkipLayerRead : 스킵레이어 정렬을 완료했습니다.\n");
 
 	// 스킵레이어 대체
 	SkipLayer = _SkipLayer;
-	WriteLog(L"SkipLayerRead : 총 %d개의 스킵레이어를 읽었습니다.\n", SkipLayer.size());
+	WriteLog(NORMAL_LOG, L"SkipLayerRead : 총 %d개의 스킵레이어를 읽었습니다.\n", SkipLayer.size());
 
 	// 소요시간 계산
 	dwEnd = GetTickCount();
-	WriteLog(L"SkipLayerRead : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
+	WriteLog(TIME_LOG, L"SkipLayerRead : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
 	return true;
 }
 bool filter::userdic_load()
@@ -195,8 +195,7 @@ bool filter::userdic_load()
 	UserDic.clear();
 
 	// load userdict.jk
-	bool use_jkdic = true;
-	if (use_jkdic) jkdic_load();
+	if (pConfig->GetJKDICSwitch()) jkdic_load();
 	HANDLE hFind = FindFirstFile(Path.c_str(), &FindFileData);
 
 	do
@@ -214,11 +213,11 @@ bool filter::userdic_load()
 
 	// 정렬
 	sort(UserDic.begin(), UserDic.end());
-	WriteLog(L"UserDicRead : 사용자 사전 정렬을 완료했습니다.\n");
+	WriteLog(NORMAL_LOG, L"UserDicRead : 사용자 사전 정렬을 완료했습니다.\n");
 
 	// 소요시간 계산
 	dwEnd = GetTickCount();
-	WriteLog(L"UserDicRead : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
+	WriteLog(TIME_LOG, L"UserDicRead : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
 
 	// 엔드 임시파일 삭제
 	ehnddic_cleanup();
@@ -267,11 +266,11 @@ bool filter::userdic_anedic_load()
 
 	// 정렬
 	sort(UserDic.begin(), UserDic.end());
-	WriteLog(L"UserDicRead : 사용자 사전 정렬을 완료했습니다.\n");
+	WriteLog(NORMAL_LOG, L"UserDicRead : 사용자 사전 정렬을 완료했습니다.\n");
 
 	// 소요시간 계산
 	dwEnd = GetTickCount();
-	WriteLog(L"UserDicRead : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
+	WriteLog(TIME_LOG, L"UserDicRead : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
 
 	// 엔드 임시파일 삭제
 	ehnddic_cleanup();
@@ -297,7 +296,7 @@ bool filter::jkdic_load()
 
 	if (_wfopen_s(&fp, Path.c_str(), L"rt,ccs=UTF-8") != 0)
 	{
-		WriteLog(L"JkDicLoad : DAT 사용자 사전 파일 \"UserDict.jk\"이 없습니다.\n");
+		WriteLog(NORMAL_LOG, L"JkDicLoad : DAT 사용자 사전 파일 \"UserDict.jk\"이 없습니다.\n");
 
 		// userdict.jk 파일이 없으면 빈 파일 만듦
 		if (_wfopen_s(&fp, Path.c_str(), L"wb") == 0) fclose(fp);
@@ -341,11 +340,11 @@ bool filter::jkdic_load()
 	}
 	fclose(fp);
 
-	WriteLog(L"JkDicRead : %d개의 DAT 사용자 사전 \"UserDict.jk\"를 읽었습니다.\n", vaild_line);
+	WriteLog(NORMAL_LOG, L"JkDicRead : %d개의 DAT 사용자 사전 \"UserDict.jk\"를 읽었습니다.\n", vaild_line);
 
 	// 소요시간 계산
 	dwEnd = GetTickCount();
-	WriteLog(L"JkDicRead : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
+	WriteLog(TIME_LOG, L"JkDicRead : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
 	return true;
 }
 
@@ -366,7 +365,7 @@ bool filter::ehnddic_cleanup()
 
 	do
 	{
-		WriteLog(L"EhndDicCleanUp : %s\n", FindFileData.cFileName);
+		WriteLog(NORMAL_LOG, L"EhndDicCleanUp : %s\n", FindFileData.cFileName);
 		if (hFind == INVALID_HANDLE_VALUE) break;
 		else if (FindFileData.dwFileAttributes == FILE_ATTRIBUTE_DIRECTORY)
 			continue;
@@ -388,7 +387,7 @@ bool filter::ehnddic_cleanup()
 
 	// 소요시간 계산
 	dwEnd = GetTickCount();
-	WriteLog(L"EhndDicCleanup : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
+	WriteLog(TIME_LOG, L"EhndDicCleanup : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
 
 	return true;
 }
@@ -409,7 +408,7 @@ bool filter::ehnddic_create()
 	Path += L".ehnd";
 
 	if (_wfopen_s(&fp, Path.c_str(), L"wb") != 0)
-		WriteLog(L"EhndDicCreate : 사용자사전 바이너리 \"UserDict_%s.ehnd\" 파일을 생성하는데 실패했습니다.\n", lpText);
+		WriteLog(NORMAL_LOG, L"EhndDicCreate : 사용자사전 바이너리 \"UserDict_%s.ehnd\" 파일을 생성하는데 실패했습니다.\n", lpText);
 
 	for (UINT i = 0; i < UserDic.size(); i++)
 	{
@@ -419,12 +418,12 @@ bool filter::ehnddic_create()
 		fwrite(&UserDic[i].part, sizeof(char), 5, fp);
 		fwrite(&UserDic[i].attr, sizeof(char), 42, fp);
 	}
-	WriteLog(L"EhndDicCreate : 사용자사전 바이너리 \"UserDict_%s.ehnd\" 생성 완료.\n", lpText);
+	WriteLog(NORMAL_LOG, L"EhndDicCreate : 사용자사전 바이너리 \"UserDict_%s.ehnd\" 생성 완료.\n", lpText);
 	fclose(fp);
 
 	// 소요시간 계산
 	dwEnd = GetTickCount();
-	WriteLog(L"EhndDicCreate : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
+	WriteLog(TIME_LOG, L"EhndDicCreate : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
 	return true;
 }
 
@@ -440,10 +439,10 @@ bool filter::skiplayer_load2(vector<SKIPLAYERSTRUCT> &SkipLayer, LPCWSTR lpPath,
 
 	if (_wfopen_s(&fp, Path.c_str(), L"rt,ccs=UTF-8") != 0)
 	{
-		WriteLog(L"SkipLayerRead : 스킵레이어 %s 로드 실패.\n", lpFileName);
+		WriteLog(NORMAL_LOG, L"SkipLayerRead : 스킵레이어 %s 로드 실패.\n", lpFileName);
 		return false;
 	}
-	WriteLog(L"SkipLayerRead : 스킵레이어 %s 로드.\n", lpFileName);
+	WriteLog(NORMAL_LOG, L"SkipLayerRead : 스킵레이어 %s 로드.\n", lpFileName);
 	
 	for (int line = 0; fgetws(Buffer, 1000, fp) != NULL; line++, g_line++)
 	{
@@ -496,7 +495,7 @@ bool filter::skiplayer_load2(vector<SKIPLAYERSTRUCT> &SkipLayer, LPCWSTR lpPath,
 			int len = _MultiByteToWideChar(949, MB_PRECOMPOSED, ex.what(), -1, NULL, NULL);
 			_MultiByteToWideChar(949, MB_PRECOMPOSED, ex.what(), -1, lpWhat, len);
 
-			WriteLog(L"SkipLayerRead : 정규식 오류! : [%s:%d] %s | %s | %s\n", L"SkipLayer.txt", line, ss.wtype, ss.wlayer, ss.cond);
+			WriteLog(NORMAL_LOG, L"SkipLayerRead : 정규식 오류! : [%s:%d] %s | %s | %s\n", L"SkipLayer.txt", line, ss.wtype, ss.wlayer, ss.cond);
 
 			continue;
 		}
@@ -504,7 +503,7 @@ bool filter::skiplayer_load2(vector<SKIPLAYERSTRUCT> &SkipLayer, LPCWSTR lpPath,
 		SkipLayer.push_back(ss);
 	}
 	fclose(fp);
-	WriteLog(L"SkipLayerRead : %d개의 스킵레이어 %s를 읽었습니다.\n", vaild_line, lpFileName);
+	WriteLog(NORMAL_LOG, L"SkipLayerRead : %d개의 스킵레이어 %s를 읽었습니다.\n", vaild_line, lpFileName);
 	return true;
 }
 
@@ -520,17 +519,17 @@ bool filter::filter_load(vector<FILTERSTRUCT> &Filter, LPCWSTR lpPath, LPCWSTR l
 
 	if (_wfopen_s(&fp, Path.c_str(), L"rt,ccs=UTF-8") != 0)
 	{
-		if (FilterType == PREFILTER && IsUnicode) WriteLog(L"PreFilterRead : 전처리 유니코드 전용 필터 '%s' 로드 실패!\n", lpFileName);
-		else if (FilterType == PREFILTER && !IsUnicode) WriteLog(L"PreFilterRead : 전처리 필터 '%s' 로드 실패!\n", lpFileName);
-		else if (FilterType == POSTFILTER && IsUnicode) WriteLog(L"PostFilterRead : 후처리 유니코드 전용 필터 '%s' 로드 실패!\n", lpFileName);
-		else if (FilterType == POSTFILTER && !IsUnicode) WriteLog(L"PostFilterRead : 후처리 필터 '%s' 로드 실패!\n", lpFileName);
+		if (FilterType == PREFILTER && IsUnicode) WriteLog(NORMAL_LOG, L"PreFilterRead : 전처리 유니코드 전용 필터 '%s' 로드 실패!\n", lpFileName);
+		else if (FilterType == PREFILTER && !IsUnicode) WriteLog(NORMAL_LOG, L"PreFilterRead : 전처리 필터 '%s' 로드 실패!\n", lpFileName);
+		else if (FilterType == POSTFILTER && IsUnicode) WriteLog(NORMAL_LOG, L"PostFilterRead : 후처리 유니코드 전용 필터 '%s' 로드 실패!\n", lpFileName);
+		else if (FilterType == POSTFILTER && !IsUnicode) WriteLog(NORMAL_LOG, L"PostFilterRead : 후처리 필터 '%s' 로드 실패!\n", lpFileName);
 		return false;
 	}
 
-	if (FilterType == PREFILTER && IsUnicode) WriteLog(L"PreFilterRead : 전처리 유니코드 전용 필터 \"%s\" 로드.\n", lpFileName);
-	if (FilterType == PREFILTER && !IsUnicode) WriteLog(L"PreFilterRead : 전처리 필터 \"%s\" 로드.\n", lpFileName);
-	else if (FilterType == POSTFILTER && IsUnicode) WriteLog(L"PostFilterRead : 후처리 유니코드 전용 필터 \"%s\" 로드.\n", lpFileName);
-	else if (FilterType == POSTFILTER && !IsUnicode) WriteLog(L"PostFilterRead : 후처리 필터 \"%s\" 로드.\n", lpFileName);
+	if (FilterType == PREFILTER && IsUnicode) WriteLog(NORMAL_LOG, L"PreFilterRead : 전처리 유니코드 전용 필터 \"%s\" 로드.\n", lpFileName);
+	if (FilterType == PREFILTER && !IsUnicode) WriteLog(NORMAL_LOG, L"PreFilterRead : 전처리 필터 \"%s\" 로드.\n", lpFileName);
+	else if (FilterType == POSTFILTER && IsUnicode) WriteLog(NORMAL_LOG, L"PostFilterRead : 후처리 유니코드 전용 필터 \"%s\" 로드.\n", lpFileName);
+	else if (FilterType == POSTFILTER && !IsUnicode) WriteLog(NORMAL_LOG, L"PostFilterRead : 후처리 필터 \"%s\" 로드.\n", lpFileName);
 
 	for (int line = 0; fgetws(Buffer, 1000, fp) != NULL; line++, g_line++)
 	{
@@ -593,8 +592,8 @@ bool filter::filter_load(vector<FILTERSTRUCT> &Filter, LPCWSTR lpPath, LPCWSTR l
 				int len = _MultiByteToWideChar(949, MB_PRECOMPOSED, ex.what(), -1, NULL, NULL);
 				_MultiByteToWideChar(949, MB_PRECOMPOSED, ex.what(), -1, lpWhat, len);
 
-				if (FilterType == 1) WriteLog(L"PreFilterRead : 정규식 오류! : [%s:%d] %s | %s | %d | %d\n", lpFileName, line, fs.src.c_str(), fs.dest.c_str(), fs.layer, fs.regex);
-				else if (FilterType == 2) WriteLog(L"PostFilterRead : 정규식 오류! : [%s:%d] %s | %s | %d | %d\n", lpFileName, line, fs.src.c_str(), fs.dest.c_str(), fs.layer, fs.regex);
+				if (FilterType == 1) WriteLog(NORMAL_LOG, L"PreFilterRead : 정규식 오류! : [%s:%d] %s | %s | %d | %d\n", lpFileName, line, fs.src.c_str(), fs.dest.c_str(), fs.layer, fs.regex);
+				else if (FilterType == 2) WriteLog(NORMAL_LOG, L"PostFilterRead : 정규식 오류! : [%s:%d] %s | %s | %d | %d\n", lpFileName, line, fs.src.c_str(), fs.dest.c_str(), fs.layer, fs.regex);
 				continue;
 			}
 		}
@@ -602,10 +601,10 @@ bool filter::filter_load(vector<FILTERSTRUCT> &Filter, LPCWSTR lpPath, LPCWSTR l
 		Filter.push_back(fs);
 	}
 	fclose(fp);
-	if (FilterType == PREFILTER && IsUnicode) WriteLog(L"PreFilterRead : %d개의 유니코드 전용 전처리 필터 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
-	if (FilterType == PREFILTER && !IsUnicode) WriteLog(L"PreFilterRead : %d개의 전처리 필터 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
-	else if (FilterType == POSTFILTER && IsUnicode) WriteLog(L"PostFilterRead : %d개의 유니코드 전용 후처리 필터 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
-	else if (FilterType == POSTFILTER && !IsUnicode) WriteLog(L"PostFilterRead : %d개의 후처리 필터 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
+	if (FilterType == PREFILTER && IsUnicode) WriteLog(NORMAL_LOG, L"PreFilterRead : %d개의 유니코드 전용 전처리 필터 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
+	if (FilterType == PREFILTER && !IsUnicode) WriteLog(NORMAL_LOG, L"PreFilterRead : %d개의 전처리 필터 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
+	else if (FilterType == POSTFILTER && IsUnicode) WriteLog(NORMAL_LOG, L"PostFilterRead : %d개의 유니코드 전용 후처리 필터 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
+	else if (FilterType == POSTFILTER && !IsUnicode) WriteLog(NORMAL_LOG, L"PostFilterRead : %d개의 후처리 필터 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
 	return true;
 }
 
@@ -621,11 +620,11 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 
 	if (_wfopen_s(&fp, Path.c_str(), L"rt,ccs=UTF-8") != 0)
 	{
-		WriteLog(L"UserDicRead : 사용자 사전 '%s' 로드 실패!\n", lpFileName);
+		WriteLog(NORMAL_LOG, L"UserDicRead : 사용자 사전 '%s' 로드 실패!\n", lpFileName);
 		return false;
 	}
 
-	WriteLog(L"UserDicRead : 사용자 사전 \"%s\" 로드.\n", lpFileName);
+	WriteLog(NORMAL_LOG, L"UserDicRead : 사용자 사전 \"%s\" 로드.\n", lpFileName);
 
 	for (int line = 0; fgetws(Buffer, 1000, fp) != NULL; line++, g_line++)
 	{
@@ -684,24 +683,24 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 
 		if ((len = _WideCharToMultiByte(932, 0, Jpn.c_str(), -1, NULL, NULL, NULL, NULL)) > 31)
 		{
-			WriteLog(L"UserDicRead : 오류 : 원문 단어의 길이는 15자(30Byte)를 초과할 수 없습니다.\n");
-			WriteLog(L"UserDicRead : 오류 : [%s:%d] : <<%s>> | %s | %s | %s\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
+			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 원문 단어의 길이는 15자(30Byte)를 초과할 수 없습니다.\n");
+			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : [%s:%d] : <<%s>> | %s | %s | %s\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
 		}
 		_WideCharToMultiByte(932, 0, Jpn.c_str(), -1, szBuffer, len, NULL, NULL);
 		strcpy_s(us.jpn, szBuffer);
 
 		if ((len = _WideCharToMultiByte(949, 0, Kor.c_str(), -1, NULL, NULL, NULL, NULL)) > 31)
 		{
-			WriteLog(L"UserDicRead : 오류 : 역문 단어의 길이는 15자(30Byte)를 초과할 수 없습니다.\n");
-			WriteLog(L"UserDicRead : 오류 : [%s:%d] : %s | <<%s>> | %s | %s\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
+			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 역문 단어의 길이는 15자(30Byte)를 초과할 수 없습니다.\n");
+			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : [%s:%d] : %s | <<%s>> | %s | %s\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
 		}
 		_WideCharToMultiByte(949, 0, Kor.c_str(), -1, szBuffer, len, NULL, NULL);
 		strcpy_s(us.kor, szBuffer);
 
 		if ((len = _WideCharToMultiByte(932, 0, Attr.c_str(), -1, NULL, NULL, NULL, NULL)) > 31)
 		{
-			WriteLog(L"UserDicRead : 오류 :  단어 속성은 42Byte를 초과할 수 없습니다.\n");
-			WriteLog(L"UserDicRead : 오류 : [%s:%d] : %s | %s | %s | <<%s>>\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
+			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 :  단어 속성은 42Byte를 초과할 수 없습니다.\n");
+			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : [%s:%d] : %s | %s | %s | <<%s>>\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
 		}
 		_WideCharToMultiByte(932, 0, Attr.c_str(), -1, szBuffer, len, NULL, NULL);
 		strcpy_s(us.attr, szBuffer);
@@ -713,7 +712,7 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 		vaild_line++;
 		UserDic.push_back(us);
 	}
-	WriteLog(L"UserDictRead : %d개의 사용자 사전 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
+	WriteLog(NORMAL_LOG, L"UserDictRead : %d개의 사용자 사전 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
 	fclose(fp);
 	return true;
 }
@@ -731,7 +730,7 @@ bool filter::anedic_load()
 	HWND hwnd;
 	DWORD pid;
 	hwnd = FindWindow(L"AneParentClass", NULL);
-	WriteLog(L"AneParentClass: %d\n", hwnd);
+	WriteLog(NORMAL_LOG, L"AneParentClass: %d\n", hwnd);
 	if (hwnd)
 	{
 		GetWindowThreadProcessId(hwnd, &pid);
@@ -754,11 +753,11 @@ bool filter::anedic_load()
 
 	if (_wfopen_s(&fp, lpFileName, L"rt,ccs=UTF-8") != 0)
 	{
-		WriteLog(L"UserDicRead : 사용자 사전 '%s' 로드 실패!\n", lpFileName);
+		WriteLog(NORMAL_LOG, L"UserDicRead : 사용자 사전 '%s' 로드 실패!\n", lpFileName);
 		return false;
 	}
 
-	WriteLog(L"UserDicRead : 사용자 사전 \"%s\" 로드.\n", lpFileName);
+	WriteLog(NORMAL_LOG, L"UserDicRead : 사용자 사전 \"%s\" 로드.\n", lpFileName);
 
 	for (int line = 0; fgetws(Buffer, 1000, fp) != NULL; line++)
 	{
@@ -818,24 +817,24 @@ bool filter::anedic_load()
 
 		if ((len = _WideCharToMultiByte(932, 0, Jpn.c_str(), -1, NULL, NULL, NULL, NULL)) > 31)
 		{
-			WriteLog(L"UserDicRead : 오류 : 원문 단어의 길이는 15자(30Byte)를 초과할 수 없습니다.\n");
-			WriteLog(L"UserDicRead : 오류 : [%s:%d] : <<%s>> | %s | %s | %s\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
+			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 원문 단어의 길이는 15자(30Byte)를 초과할 수 없습니다.\n");
+			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : [%s:%d] : <<%s>> | %s | %s | %s\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
 		}
 		_WideCharToMultiByte(932, 0, Jpn.c_str(), -1, szBuffer, len, NULL, NULL);
 		strcpy_s(us.jpn, szBuffer);
 
 		if ((len = _WideCharToMultiByte(949, 0, Kor.c_str(), -1, NULL, NULL, NULL, NULL)) > 31)
 		{
-			WriteLog(L"UserDicRead : 오류 : 역문 단어의 길이는 15자(30Byte)를 초과할 수 없습니다.\n");
-			WriteLog(L"UserDicRead : 오류 : [%s:%d] : %s | <<%s>> | %s | %s\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
+			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 역문 단어의 길이는 15자(30Byte)를 초과할 수 없습니다.\n");
+			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : [%s:%d] : %s | <<%s>> | %s | %s\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
 		}
 		_WideCharToMultiByte(949, 0, Kor.c_str(), -1, szBuffer, len, NULL, NULL);
 		strcpy_s(us.kor, szBuffer);
 
 		if ((len = _WideCharToMultiByte(932, 0, Attr.c_str(), -1, NULL, NULL, NULL, NULL)) > 31)
 		{
-			WriteLog(L"UserDicRead : 오류 :  단어 속성은 42Byte를 초과할 수 없습니다.\n");
-			WriteLog(L"UserDicRead : 오류 : [%s:%d] : %s | %s | %s | <<%s>>\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
+			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 :  단어 속성은 42Byte를 초과할 수 없습니다.\n");
+			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : [%s:%d] : %s | %s | %s | <<%s>>\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
 		}
 		_WideCharToMultiByte(932, 0, Attr.c_str(), -1, szBuffer, len, NULL, NULL);
 		strcpy_s(us.attr, szBuffer);
@@ -847,16 +846,16 @@ bool filter::anedic_load()
 		vaild_line++;
 		UserDic.push_back(us);
 	}
-	WriteLog(L"UserDictRead : %d개의 사용자 사전 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
+	WriteLog(NORMAL_LOG, L"UserDictRead : %d개의 사용자 사전 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
 	fclose(fp);
 	return true;
 }
 
 bool filter::pre(wstring &wsText)
 {
-	if (g_PreUsable == false)
+	if (!pConfig->GetPreSwitch())
 	{
-		WriteLog(L"PreFilter : 전처리가 꺼져 있습니다.\n");
+		WriteLog(NORMAL_LOG, L"PreFilter : 전처리가 꺼져 있습니다.\n");
 		return false;
 	}
 	return filter_proc(PreFilter, PREFILTER, wsText);
@@ -864,9 +863,9 @@ bool filter::pre(wstring &wsText)
 
 bool filter::post(wstring &wsText)
 {
-	if (g_PostUsable == false)
+	if (!pConfig->GetPostSwitch())
 	{
-		WriteLog(L"PostFilter : 후처리가 꺼져 있습니다.\n");
+		WriteLog(NORMAL_LOG, L"PostFilter : 후처리가 꺼져 있습니다.\n");
 		return false;
 	}
 	return filter_proc(PostFilter, POSTFILTER, wsText);
@@ -918,7 +917,7 @@ bool filter::filter_proc(vector<FILTERSTRUCT> &Filter, const int FilterType, wst
 						int len = _MultiByteToWideChar(949, MB_PRECOMPOSED, ex.what(), -1, NULL, NULL);
 						_MultiByteToWideChar(949, MB_PRECOMPOSED, ex.what(), -1, lpWhat, len);
 
-						WriteLog(L"SkipLayerRead : 정규식 오류! : [%s:%d] %s | %d | %s\n", L"SkipLayer.txt", SkipLayer[i].line, SkipLayer[i].wtype.c_str(), SkipLayer[i].layer, SkipLayer[i].cond.c_str());
+						WriteLog(NORMAL_LOG, L"SkipLayerRead : 정규식 오류! : [%s:%d] %s | %d | %s\n", L"SkipLayer.txt", SkipLayer[i].line, SkipLayer[i].wtype.c_str(), SkipLayer[i].layer, SkipLayer[i].cond.c_str());
 						continue;
 					}
 				}
@@ -933,8 +932,8 @@ bool filter::filter_proc(vector<FILTERSTRUCT> &Filter, const int FilterType, wst
 			wsText = replace_all(wsText, Filter[i].src, Filter[i].dest);
 			if (Str.compare(wsText))
 			{
-				if (FilterType == PREFILTER) WriteLog(L"PreFilter : [%s:%d] | %s | %s | %d | %d\n", Filter[i].db.c_str(), Filter[i].line, Filter[i].src.c_str(), Filter[i].dest.c_str(), Filter[i].layer, Filter[i].regex);
-				else if (FilterType == POSTFILTER) WriteLog(L"PostFIlter : [%s:%d] | %s | %s | %d | %d\n", Filter[i].db.c_str(), Filter[i].line, Filter[i].src.c_str(), Filter[i].dest.c_str(), Filter[i].layer, Filter[i].regex);
+				if (FilterType == PREFILTER) WriteLog(DETAIL_LOG, L"PreFilter : [%s:%d] | %s | %s | %d | %d\n", Filter[i].db.c_str(), Filter[i].line, Filter[i].src.c_str(), Filter[i].dest.c_str(), Filter[i].layer, Filter[i].regex);
+				else if (FilterType == POSTFILTER) WriteLog(DETAIL_LOG, L"PostFIlter : [%s:%d] | %s | %s | %d | %d\n", Filter[i].db.c_str(), Filter[i].line, Filter[i].src.c_str(), Filter[i].dest.c_str(), Filter[i].layer, Filter[i].regex);
 			}
 				
 		}
@@ -957,15 +956,15 @@ bool filter::filter_proc(vector<FILTERSTRUCT> &Filter, const int FilterType, wst
 				int len = _MultiByteToWideChar(949, MB_PRECOMPOSED, ex.what(), -1, NULL, NULL);
 				_MultiByteToWideChar(949, MB_PRECOMPOSED, ex.what(), -1, lpWhat, len);
 
-				if (FilterType == PREFILTER) WriteLog(L"PreFilter : 정규식 오류! : [%s:%d] %s | %s | %d | %d\n", Filter[i].db.c_str(), Filter[i].line, Filter[i].src.c_str(), Filter[i].dest.c_str(), Filter[i].layer, Filter[i].regex);
-				else if (FilterType == POSTFILTER) WriteLog(L"PostFilter : 정규식 오류! : [%s:%d] %s | %s | %d | %d\n", Filter[i].db.c_str(), Filter[i].line, Filter[i].src.c_str(), Filter[i].dest.c_str(), Filter[i].layer, Filter[i].regex);
+				if (FilterType == PREFILTER) WriteLog(NORMAL_LOG, L"PreFilter : 정규식 오류! : [%s:%d] %s | %s | %d | %d\n", Filter[i].db.c_str(), Filter[i].line, Filter[i].src.c_str(), Filter[i].dest.c_str(), Filter[i].layer, Filter[i].regex);
+				else if (FilterType == POSTFILTER) WriteLog(NORMAL_LOG, L"PostFilter : 정규식 오류! : [%s:%d] %s | %s | %d | %d\n", Filter[i].db.c_str(), Filter[i].line, Filter[i].src.c_str(), Filter[i].dest.c_str(), Filter[i].layer, Filter[i].regex);
 				continue;
 			}
 
 			if (Str != wsText)
 			{
-				if (FilterType == PREFILTER) WriteLog(L"PreFilter : [%s:%d] %s | %s | %d | %d\n", Filter[i].db.c_str(), Filter[i].line, Filter[i].src.c_str(), Filter[i].dest.c_str(), Filter[i].layer, Filter[i].regex);
-				else if (FilterType == POSTFILTER) WriteLog(L"PostFilter : [%s:%d] %s | %s | %d | %d\n", Filter[i].db.c_str(), Filter[i].line, Filter[i].src.c_str(), Filter[i].dest.c_str(), Filter[i].layer, Filter[i].regex);
+				if (FilterType == PREFILTER) WriteLog(DETAIL_LOG, L"PreFilter : [%s:%d] %s | %s | %d | %d\n", Filter[i].db.c_str(), Filter[i].line, Filter[i].src.c_str(), Filter[i].dest.c_str(), Filter[i].layer, Filter[i].regex);
+				else if (FilterType == POSTFILTER) WriteLog(DETAIL_LOG, L"PostFilter : [%s:%d] %s | %s | %d | %d\n", Filter[i].db.c_str(), Filter[i].line, Filter[i].src.c_str(), Filter[i].dest.c_str(), Filter[i].layer, Filter[i].regex);
 				Str = wsText;
 			}
 		}
@@ -975,22 +974,23 @@ bool filter::filter_proc(vector<FILTERSTRUCT> &Filter, const int FilterType, wst
 
 	if (pass_once)
 	{
-		if (FilterType == PREFILTER) WriteLog(L"PreSkipLayer : %s\n", pass_log.c_str());
-		else if (FilterType == POSTFILTER) WriteLog(L"PostSkipLayer : %s\n", pass_log.c_str());
+		if (FilterType == PREFILTER) WriteLog(SKIPLAYER_LOG, L"PreSkipLayer : %s\n", pass_log.c_str());
+		else if (FilterType == POSTFILTER) WriteLog(SKIPLAYER_LOG, L"PostSkipLayer : %s\n", pass_log.c_str());
 	}
 
 	dwEnd = GetTickCount();
-	if (FilterType == PREFILTER) WriteLog(L"PreFilter : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
-	else if (FilterType == POSTFILTER) WriteLog(L"PostFIlter : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
+	if (FilterType == PREFILTER) WriteLog(TIME_LOG, L"PreFilter : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
+	else if (FilterType == POSTFILTER) WriteLog(TIME_LOG, L"PostFIlter : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
 	return true;
 }
 
 bool filter::cmd(wstring &wsText)
 {
+	BOOL bChanged = false;
 	if (wsText[0] != L'/') return false;
 	if (!wsText.compare(L"/ver") || !wsText.compare(L"/version"))
 	{
-		wsText = L"Ehnd ";
+		wsText += L" : Ehnd ";
 		wsText += WIDEN(EHND_VER);
 		wsText += L", ";
 		wsText += WIDEN(__DATE__);
@@ -1003,35 +1003,61 @@ bool filter::cmd(wstring &wsText)
 	}
 	else if (!wsText.compare(L"/log"))
 	{
-		wsText = L"Log Window.\r\n";
-		ShowLogWin(!IsShownLogWin());
-		return true;
+		if (IsShownLogWin())
+		{
+			pConfig->SetConsoleSwitch(false);
+			wsText = L"/log : Log Window Off.";
+		}
+		else
+		{
+			pConfig->SetConsoleSwitch(true);
+			wsText = L"/log : Log Window On.";
+		}
+		bChanged = true;
+	}
+	else if (!wsText.compare(L"/log_detail"))
+	{
+		if (IsShownLogWin())
+		{
+			pConfig->SetLogDetail(false);
+			wsText = L"/log_detail : Detail Log Off.";
+		}
+		else
+		{
+			pConfig->SetLogDetail(true);
+			wsText = L"/log_detail : Detail Log On.";
+		}
+		bChanged = true;
 	}
 	else if (!wsText.compare(L"/pre"))
 	{
-		if (g_PreUsable)
+		if (pConfig->GetPreSwitch())
 		{
-			g_PreUsable = false;
-			wsText = L"전처리 끔.";
+			pConfig->SetPreSwitch(false);
+			wsText = L"/pre : PreFilter Off.";
 		}
 		else
 		{
-			g_PreUsable = true;
-			wsText = L"전처리 켬.";
+			pConfig->SetPreSwitch(true);
+			wsText = L"/pre : PreFilter On.";
 		}
+		bChanged = true;
 	}
 	else if (!wsText.compare(L"/post"))
 	{
-		if (g_PostUsable)
+		if (pConfig->GetPostSwitch())
 		{
-			g_PostUsable = false;
-			wsText = L"후처리 끔.";
+			pConfig->SetPostSwitch(false);
+			wsText = L"/post : PostFilter Off.";
 		}
 		else
 		{
-			g_PostUsable = true;
-			wsText = L"후처리 켬.";
+			pConfig->SetPostSwitch(true);
+			wsText = L"/post : PostFilter On.";
 		}
+		bChanged = true;
 	}
+
+	if (bChanged) pConfig->SaveConfig();
 	return false;
 }

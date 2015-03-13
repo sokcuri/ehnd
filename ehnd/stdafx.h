@@ -23,20 +23,25 @@ using namespace std;
 #define PREFILTER 1
 #define POSTFILTER 2
 
+#define NORMAL_LOG 0
+#define DETAIL_LOG 10
+#define TIME_LOG 20
+#define SKIPLAYER_LOG 30
+
 // TODO: 프로그램에 필요한 추가 헤더는 여기에서 참조합니다.
 #include "ehnd.h"
 #include "hook.h"
 #include "log.h"
 #include "filter.h"
 #include "watch.h"
+#include "config.h"
 
 extern HINSTANCE g_hInst;
 extern filter *pFilter;
 extern watch *pWatch;
+extern config *pConfig;
 extern int g_initTick;
 extern char g_DicPath[MAX_PATH];
-extern bool g_PreUsable;
-extern bool g_PostUsable;
 
 extern LPBYTE lpfnRetn;
 extern LPBYTE lpfnfopen;
