@@ -22,10 +22,7 @@ bool EhndInit(void)
 
 	WriteLog(L"Hook Success.\n");
 
-	pFilter->pre_load();
-	pFilter->post_load();
-	pFilter->userdic_load();
-	pFilter->skiplayer_load();
+	pFilter->load();
 	return true;
 }
 
@@ -57,9 +54,11 @@ __declspec(naked) void J2K_GetProperty(void)
 {
 	__asm JMP apfnEzt[4 * 4];
 }
-__declspec(naked) void J2K_ReloadUserDict(void)
+void __stdcall J2K_ReloadUserDict(void)
 {
-	__asm JMP apfnEzt[4 * 5];
+	pFilter->load();
+	__asm CALL apfnEzt[4 * 5];
+	return;
 }
 __declspec(naked) void J2K_SetDelJPN(void)
 {

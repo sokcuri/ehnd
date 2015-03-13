@@ -15,7 +15,7 @@ extern "C"
 	EHND_EXPORT void J2K_FreeMem(void);
 	EHND_EXPORT void J2K_GetPriorDict(void);
 	EHND_EXPORT void J2K_GetProperty(void);
-	EHND_EXPORT void J2K_ReloadUserDict(void);
+	EHND_EXPORT void __stdcall J2K_ReloadUserDict(void);
 	EHND_EXPORT void J2K_SetDelJPN(void);
 	EHND_EXPORT void J2K_SetField(void);
 	EHND_EXPORT void J2K_SetHnj2han(void);

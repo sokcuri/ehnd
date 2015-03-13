@@ -36,6 +36,7 @@ public:
 	filter();
 	~filter();
 
+	bool load();
 	bool pre_load();
 	bool post_load();
 	bool userdic_load();
@@ -56,4 +57,6 @@ private:
 	vector<FILTERSTRUCT> PostFilter;
 	vector<USERDICSTRUCT> UserDic;
 	vector<SKIPLAYERSTRUCT> SkipLayer;
+	
+	HANDLE hLoadEvent;
 };

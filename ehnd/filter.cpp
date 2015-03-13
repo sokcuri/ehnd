@@ -1,14 +1,24 @@
 #include "stdafx.h"
 #include "filter.h"
 
-
 filter::filter()
 {
+	hLoadEvent = CreateEvent(NULL, FALSE, TRUE, NULL);
 }
 
 
 filter::~filter()
 {
+	CloseHandle(hLoadEvent);
+}
+
+bool filter::load()
+{
+	WaitForSingleObject(hLoadEvent, INFINITE);
+	if (!pre_load() || !post_load() ||
+		!userdic_load() || skiplayer_load()) return false;
+	SetEvent(hLoadEvent);
+	return true;
 }
 
 bool filter::pre_load()
@@ -27,7 +37,8 @@ bool filter::pre_load()
 
 	int pre_line = 0;
 	bool IsUnicode;
-	PreFilter.clear();
+
+	vector<FILTERSTRUCT> Filter;
 
 	HANDLE hFind = FindFirstFile(Path.c_str(), &FindFileData);
 	
@@ -44,13 +55,17 @@ bool filter::pre_load()
 		Path = lpEztPath;
 		Path += L"\\Ehnd\\";
 
-		filter_load(PreFilter, Path.c_str(), FindFileData.cFileName, PREFILTER, IsUnicode, pre_line);
+		filter_load(Filter, Path.c_str(), FindFileData.cFileName, PREFILTER, IsUnicode, pre_line);
 
 	} while (FindNextFile(hFind, &FindFileData));
 
 	// 정렬
-	sort(PreFilter.begin(), PreFilter.end());
+	sort(Filter.begin(), Filter.end());
 	WriteLog(L"PreFilterRead : 필터 정렬을 완료했습니다.\n");
+
+	// 필터 대체
+	PreFilter = Filter;
+	WriteLog(L"총 %d개의 전처리 필터가 있습니다.\n", PreFilter.size());
 
 	// 소요시간 계산
 	dwEnd = GetTickCount(); WriteLog(L"PreFilterRead : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
@@ -73,7 +88,8 @@ bool filter::post_load()
 
 	int post_line = 0;
 	bool IsUnicode;
-	PostFilter.clear();
+
+	vector<FILTERSTRUCT> Filter;
 
 	HANDLE hFind = FindFirstFile(Path.c_str(), &FindFileData);
 
@@ -90,13 +106,17 @@ bool filter::post_load()
 		Path = lpEztPath;
 		Path += L"\\Ehnd\\";
 
-		filter_load(PostFilter, Path.c_str(), FindFileData.cFileName, POSTFILTER, IsUnicode, post_line);
+		filter_load(Filter, Path.c_str(), FindFileData.cFileName, POSTFILTER, IsUnicode, post_line);
 
 	} while (FindNextFile(hFind, &FindFileData));
 
 	// 정렬
-	sort(PostFilter.begin(), PostFilter.end());
+	sort(Filter.begin(), Filter.end());
 	WriteLog(L"PostFilterRead : 필터 정렬을 완료했습니다.\n");
+
+	// 필터 대체
+	PostFilter = Filter;
+	WriteLog(L"총 %d개의 후처리 필터가 있습니다.\n", PostFilter.size());
 
 	// 소요시간 계산
 	dwEnd = GetTickCount();
