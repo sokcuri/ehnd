@@ -3,7 +3,7 @@
 
 filter::filter()
 {
-	hLoadEvent = CreateEvent(NULL, FALSE, TRUE, NULL);
+	hLoadEvent = CreateEvent(NULL, TRUE, TRUE, NULL);
 }
 
 
