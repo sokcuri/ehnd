@@ -2,6 +2,7 @@
 #include "log.h"
 
 HWND hLogWin, hLogRes;
+HANDLE hLogEvent;
 
 void WriteLog(const wchar_t *format, ...)
 {
@@ -76,11 +77,22 @@ bool CreateLogWin(HINSTANCE hInst)
 	thAttr.lpSecurityDescriptor = NULL;
 	thAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
 
+	hLogEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+	if (!hLogEvent)
+	{
+		MessageBox(0, L"event init error", 0, 0);
+		return 0;
+	}
 	HANDLE hThread = CreateThread(&thAttr, 0, LogThreadMain, NULL, 0, NULL);
 	if (hThread == NULL)
 	{
 		WriteLog(L"cannot create log thread\n");
 	}
+
+	// 로그 윈도우가 초기화될때까지 기다림
+	WaitForSingleObject(hLogEvent, INFINITE);
+
+	WriteLog(L"Log Start.\n");
 	return 0;
 }
 
@@ -111,6 +123,10 @@ DWORD WINAPI LogThreadMain(LPVOID lpParam)
 	
 	MSG msg;
 	BOOL bRet;
+	
+	// 쓰레드 초기화 완료
+	SetEvent(hLogEvent);
+
 	while ((bRet = GetMessage(&msg, NULL, 0, 0)) != 0)
 	{
 		TranslateMessage(&msg);

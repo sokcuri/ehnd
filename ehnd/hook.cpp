@@ -471,23 +471,3 @@ __declspec(naked) void userdict_patch(void)
 	}
 
 }
-
-UINT calculate_hash(LPCSTR s, int n)
-{
-	UINT hash = 5381;
-	UINT c = 0;
-	UINT i = 0; 
-	while(c = *s++)
-	{
-		hash = ((hash << 5) + hash) + c;
-		if (++i == n) break;
-	}
-	return (hash & 0x7FFFFFFF);
-}
-
-size_t strlen_inline(LPCSTR str)
-{
-	register const char* i;
-	for (i = str; *i; ++i);
-	return (i - str);
-}

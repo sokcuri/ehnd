@@ -13,7 +13,6 @@ bool EhndInit(void)
 	pFilter = new filter();
 	CreateLogWin(g_hInst);
 	ShowLogWin(true);
-	WriteLog(L"Log Start.\n", RGB(0, 0, 0), RGB(255, 255, 255));
 	hook_wc2mb();
 	hook_mb2wc();
 
@@ -21,7 +20,7 @@ bool EhndInit(void)
 	hook_userdict();
 	hook_userdict2();
 
-	WriteLog(L"Hook Success.\n", RGB(0, 0, 0), RGB(255, 255, 255));
+	WriteLog(L"Hook Success.\n");
 
 	pFilter->pre_load();
 	pFilter->post_load();
