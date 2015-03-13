@@ -716,6 +716,8 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 	return true;
 }
 
+// anedic.txt 호환을 위한 함수
+// 필터가 변경이 되면 anedic.txt 파일을 찾아 읽는다
 bool filter::anedic_load()
 {
 	WCHAR lpFileName[MAX_PATH];
@@ -724,10 +726,31 @@ bool filter::anedic_load()
 	char szBuffer[128];
 	wstring Path, Jpn, Kor, Part, Attr;
 	int vaild_line = 0;
+	HWND hwnd;
+	DWORD pid;
+	hwnd = FindWindow(L"AneParentClass", NULL);
+	WriteLog(L"AneParentClass: %d\n", hwnd);
+	if (hwnd)
+	{
+		GetWindowThreadProcessId(hwnd, &pid);
+		if (GetCurrentProcessId() != pid)
+			return false;
+	}
+	else
+	{
+		hwnd = FindWindow(L"AnemoneParentWndClass", NULL);
+		if (hwnd)
+		{
+			GetWindowThreadProcessId(hwnd, &pid);
+			if (GetCurrentProcessId() != pid)
+				return false;
+		} else return false;
+	}
+
 	GetExecutePath(lpFileName, MAX_PATH);
 	wcscat_s(lpFileName, L"\\anedic.txt");
 
-	if (_wfopen_s(&fp, Path.c_str(), L"rt,ccs=UTF-8") != 0)
+	if (_wfopen_s(&fp, lpFileName, L"rt,ccs=UTF-8") != 0)
 	{
 		WriteLog(L"UserDicRead : 사용자 사전 '%s' 로드 실패!\n", lpFileName);
 		return false;
@@ -745,6 +768,8 @@ bool filter::anedic_load()
 		memset(us.kor, 0, sizeof(us.kor));
 		memset(us.part, 0, sizeof(us.part));
 		memset(us.attr, 0, sizeof(us.attr));
+
+		Part = L"I110";
 
 		int tab = 0;
 		for (UINT i = 0, prev = 0; i <= wcslen(Buffer); i++)
@@ -769,10 +794,10 @@ bool filter::anedic_load()
 					wcsncpy_s(Context, Buffer + prev, i - prev);
 					prev = i + 1;
 					tab++;
-					if (_wtoi(Context))
-						Part = L"I110";
+					if (Context[0] == L'0' || Context[2] == L'2')
+						Part = L"A9D0"; // 상용어구
 					else
-						Part = L"A9D0";
+						Part = L"I110"; // 명사
 					break;
 				case 3:
 					wcsncpy_s(Context, Buffer + prev, i - prev);
@@ -785,7 +810,7 @@ bool filter::anedic_load()
 			}
 		}
 
-		if (tab < 3) continue;
+		if (tab < 2) continue;
 		int len;
 
 		if ((len = _WideCharToMultiByte(932, 0, Jpn.c_str(), -1, NULL, NULL, NULL, NULL)) > 31)

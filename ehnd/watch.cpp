@@ -41,12 +41,15 @@ DWORD watch::_NotifyThread(LPVOID lpParam)
 	UINT m_nTimerID;
 	WCHAR lpEztPath[MAX_PATH];
 	std::wstring Path;
-	Path = GetLoadPath(lpEztPath, MAX_PATH);
+	GetLoadPath(lpEztPath, MAX_PATH);
+	Path = lpEztPath;
 	Path += L"\\Ehnd";
+
+	WriteLog(L"watch to %s directory\n", Path.c_str());
 
 	HANDLE hDir = CreateFile(Path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
 		0, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
-	CONST DWORD cbBuffer = 1024 * 1024;
+	CONST DWORD cbBuffer = 1024;
 	BYTE pBuffer[1024];
 	BOOL bWatchSubtree = FALSE;
 	DWORD dwNotifyFilter = FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME |
@@ -96,7 +99,6 @@ DWORD watch::_NotifyThread(LPVOID lpParam)
 
 				pfni = (FILE_NOTIFY_INFORMATION*)((PBYTE)pfni + pfni->NextEntryOffset);
 			} while (pfni->NextEntryOffset > 0);
-
 			fileList = fileList_Temp;
 		}
 	}

@@ -109,7 +109,7 @@ DWORD WINAPI LogThreadMain(LPVOID lpParam)
 	CHARFORMAT2 cf;
 	cf.cbSize = sizeof(CHARFORMAT2);
 	cf.dwMask = CFM_COLOR | CFM_BACKCOLOR | CFM_EFFECTS2 | CFM_FACE | CFM_SIZE;
-	cf.crTextColor = RGB(255, 0, 0);
+	cf.crTextColor = RGB(0, 0, 0);
 	cf.crBackColor = RGB(255, 255, 255);
 	cf.yHeight = 12 * 20;
 

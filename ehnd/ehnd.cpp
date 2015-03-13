@@ -10,10 +10,11 @@ FARPROC apfnMsv[100];
 bool EhndInit(void)
 {
 	// init
-	pFilter = new filter();
-	pWatch = new watch();
 	CreateLogWin(g_hInst);
 	ShowLogWin(true);
+
+	pFilter = new filter();
+	pWatch = new watch();
 	hook_wc2mb();
 	hook_mb2wc();
 
