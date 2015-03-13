@@ -19,6 +19,10 @@ BOOL APIENTRY DllMain(HINSTANCE hInstance,
 		g_hInst = hInstance;
 
 		// init ehnd dic path
+		pFilter = new filter();
+		pWatch = new watch();
+		pConfig = new config();
+
 		char szInitTick[12];
 		g_initTick = GetTickCount() + rand();
 		_itoa_s(g_initTick, szInitTick, 10);

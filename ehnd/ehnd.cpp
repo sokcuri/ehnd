@@ -12,10 +12,6 @@ bool EhndInit(void)
 	// init
 	CreateLogWin(g_hInst);
 
-	pFilter = new filter();
-	pWatch = new watch();
-	pConfig = new config();
-
 	pConfig->LoadConfig();
 	ShowLogWin(pConfig->GetConsoleSwitch());
 
@@ -26,7 +22,7 @@ bool EhndInit(void)
 	hook_userdict();
 	hook_userdict2();
 
-	WriteLog(NORMAL_LOG, L"Hook Success.\n");
+	WriteLog(NORMAL_LOG, L"HookUserDict : 사용자사전 알고리즘 최적화.\n");
 
 	pFilter->load();
 	return true;
@@ -40,13 +36,13 @@ __declspec(naked) void J2K_Initialize(void)
 int __stdcall J2K_InitializeEx(int data0, LPSTR key)
 {
 	EhndInit();
-	SetLogText(L"J2K_InitializeEx.\n");
 	__asm
 	{
 		PUSH DWORD PTR DS : [key]
 		PUSH data0
 		CALL apfnEzt[4 * 1]
 	}
+	SetLogText(L"J2K_InitializeEx : 이지트랜스 초기화\n");
 	return g_initTick;
 }
 __declspec(naked) void J2K_FreeMem(void)
@@ -154,7 +150,7 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 
 	wsLog = replace_all(wsText, L"%", L"%%");
 	wsLog = replace_all(wsText, L"%", L"%%");
-	WriteLog(NORMAL_LOG, L"[REQUEST] %s\n\n", wsLog.c_str());
+	if (wsLog.length()) WriteLog(NORMAL_LOG, L"[REQUEST] %s\n\n", wsLog.c_str());
 
 	// 넘어온 문자열의 길이가 0이거나 명령어일때 번역 프로세스 스킵
 	if (wcslen(lpJPN) && !pFilter->cmd(wsText))
