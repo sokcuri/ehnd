@@ -27,6 +27,7 @@ using namespace std;
 #define DETAIL_LOG 10
 #define TIME_LOG 20
 #define SKIPLAYER_LOG 30
+#define ERROR_LOG 40
 
 // TODO: 프로그램에 필요한 추가 헤더는 여기에서 참조합니다.
 #include "ehnd.h"

@@ -16,7 +16,7 @@ watch::watch()
 	hWatchThread = CreateThread(&ThreadAttributes, 0, NotifyThread, NULL, 0, NULL);
 	if (hWatchThread == NULL)
 	{
-		MessageBox(0, L"watch thread create error.", 0, MB_ICONERROR);
+		WriteLog(ERROR_LOG, L"WatchThread : WatchThread Create Error");
 	}
 }
 

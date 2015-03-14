@@ -9,8 +9,8 @@ FARPROC apfnMsv[100];
 
 bool EhndInit(void)
 {
-	// init
 	CreateLogWin(g_hInst);
+	LogStartMsg();
 
 	pConfig->LoadConfig();
 	ShowLogWin(pConfig->GetConsoleSwitch());
@@ -18,9 +18,9 @@ bool EhndInit(void)
 	hook_wc2mb();
 	hook_mb2wc();
 
-	hook();
-	hook_userdict();
-	hook_userdict2();
+	if (!hook()) return false;
+	if (hook_userdict()) return false;
+	if (hook_userdict2()) return false;
 
 	WriteLog(NORMAL_LOG, L"HookUserDict : 사용자사전 알고리즘 최적화.\n");
 
@@ -135,11 +135,15 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 	int i_len;
 	LPWSTR lpJPN, lpKOR;
 	LPSTR szJPN, szKOR;
+
+	// 로그 크기 체크
+	CheckLogSize();
+
 	i_len = _MultiByteToWideChar(932, MB_PRECOMPOSED, szIn, -1, NULL, NULL);
 	lpJPN = (LPWSTR)msvcrt_malloc((i_len + 1) * 3);
 	if (lpJPN == NULL)
 	{
-		SetLogText(L"memory allocation error.\n");
+		WriteLog(ERROR_LOG, L"J2K_TranslateMMNT : Memory Allocation Error.\n");
 		return 0;
 	}
 	_MultiByteToWideChar(932, 0, szIn, -1, lpJPN, i_len);
@@ -169,7 +173,7 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 		szJPN = (LPSTR)msvcrt_malloc((i_len + 1) * 3);
 		if (szJPN == NULL)
 		{
-			SetLogText(L"memory allocation error.\n");
+			WriteLog(ERROR_LOG, L"J2K_TranslateMMNT : Memory Allocation Error.\n");
 			return 0;
 		}
 		_WideCharToMultiByte(932, 0, wsText.c_str(), -1, szJPN, i_len, NULL, NULL);
@@ -194,7 +198,7 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 		lpKOR = (LPWSTR)msvcrt_malloc((i_len + 1) * 3);
 		if (lpKOR == NULL)
 		{
-			SetLogText(L"memory allocation error.\n");
+			WriteLog(ERROR_LOG, L"J2K_TranslateMMNT : Memory Allocation Error.\n");
 			return 0;
 		}
 		_MultiByteToWideChar(949, 0, szKOR, -1, lpKOR, i_len);
@@ -221,7 +225,7 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 	szOut = (LPSTR)msvcrt_malloc((i_len + 1) * 3);
 	if (szOut == NULL)
 	{
-		SetLogText(L"memory allocation error.\n");
+		WriteLog(ERROR_LOG, L"J2K_TranslateMMNT : Memory Allocation Error.\n");
 		return 0;
 	}
 	_WideCharToMultiByte(949, 0, wsText.c_str(), -1, szOut, i_len, NULL, NULL);

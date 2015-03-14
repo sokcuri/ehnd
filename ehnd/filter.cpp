@@ -496,7 +496,7 @@ bool filter::skiplayer_load2(vector<SKIPLAYERSTRUCT> &SkipLayer, LPCWSTR lpPath,
 			int len = _MultiByteToWideChar(949, MB_PRECOMPOSED, ex.what(), -1, NULL, NULL);
 			_MultiByteToWideChar(949, MB_PRECOMPOSED, ex.what(), -1, lpWhat, len);
 
-			WriteLog(NORMAL_LOG, L"SkipLayerRead : 정규식 오류! : [%s:%d] %s | %s | %s\n", L"SkipLayer.txt", line, ss.wtype, ss.wlayer, ss.cond);
+			WriteLog(ERROR_LOG, L"SkipLayerRead : 정규식 오류! : [%s:%d] %s | %s | %s\n", L"SkipLayer.txt", line, ss.wtype, ss.wlayer, ss.cond);
 
 			continue;
 		}
@@ -594,8 +594,8 @@ bool filter::filter_load(vector<FILTERSTRUCT> &Filter, LPCWSTR lpPath, LPCWSTR l
 				int len = _MultiByteToWideChar(949, MB_PRECOMPOSED, ex.what(), -1, NULL, NULL);
 				_MultiByteToWideChar(949, MB_PRECOMPOSED, ex.what(), -1, lpWhat, len);
 
-				if (FilterType == 1) WriteLog(NORMAL_LOG, L"PreFilterRead : 정규식 오류! : [%s:%d] %s | %s | %d | %d\n", lpFileName, line, fs.src.c_str(), fs.dest.c_str(), fs.layer, fs.regex);
-				else if (FilterType == 2) WriteLog(NORMAL_LOG, L"PostFilterRead : 정규식 오류! : [%s:%d] %s | %s | %d | %d\n", lpFileName, line, fs.src.c_str(), fs.dest.c_str(), fs.layer, fs.regex);
+				if (FilterType == 1) WriteLog(ERROR_LOG, L"PreFilterRead : 정규식 오류! : [%s:%d] %s | %s | %d | %d\n", lpFileName, line, fs.src.c_str(), fs.dest.c_str(), fs.layer, fs.regex);
+				else if (FilterType == 2) WriteLog(ERROR_LOG, L"PostFilterRead : 정규식 오류! : [%s:%d] %s | %s | %d | %d\n", lpFileName, line, fs.src.c_str(), fs.dest.c_str(), fs.layer, fs.regex);
 				continue;
 			}
 		}
@@ -918,7 +918,7 @@ bool filter::filter_proc(vector<FILTERSTRUCT> &Filter, const int FilterType, wst
 						int len = _MultiByteToWideChar(949, MB_PRECOMPOSED, ex.what(), -1, NULL, NULL);
 						_MultiByteToWideChar(949, MB_PRECOMPOSED, ex.what(), -1, lpWhat, len);
 
-						WriteLog(NORMAL_LOG, L"SkipLayerRead : 정규식 오류! : [%s:%d] %s | %d | %s\n", L"SkipLayer.txt", SkipLayer[i].line, SkipLayer[i].wtype.c_str(), SkipLayer[i].layer, SkipLayer[i].cond.c_str());
+						WriteLog(ERROR_LOG, L"SkipLayerRead : 정규식 오류! : [%s:%d] %s | %d | %s\n", L"SkipLayer.txt", SkipLayer[i].line, SkipLayer[i].wtype.c_str(), SkipLayer[i].layer, SkipLayer[i].cond.c_str());
 						continue;
 					}
 				}
@@ -957,8 +957,8 @@ bool filter::filter_proc(vector<FILTERSTRUCT> &Filter, const int FilterType, wst
 				int len = _MultiByteToWideChar(949, MB_PRECOMPOSED, ex.what(), -1, NULL, NULL);
 				_MultiByteToWideChar(949, MB_PRECOMPOSED, ex.what(), -1, lpWhat, len);
 
-				if (FilterType == PREFILTER) WriteLog(NORMAL_LOG, L"PreFilter : 정규식 오류! : [%s:%d] %s | %s | %d | %d\n", Filter[i].db.c_str(), Filter[i].line, Filter[i].src.c_str(), Filter[i].dest.c_str(), Filter[i].layer, Filter[i].regex);
-				else if (FilterType == POSTFILTER) WriteLog(NORMAL_LOG, L"PostFilter : 정규식 오류! : [%s:%d] %s | %s | %d | %d\n", Filter[i].db.c_str(), Filter[i].line, Filter[i].src.c_str(), Filter[i].dest.c_str(), Filter[i].layer, Filter[i].regex);
+				if (FilterType == PREFILTER) WriteLog(ERROR_LOG, L"PreFilter : 정규식 오류! : [%s:%d] %s | %s | %d | %d\n", Filter[i].db.c_str(), Filter[i].line, Filter[i].src.c_str(), Filter[i].dest.c_str(), Filter[i].layer, Filter[i].regex);
+				else if (FilterType == POSTFILTER) WriteLog(ERROR_LOG, L"PostFilter : 정규식 오류! : [%s:%d] %s | %s | %d | %d\n", Filter[i].db.c_str(), Filter[i].line, Filter[i].src.c_str(), Filter[i].dest.c_str(), Filter[i].layer, Filter[i].regex);
 				continue;
 			}
 

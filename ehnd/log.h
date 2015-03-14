@@ -4,6 +4,9 @@
 void WriteLog(int LogType, const wchar_t *format, ...);
 void WriteTextLog(const wchar_t* format, ...);
 
+void LogStartMsg();
+void CheckLogSize();
+
 bool CreateLogWin(HINSTANCE);
 void SetLogText(LPCWSTR);
 void SetLogText(LPCWSTR, COLORREF, COLORREF);

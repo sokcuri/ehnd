@@ -4,6 +4,57 @@
 HWND hLogWin, hLogRes;
 HANDLE hLogEvent;
 
+
+void LogStartMsg()
+{
+	wchar_t lpEztPath[MAX_PATH];
+	wchar_t lpExePath[MAX_PATH];
+
+	GetLoadPath(lpEztPath, MAX_PATH);
+	GetExecutePath(lpExePath, MAX_PATH);
+
+	WriteLog(NORMAL_LOG, L"──── ━━\n");
+	WriteLog(NORMAL_LOG, L"Ehnd :: 엔드 - VER. %s :: COMPILE AT %s, %s\n", WIDEN(EHND_VER), WIDEN(__DATE__), WIDEN(__TIME__));
+	WriteLog(NORMAL_LOG, L"──── ━━ Ehnd -- sokcuri.neko.kr --\n");
+	WriteLog(NORMAL_LOG, L"\n");
+	WriteLog(NORMAL_LOG, L"- 제작자 : %s\n", L"소쿠릿");
+	WriteLog(NORMAL_LOG, L"━━━━━━━━━───────────-＊\n");
+	WriteLog(NORMAL_LOG, L"EzTransPath : %s\n", lpEztPath);
+	WriteLog(NORMAL_LOG, L"ExecutePath : %s\n", lpExePath);
+	return;
+}
+
+void CheckLogSize()
+{
+	FILE *fp;
+
+	// 로그 사용안할때 끄기
+	if (!pConfig->GetFileLogSwitch()) return;
+
+	wchar_t lpFileName[MAX_PATH];
+	if (pConfig->GetFileLogEztLoc())
+		GetLoadPath(lpFileName, MAX_PATH);
+	else GetExecutePath(lpFileName, MAX_PATH);
+	wcscat_s(lpFileName, L"\\ehnd_log.log");
+
+	if (_wfopen_s(&fp, lpFileName, L"a+t,ccs=UTF-8")) return;
+
+	//fpos = ftell(fp);
+	fseek(fp, 0, SEEK_END);
+	int fsize = ftell(fp);
+	int cf_size = pConfig->GetFileLogSize();
+
+	if (cf_size != 0 && cf_size * 1024 < fsize)
+	{
+		fclose(fp);
+		DeleteFile(L".\\ehnd_log.log");
+
+		LogStartMsg();
+	}
+	else
+		fclose(fp);
+}
+
 void WriteLog(int LogType, const wchar_t *format, ...)
 {
 	if (!pConfig->GetLogTime() && LogType == TIME_LOG) return;
@@ -88,19 +139,17 @@ bool CreateLogWin(HINSTANCE hInst)
 	hLogEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 	if (!hLogEvent)
 	{
-		MessageBox(0, L"event init error", 0, 0);
+		WriteLog(ERROR_LOG, L"CreateLogWin : Event Init Error");
 		return 0;
 	}
 	HANDLE hThread = CreateThread(&thAttr, 0, LogThreadMain, NULL, 0, NULL);
 	if (hThread == NULL)
 	{
-		WriteLog(NORMAL_LOG, L"cannot create log thread\n");
+		WriteLog(ERROR_LOG, L"CreateLogWin : Log Thread Create Error");
 	}
 
 	// 로그 윈도우가 초기화될때까지 기다림
 	WaitForSingleObject(hLogEvent, INFINITE);
-
-	WriteLog(NORMAL_LOG, L"Log Start.\n");
 	return 0;
 }
 
@@ -109,10 +158,17 @@ DWORD WINAPI LogThreadMain(LPVOID lpParam)
 	HINSTANCE hInst = g_hInst;
 
 	hLogWin = CreateWindowEx(0, L"EhndLogWin", L"title", WS_OVERLAPPEDWINDOW, 64, 64, 640, 480, 0, 0, hInst, 0);
-	if (!hLogWin) MessageBox(0, L"log win create failed", 0, 0);
+	if (!hLogWin)
+	{
+		WriteLog(ERROR_LOG, L"LogThreadMain : Log Window Create Failed");
+		return 0;
+	}
 
 	hLogRes = CreateWindowEx(0, MSFTEDIT_CLASS, L"", WS_VISIBLE | WS_CHILD | WS_VSCROLL | ES_MULTILINE | ES_LEFT | ES_NOHIDESEL | ES_AUTOVSCROLL, 0, 0, 640, 480, hLogWin, NULL, hInst, NULL);
-	if (!hLogRes) MessageBox(0, L"log win textbox create failed", 0, 0);
+	if (!hLogRes)
+	{
+		WriteLog(ERROR_LOG, L"LogThreadMain : Log Edit Create Failed");
+	}
 
 	CHARFORMAT2 cf;
 	cf.cbSize = sizeof(CHARFORMAT2);

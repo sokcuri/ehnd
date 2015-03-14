@@ -43,7 +43,7 @@ bool hook()
 	hDll = LoadLibrary(lpDllPath);
 	if (!hDll)
 	{
-		MessageBox(0, L"eztrans load failed", 0, 0);
+		MessageBox(0, L"J2KEngine.dlx Load Failed", L"EzTransHook", MB_ICONERROR);
 		return false;
 	}
 
@@ -52,7 +52,7 @@ bool hook()
 		apfnEzt[i] = GetProcAddress(hDll, aEztFunction[i]);
 		if (!apfnEzt[i])
 		{
-			MessageBox(0, L"eztrans function load error", 0, 0);
+			MessageBox(0, L"J2KEngine.dlx Function Load Failed", L"EzTransHook", MB_ICONERROR);
 			return false;
 		}
 	}
@@ -63,7 +63,7 @@ bool hook()
 	hDll2 = LoadLibrary(lpDllPath);
 	if (!hDll2)
 	{
-		MessageBox(0, L"msvcrt load failed", 0, 0);
+		MessageBox(0, L"MSVCRT.DLL Load Failed", L"EzTransHook", MB_ICONERROR);
 		return false;
 	}
 
@@ -72,7 +72,7 @@ bool hook()
 		apfnMsv[i] = GetProcAddress(hDll2, aMsvFunction[i]);
 		if (!apfnMsv[i])
 		{
-			MessageBox(0, L"msvcrt function load error", 0, 0);
+			MessageBox(0, L"MSVCRT.DLL Function Load Failed", L"EzTransHook", MB_ICONERROR);
 			return false;
 		}
 	}
@@ -86,7 +86,7 @@ bool hook()
 int search_ptn(LPWORD ptn, size_t ptn_size, LPBYTE *addr)
 {
 	HMODULE hDll = GetModuleHandle(L"j2kengine.dlx");
-	if (hDll == NULL) MessageBox(0, L"j2kengine can't get handle", 0, 0);
+	if (hDll == NULL) MessageBox(0, L"J2KEngine.dlx Load Failed", L"", 0);
 
 	MODULEINFO dllInfo;
 	GetModuleInformation(GetCurrentProcess(), hDll, &dllInfo, sizeof(dllInfo));
@@ -135,14 +135,11 @@ int search_ptn(LPWORD ptn, size_t ptn_size, LPBYTE *addr)
 		scan = ptnEnd;
 		while (scan >= 0)
 		{
-			WCHAR asdfd[100];
-			wsprintf(asdfd, L"ptn try search at 0x%08X\n", p);
-			//WriteLog(asdfd);
 			if ((HIBYTE(ptn[scan]) == 0x00) && (LOBYTE(ptn[scan]) != p[scan]))
 				break;
 			if (scan == 0)
 			{
-				*addr = p;
+				*addr = p;	
 				searchSuccessCount++;
 			}
 			scan--;
@@ -162,12 +159,12 @@ bool hook_userdict(void)
 
 	if (r == 0)
 	{
-		WriteLog(NORMAL_LOG, L"j2kengine ptn search failed\n");
+		WriteLog(NORMAL_LOG, L"HookUserDict : J2KEngine Pattern Search Failed\n");
 		return false;
 	}
 	else if (r > 1)
 	{
-		WriteLog(NORMAL_LOG, L"j2kengine ptn multi found\n");
+		WriteLog(NORMAL_LOG, L"HookUserDict : J2KEngine Pattern Search Failed\n");
 		return false;
 	}
 	else
@@ -189,7 +186,7 @@ bool hook_userdict(void)
 		memcpy(addr, Patch, PatchSize);
 		hHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, FALSE, GetCurrentProcessId());
 		VirtualProtectEx(hHandle, (void *)addr, PatchSize, OldProtect, &OldProtect2);
-		WriteLog(NORMAL_LOG, L"success userdict hook.\n");
+		WriteLog(NORMAL_LOG, L"HookUserDict : Success.\n");
 	}
 
 	return true;
@@ -211,12 +208,12 @@ bool hook_userdict2(void)
 
 	if (r == 0)
 	{
-		WriteLog(NORMAL_LOG, L"j2kengine ptn search failed\n");
+		WriteLog(NORMAL_LOG, L"HookUserDict2 : J2KEngine Pattern Search Failed\n");
 		return false;
 	}
 	else if (r > 1)
 	{
-		WriteLog(NORMAL_LOG, L"j2kengine ptn multi found\n");
+		WriteLog(NORMAL_LOG, L"HookUserDict2 : J2kEngine Pattern Search Failed\n");
 		return false;
 	}
 	else
@@ -238,7 +235,7 @@ bool hook_userdict2(void)
 		hHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, FALSE, GetCurrentProcessId());
 		VirtualProtectEx(hHandle, (void *)addr, PatchSize, OldProtect, &OldProtect2);
 
-		WriteLog(NORMAL_LOG, L"success userdict2 hook.\n");
+		WriteLog(NORMAL_LOG, L"HookUserDict2 : Success.\n");
 	}
 
 	return true;
@@ -248,13 +245,11 @@ void hook_wc2mb(void)
 {
 	HMODULE hDll = GetModuleHandle(L"kernel32.dll");
 	lpfnwc2mb = (LPBYTE)GetProcAddress(hDll, "WideCharToMultiByte");
-	WriteLog(NORMAL_LOG, L"hook_wc2mb : %08X\n", lpfnwc2mb);
 
 	for (int i = 0; i < 0x10; i++)
 	{
 		if (*(lpfnwc2mb + i) == 0xFF && *(lpfnwc2mb + i + 1) == 0x25)
 		{
-			WriteLog(NORMAL_LOG, L"_wc2mb : %08X\n", lpfnwc2mb + i);
 			lpfnwc2mb += i;
 			break;
 		}
@@ -266,13 +261,11 @@ void hook_mb2wc(void)
 {
 	HMODULE hDll = GetModuleHandle(L"kernel32.dll");
 	lpfnmb2wc = (LPBYTE)GetProcAddress(hDll, "MultiByteToWideChar");
-	WriteLog(NORMAL_LOG, L"hook_mb2wc : %08X\n", lpfnmb2wc);
 
 	for (int i = 0; i < 0x10; i++)
 	{
 		if (*(lpfnmb2wc + i) == 0xFF && *(lpfnmb2wc + i + 1) == 0x25)
 		{
-			WriteLog(NORMAL_LOG, L"_mb2wc : %08X\n", lpfnmb2wc + i);
 			lpfnmb2wc += i;
 			break;
 		}
