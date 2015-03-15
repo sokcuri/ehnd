@@ -47,8 +47,15 @@ extern char g_DicPath[MAX_PATH];
 extern LPBYTE lpfnRetn;
 extern LPBYTE lpfnfopen;
 extern LPBYTE lpfnwc2mb;
+extern LPBYTE lpfnwc2mb_main;
 extern LPBYTE lpfnmb2wc;
+extern LPBYTE lpfnmb2wc_main;
+
+extern wstring watchStr;
+extern wstring resStr;
+
 extern HMODULE hEzt, hMsv;
+
 
 #ifdef _UNICODE
 #define WIDEN2(x) L ## x

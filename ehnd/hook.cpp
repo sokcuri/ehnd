@@ -241,7 +241,7 @@ bool hook_userdict2(void)
 	return true;
 }
 
-void hook_wc2mb(void)
+bool hook_wc2mb(void)
 {
 	HMODULE hDll = GetModuleHandle(L"kernel32.dll");
 	lpfnwc2mb = (LPBYTE)GetProcAddress(hDll, "WideCharToMultiByte");
@@ -254,10 +254,11 @@ void hook_wc2mb(void)
 			break;
 		}
 	}
-
+	if (lpfnwc2mb == NULL) return false;
+	LPBYTE lpfnwc2mb_main = (LPBYTE)*(lpfnwc2mb);
 }
 
-void hook_mb2wc(void)
+bool hook_mb2wc(void)
 {
 	HMODULE hDll = GetModuleHandle(L"kernel32.dll");
 	lpfnmb2wc = (LPBYTE)GetProcAddress(hDll, "MultiByteToWideChar");
@@ -270,6 +271,55 @@ void hook_mb2wc(void)
 			break;
 		}
 	}
+	if (lpfnmb2wc == NULL) return false;
+	LPBYTE lpfnmb2wc_main = (LPBYTE)*(lpfnmb2wc);
+}
+
+__declspec(naked) void _func_wc2mb(UINT a, DWORD b, LPCWSTR c, int d, LPSTR e, int f, LPCSTR g, LPBOOL h)
+{
+	// stdcall head
+	// 767BF830 >  8BFF            MOV EDI,EDI
+	// 767BF832    55              PUSH EBP
+	// 767BF833    8BEC            MOV EBP, ESP
+
+	func_wc2mb(a, b, c, d, e, f, g, h);
+
+	__asm
+	{
+		MOV EDI, EDI
+		PUSH EBP
+		MOV EBP, ESP
+		JMP [lpfnwc2mb_main + 5]
+	}
+}
+
+__declspec(naked) void _func_mb2wc(UINT a, DWORD b, LPCSTR c, int d, LPWSTR e, int f)
+{
+	// stdcall head
+	// 767BF830 >  8BFF            MOV EDI,EDI
+	// 767BF832    55              PUSH EBP
+	// 767BF833    8BEC            MOV EBP, ESP
+
+	func_mb2wc(a, b, c, d, e, f);
+
+	__asm
+	{
+		MOV EDI, EDI
+		PUSH EBP
+		MOV EBP, ESP
+		JMP [lpfnmb2wc_main + 5]
+	}
+}
+
+void func_wc2mb(UINT a, DWORD b, LPCWSTR c, int d, LPSTR e, int f, LPCSTR g, LPBOOL h)
+{
+	// Unicode -> 932
+	if (a == 932)
+}
+
+void func_mb2wc(UINT a, DWORD b, LPCSTR c, int d, LPWSTR e, int f)
+{
+	// 949 -> Unicode
 
 }
 

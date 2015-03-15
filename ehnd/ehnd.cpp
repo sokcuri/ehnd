@@ -134,23 +134,51 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 	wstring wsText, wsOriginal, wsLog;
 	int i_len;
 	LPWSTR lpJPN, lpKOR;
-	LPSTR szJPN, szKOR;
+	LPSTR szJPN, szKOR, szTemp;
 
 	// 로그 크기 체크
 	CheckLogSize();
 
-	i_len = _MultiByteToWideChar(932, MB_PRECOMPOSED, szIn, -1, NULL, NULL);
-	lpJPN = (LPWSTR)msvcrt_malloc((i_len + 1) * 3);
-	if (lpJPN == NULL)
+	// WideCharToMultiByte intercept
+	
+	// watchStr를 wc2mb해서 같은 결과가 나오면 이쪽을 우선적으로 쓴다
+	//WideCharToMultiByte(949, 0, wsText.c_str(), -1, szOut, i_len, NULL, NULL);
+	i_len = _WideCharToMultiByte(949, 0, watchStr.c_str(), -1, NULL, NULL, NULL, NULL);
+	szTemp = (LPSTR)msvcrt_malloc((i_len + 1) * 3);
+	if (szTemp == NULL)
 	{
 		WriteLog(ERROR_LOG, L"J2K_TranslateMMNT : Memory Allocation Error.\n");
 		return 0;
 	}
-	_MultiByteToWideChar(932, 0, szIn, -1, lpJPN, i_len);
+	_WideCharToMultiByte(949, 0, watchStr.c_str(), -1, szTemp, i_len, NULL, NULL);
+	
+	if (strcmp(szTemp, szIn))
+	{
+		// Normal Mode
+		WriteLog(NORMAL_LOG, L"[NM] watchStr: %s, szIn: %s\n", watchStr.c_str(), szIn);
 
-	wsOriginal = lpJPN;
-	wsText = lpJPN;
-	msvcrt_free(lpJPN);
+		i_len = _MultiByteToWideChar(932, MB_PRECOMPOSED, szIn, -1, NULL, NULL);
+		lpJPN = (LPWSTR)msvcrt_malloc((i_len + 1) * 3);
+		if (lpJPN == NULL)
+		{
+			WriteLog(ERROR_LOG, L"J2K_TranslateMMNT : Memory Allocation Error.\n");
+			return 0;
+		}
+		_MultiByteToWideChar(932, 0, szIn, -1, lpJPN, i_len);
+
+		wsOriginal = lpJPN;
+		wsText = lpJPN;
+		msvcrt_free(lpJPN);
+	}
+	else
+	{
+		// Unicode 대체 Mode
+		WriteLog(NORMAL_LOG, L"[RP] watchStr: %s, szIn: %s\n", watchStr.c_str(), szIn);
+
+		wsOriginal = watchStr;
+		wsText = watchStr;
+	}
+	msvcrt_free(szTemp);
 
 	wsLog = replace_all(wsText, L"%", L"%%");
 	wsLog = replace_all(wsText, L"%", L"%%");
