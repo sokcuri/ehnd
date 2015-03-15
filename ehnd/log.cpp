@@ -180,7 +180,6 @@ DWORD WINAPI LogThreadMain(LPVOID lpParam)
 	SendMessage(hLogRes, EM_SETCHARFORMAT, SCF_ALL, (LPARAM)&cf);
 	SendMessage(hLogRes, EM_REPLACESEL, TRUE, (LPARAM)L"");
 
-	ShowWindow(hLogWin, true);
 	ShowWindow(hLogRes, true);
 	
 	MSG msg;
