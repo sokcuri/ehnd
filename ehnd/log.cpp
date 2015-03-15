@@ -48,8 +48,6 @@ void CheckLogSize()
 	{
 		fclose(fp);
 		DeleteFile(L".\\ehnd_log.log");
-
-		LogStartMsg();
 	}
 	else
 		fclose(fp);

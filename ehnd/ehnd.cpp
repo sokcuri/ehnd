@@ -140,7 +140,8 @@ void *__stdcall J2K_TranslateMMNTW(int data0, LPCWSTR szIn)
 	wsOriginal = szIn;
 	wsText = szIn;
 
-	WriteLog(NORMAL_LOG, L"x: %s\n", szIn);
+	// 로그 크기 체크
+	CheckLogSize();
 
 	wsLog = replace_all(wsText, L"%", L"%%");
 	if (wsLog.length()) WriteLog(NORMAL_LOG, L"[REQUEST] %s\n\n", wsLog.c_str());
@@ -219,9 +220,6 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPCSTR szIn)
 	LPSTR szTemp;
 
 	lpJPN = 0;
-
-	// 로그 크기 체크
-	//CheckLogSize();
 
 	// WideCharToMultiByte intercept
 	// watchStr를 wc2mb해서 같은 결과가 나오면 이쪽을 우선적으로 쓴다
