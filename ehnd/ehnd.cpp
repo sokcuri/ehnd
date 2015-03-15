@@ -245,26 +245,18 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPCSTR szIn)
 	}
 	_MultiByteToWideChar(932, 0, szIn, -1, lpJPN, i_len);
 
+	// Input에 함수가 깨져 들어오지 않도록 해줌
 	if (szIn[0] == 0 || strcmp(szTemp, szIn) != 0)
-	{
-		// Normal Mode
-		WriteLog(NORMAL_LOG, L"[일반 모드]\n");
-
 		wsText = lpJPN;
-	}
 	else
-	{
-		WriteLog(NORMAL_LOG, L"[유니코드 대체]\n");
-
 		wsText = wsTemp.c_str();
-	}
+
 	msvcrt_free(lpJPN);
 	msvcrt_free(szTemp);
 	
 	lpKOR = (LPWSTR)J2K_TranslateMMNTW(data0, wsText.c_str());
 
-	WriteLog(NORMAL_LOG, L"Result: %s\n", lpKOR);
-	// Ehnd 유니코드 지원 (문자열 뒤에 ##EHND## Padding 추가 이후 유니코드 데이터 포함)
+	// [보류]Ehnd 유니코드 지원 (문자열 뒤에 ##EHND## Padding 추가 이후 유니코드 데이터 포함)
 	// (OutputData) 0x00 "##EHND##" 0x00 (UnicodeData)
 
 	i_len = _WideCharToMultiByte(949, 0, lpKOR, -1, NULL, NULL, NULL, NULL);
