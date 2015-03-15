@@ -182,7 +182,7 @@ bool hook_userdict(void)
 		DWORD OldProtect, OldProtect2;
 		HANDLE hHandle;
 		hHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, FALSE, GetCurrentProcessId());
-		VirtualProtectEx(hHandle, (void *)addr, 5, PAGE_EXECUTE_READWRITE, &OldProtect);
+		VirtualProtectEx(hHandle, (void *)addr, PatchSize, PAGE_EXECUTE_READWRITE, &OldProtect);
 		memcpy(addr, Patch, PatchSize);
 		hHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, FALSE, GetCurrentProcessId());
 		VirtualProtectEx(hHandle, (void *)addr, PatchSize, OldProtect, &OldProtect2);
@@ -230,7 +230,7 @@ bool hook_userdict2(void)
 		DWORD OldProtect, OldProtect2;
 		HANDLE hHandle;
 		hHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, FALSE, GetCurrentProcessId());
-		VirtualProtectEx(hHandle, (void *)addr, 5, PAGE_EXECUTE_READWRITE, &OldProtect);
+		VirtualProtectEx(hHandle, (void *)addr, PatchSize, PAGE_EXECUTE_READWRITE, &OldProtect);
 		memcpy(addr, Patch, PatchSize);
 		hHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, FALSE, GetCurrentProcessId());
 		VirtualProtectEx(hHandle, (void *)addr, PatchSize, OldProtect, &OldProtect2);
@@ -255,7 +255,46 @@ bool hook_wc2mb(void)
 		}
 	}
 	if (lpfnwc2mb == NULL) return false;
-	LPBYTE lpfnwc2mb_main = (LPBYTE)*(lpfnwc2mb);
+
+	// FF 15 AA BB CC DD
+	//       ^^----------
+
+	LPBYTE d, d2;
+	char *p = (char *)&d;
+	for (int i = 0; i < 4; i++)
+		p[i] = (BYTE)*(lpfnwc2mb + 2 + i);
+
+	p = (char *)&d2;
+	for (int i = 0; i < 4; i++)
+		p[i] = (BYTE)*(d + i);
+
+	lpfnwc2mb = d2 + 5;
+
+	// 00h: JMP XXX = (target addr - next inst addr)
+	// 005: ~~~~
+
+	BYTE Patch[5];
+	int PatchSize = _countof(Patch);
+	Patch[0] = 0xE9;
+	Patch[1] = LOBYTE(LOWORD(((LPBYTE)&_func_wc2mb - lpfnwc2mb)));
+	Patch[2] = HIBYTE(LOWORD(((LPBYTE)&_func_wc2mb - lpfnwc2mb)));
+	Patch[3] = LOBYTE(HIWORD(((LPBYTE)&_func_wc2mb - lpfnwc2mb)));
+	Patch[4] = HIBYTE(HIWORD(((LPBYTE)&_func_wc2mb - lpfnwc2mb)));
+
+	DWORD OldProtect, OldProtect2;
+	HANDLE hHandle;
+	hHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, FALSE, GetCurrentProcessId());
+	VirtualProtectEx(hHandle, (void *)lpfnwc2mb, PatchSize, PAGE_EXECUTE_READWRITE, &OldProtect);
+	memcpy(lpfnwc2mb, Patch, PatchSize);
+	hHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, FALSE, GetCurrentProcessId());
+	VirtualProtectEx(hHandle, (void *)lpfnwc2mb, PatchSize, OldProtect, &OldProtect2);
+
+	//lpfnwc2mb = (LPBYTE)*ref + 0x05;
+	//LPBYTE lpfnwc2mb_main = (LPBYTE)*(lpfnwc2mb);
+
+	WriteLog(NORMAL_LOG, L"lpfnwc2mb: %8x\n", lpfnwc2mb);
+
+	return true;
 }
 
 bool hook_mb2wc(void)
@@ -272,15 +311,36 @@ bool hook_mb2wc(void)
 		}
 	}
 	if (lpfnmb2wc == NULL) return false;
-	LPBYTE lpfnmb2wc_main = (LPBYTE)*(lpfnmb2wc);
+
+	LPBYTE d, d2;
+	char *p = (char *)&d;
+	for (int i = 0; i < 4; i++)
+		p[i] = (BYTE)*(lpfnmb2wc + 2 + i);
+
+	p = (char *)&d2;
+	for (int i = 0; i < 4; i++)
+		p[i] = (BYTE)*(d + i);
+
+	lpfnmb2wc = d2 + 5;
+
+	WriteLog(NORMAL_LOG, L"lpfnmb2wc: %8x\n", lpfnmb2wc);
+
+	return true;
 }
 
-__declspec(naked) void _func_wc2mb(UINT a, DWORD b, LPCWSTR c, int d, LPSTR e, int f, LPCSTR g, LPBOOL h)
+__declspec(naked) int _func_wc2mb(UINT a, DWORD b, LPCWSTR c, int d, LPSTR e, int f, LPCSTR g, LPBOOL h)
 {
 	// stdcall head
 	// 767BF830 >  8BFF            MOV EDI,EDI
 	// 767BF832    55              PUSH EBP
 	// 767BF833    8BEC            MOV EBP, ESP
+
+	__asm
+	{
+		PUSH EBP
+		MOV EBP, ESP
+		POP EBP
+	}
 
 	func_wc2mb(a, b, c, d, e, f, g, h);
 
@@ -289,16 +349,23 @@ __declspec(naked) void _func_wc2mb(UINT a, DWORD b, LPCWSTR c, int d, LPSTR e, i
 		MOV EDI, EDI
 		PUSH EBP
 		MOV EBP, ESP
-		JMP [lpfnwc2mb_main + 5]
+		JMP [lpfnwc2mb]
 	}
 }
 
-__declspec(naked) void _func_mb2wc(UINT a, DWORD b, LPCSTR c, int d, LPWSTR e, int f)
+__declspec(naked) int __stdcall _func_mb2wc(UINT a, DWORD b, LPCSTR c, int d, LPWSTR e, int f)
 {
 	// stdcall head
 	// 767BF830 >  8BFF            MOV EDI,EDI
 	// 767BF832    55              PUSH EBP
 	// 767BF833    8BEC            MOV EBP, ESP
+	
+	__asm
+	{
+		PUSH EBP
+		MOV EBP, ESP
+		POP EBP
+	}
 
 	func_mb2wc(a, b, c, d, e, f);
 
@@ -307,29 +374,39 @@ __declspec(naked) void _func_mb2wc(UINT a, DWORD b, LPCSTR c, int d, LPWSTR e, i
 		MOV EDI, EDI
 		PUSH EBP
 		MOV EBP, ESP
-		JMP [lpfnmb2wc_main + 5]
+		JMP [lpfnmb2wc]
 	}
 }
 
-void func_wc2mb(UINT a, DWORD b, LPCWSTR c, int d, LPSTR e, int f, LPCSTR g, LPBOOL h)
+int func_wc2mb(UINT a, DWORD b, LPCWSTR c, int d, LPSTR e, int f, LPCSTR g, LPBOOL h)
 {
 	// Unicode -> 932
 	if (a == 932)
+	{
+		watchStr = c;
+		WriteLog(NORMAL_LOG, L"watchStr: %s\n", c);
+	}
+	return true;
 }
 
-void func_mb2wc(UINT a, DWORD b, LPCSTR c, int d, LPWSTR e, int f)
+int func_mb2wc(UINT a, DWORD b, LPCSTR c, int d, LPWSTR e, int f)
 {
 	// 949 -> Unicode
-
+	return true;
 }
 
 __declspec(naked) int __stdcall _WideCharToMultiByte(UINT a, DWORD b, LPCWSTR c, int d, LPSTR e, int f, LPCSTR g, LPBOOL h)
 {
 	__asm
 	{
-		PUSH EBP
+		PUSH EBP	 // kernel32
 		MOV EBP, ESP
 		POP EBP
+		
+		MOV EDI, EDI // kernelbase
+		PUSH EBP
+		MOV EBP, ESP
+
 		JMP lpfnwc2mb
 	}
 }
@@ -341,6 +418,11 @@ __declspec(naked) int __stdcall _MultiByteToWideChar(UINT a, DWORD b, LPCSTR c, 
 		PUSH EBP
 		MOV EBP, ESP
 		POP EBP
+
+		MOV EDI, EDI // kernelbase
+		PUSH EBP
+		MOV EBP, ESP
+
 		JMP lpfnmb2wc
 	}
 }

@@ -136,6 +136,8 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 	LPWSTR lpJPN, lpKOR;
 	LPSTR szJPN, szKOR, szTemp;
 
+	lpJPN = 0;
+
 	// 로그 크기 체크
 	CheckLogSize();
 
