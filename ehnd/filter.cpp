@@ -1030,6 +1030,10 @@ bool filter::cmd(wstring &wsText)
 		}
 		bChanged = true;
 	}
+	else if (!wsText.compare(L"/reload"))
+	{
+		pFilter->load();
+	}
 	else if (pConfig->GetCommandSwitch())
 	{
 		if (!wsText.compare(L"/log_detail"))

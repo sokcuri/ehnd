@@ -268,7 +268,7 @@ bool hook_wc2mb(void)
 	for (int i = 0; i < 4; i++)
 		p[i] = (BYTE)*(d + i);
 
-	lpfnwc2mb = d2 + 5;
+	lpfnwc2mb = d2;
 
 	// 00h: JMP XXX = (target addr - next inst addr)
 	// 005: ~~~~
@@ -276,10 +276,10 @@ bool hook_wc2mb(void)
 	BYTE Patch[5];
 	int PatchSize = _countof(Patch);
 	Patch[0] = 0xE9;
-	Patch[1] = LOBYTE(LOWORD(((LPBYTE)&_func_wc2mb - lpfnwc2mb)));
-	Patch[2] = HIBYTE(LOWORD(((LPBYTE)&_func_wc2mb - lpfnwc2mb)));
-	Patch[3] = LOBYTE(HIWORD(((LPBYTE)&_func_wc2mb - lpfnwc2mb)));
-	Patch[4] = HIBYTE(HIWORD(((LPBYTE)&_func_wc2mb - lpfnwc2mb)));
+	Patch[1] = LOBYTE(LOWORD(((LPBYTE)&_func_wc2mb - lpfnwc2mb - 5)));
+	Patch[2] = HIBYTE(LOWORD(((LPBYTE)&_func_wc2mb - lpfnwc2mb - 5)));
+	Patch[3] = LOBYTE(HIWORD(((LPBYTE)&_func_wc2mb - lpfnwc2mb - 5)));
+	Patch[4] = HIBYTE(HIWORD(((LPBYTE)&_func_wc2mb - lpfnwc2mb - 5)));
 
 	DWORD OldProtect, OldProtect2;
 	HANDLE hHandle;
@@ -288,6 +288,8 @@ bool hook_wc2mb(void)
 	memcpy(lpfnwc2mb, Patch, PatchSize);
 	hHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, FALSE, GetCurrentProcessId());
 	VirtualProtectEx(hHandle, (void *)lpfnwc2mb, PatchSize, OldProtect, &OldProtect2);
+
+	lpfnwc2mb += 5;
 
 	//lpfnwc2mb = (LPBYTE)*ref + 0x05;
 	//LPBYTE lpfnwc2mb_main = (LPBYTE)*(lpfnwc2mb);
@@ -328,7 +330,7 @@ bool hook_mb2wc(void)
 	return true;
 }
 
-__declspec(naked) int _func_wc2mb(UINT a, DWORD b, LPCWSTR c, int d, LPSTR e, int f, LPCSTR g, LPBOOL h)
+__declspec(naked) int _func_wc2mb(void)
 {
 	// stdcall head
 	// 767BF830 >  8BFF            MOV EDI,EDI
@@ -339,13 +341,20 @@ __declspec(naked) int _func_wc2mb(UINT a, DWORD b, LPCWSTR c, int d, LPSTR e, in
 	{
 		PUSH EBP
 		MOV EBP, ESP
+		//POP EBP
+	
+		PUSH DWORD PTR SS : [EBP + 0x24]
+		PUSH DWORD PTR SS : [EBP + 0x20]
+		PUSH DWORD PTR SS : [EBP + 0x1C]
+		PUSH DWORD PTR SS : [EBP + 0x18]
+		PUSH DWORD PTR SS : [EBP + 0x14]
+		PUSH DWORD PTR SS : [EBP + 0x10]
+		PUSH DWORD PTR SS : [EBP + 0x0C]
+		PUSH DWORD PTR SS : [EBP + 0x08]
+		CALL func_wc2mb
+		ADD ESP, 0x20
 		POP EBP
-	}
 
-	func_wc2mb(a, b, c, d, e, f, g, h);
-
-	__asm
-	{
 		MOV EDI, EDI
 		PUSH EBP
 		MOV EBP, ESP
@@ -380,13 +389,20 @@ __declspec(naked) int __stdcall _func_mb2wc(UINT a, DWORD b, LPCSTR c, int d, LP
 
 int func_wc2mb(UINT a, DWORD b, LPCWSTR c, int d, LPSTR e, int f, LPCSTR g, LPBOOL h)
 {
-	// Unicode -> 932
-	if (a == 932)
+	if (d != -1 && a == 932)
 	{
 		watchStr = c;
 		WriteLog(NORMAL_LOG, L"watchStr: %s\n", c);
 	}
 	return true;
+	//WriteLog(NORMAL_LOG, L"func_wc2mb: %d %d %s %d\n", a, b, c, d);
+	// Unicode -> 932
+	/*if (a == 932)
+	{
+		watchStr = c;
+		WriteLog(NORMAL_LOG, L"watchStr: %s\n", c);
+	}
+	return true;*/
 }
 
 int func_mb2wc(UINT a, DWORD b, LPCSTR c, int d, LPWSTR e, int f)

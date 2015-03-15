@@ -19,8 +19,8 @@ bool EhndInit(void)
 	hook_mb2wc();
 
 	if (!hook()) return false;
-	if (hook_userdict()) return false;
-	if (hook_userdict2()) return false;
+	if (!hook_userdict()) return false;
+	if (!hook_userdict2()) return false;
 
 	WriteLog(NORMAL_LOG, L"HookUserDict : 사용자사전 알고리즘 최적화.\n");
 
@@ -131,7 +131,7 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 {
 	DWORD dwStart, dwEnd;
 	LPSTR szOut;
-	wstring wsText, wsOriginal, wsLog;
+	wstring wsText, wsOriginal, wsLog, wsTemp;
 	int i_len;
 	LPWSTR lpJPN, lpKOR;
 	LPSTR szJPN, szKOR, szTemp;
@@ -142,22 +142,21 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 	CheckLogSize();
 
 	// WideCharToMultiByte intercept
-	
 	// watchStr를 wc2mb해서 같은 결과가 나오면 이쪽을 우선적으로 쓴다
-	//WideCharToMultiByte(949, 0, wsText.c_str(), -1, szOut, i_len, NULL, NULL);
-	i_len = _WideCharToMultiByte(949, 0, watchStr.c_str(), -1, NULL, NULL, NULL, NULL);
+	wsTemp = watchStr.c_str();
+	i_len = _WideCharToMultiByte(949, 0, wsTemp.c_str(), -1, NULL, NULL, NULL, NULL);
 	szTemp = (LPSTR)msvcrt_malloc((i_len + 1) * 3);
 	if (szTemp == NULL)
 	{
 		WriteLog(ERROR_LOG, L"J2K_TranslateMMNT : Memory Allocation Error.\n");
 		return 0;
 	}
-	_WideCharToMultiByte(949, 0, watchStr.c_str(), -1, szTemp, i_len, NULL, NULL);
+	_WideCharToMultiByte(949, 0, wsTemp.c_str(), -1, szTemp, i_len, NULL, NULL);
 	
-	if (strcmp(szTemp, szIn))
+	if (szIn[0] == 0 || strcmp(szTemp, szIn) != 0)
 	{
 		// Normal Mode
-		WriteLog(NORMAL_LOG, L"[NM] watchStr: %s, szIn: %s\n", watchStr.c_str(), szIn);
+		WriteLog(NORMAL_LOG, L"[일반 모드]\n");
 
 		i_len = _MultiByteToWideChar(932, MB_PRECOMPOSED, szIn, -1, NULL, NULL);
 		lpJPN = (LPWSTR)msvcrt_malloc((i_len + 1) * 3);
@@ -175,10 +174,10 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 	else
 	{
 		// Unicode 대체 Mode
-		WriteLog(NORMAL_LOG, L"[RP] watchStr: %s, szIn: %s\n", watchStr.c_str(), szIn);
+		WriteLog(NORMAL_LOG, L"[유니코드 대체]\n");
 
-		wsOriginal = watchStr;
-		wsText = watchStr;
+		wsOriginal = wsTemp.c_str();
+		wsText = wsTemp.c_str();
 	}
 	msvcrt_free(szTemp);
 

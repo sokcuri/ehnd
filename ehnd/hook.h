@@ -5,7 +5,7 @@ bool hook_userdict2();
 
 bool hook_wc2mb();
 bool hook_mb2wc();
-int _func_wc2mb(UINT a, DWORD b, LPCWSTR c, int d, LPSTR e, int f, LPCSTR g, LPBOOL h);
+int _func_wc2mb(void);
 int __stdcall _func_mb2wc(UINT a, DWORD b, LPCSTR c, int d, LPWSTR e, int f);
 int func_wc2mb(UINT a, DWORD b, LPCWSTR c, int d, LPSTR e, int f, LPCSTR g, LPBOOL h);
 int func_mb2wc(UINT a, DWORD b, LPCSTR c, int d, LPWSTR e, int f);
