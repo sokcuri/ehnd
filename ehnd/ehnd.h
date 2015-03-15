@@ -29,7 +29,8 @@ extern "C"
 	EHND_EXPORT void J2K_TranslateFM(void);
 	EHND_EXPORT void J2K_TranslateMM(void);
 	EHND_EXPORT void J2K_TranslateMMEx(void);
-	EHND_EXPORT void *__stdcall J2K_TranslateMMNT(int data0, LPSTR *szText);
+	EHND_EXPORT void *__stdcall J2K_TranslateMMNT(int data0, LPCSTR *szText);
+	EHND_EXPORT void *__stdcall J2K_TranslateMMNTW(int data0, LPCWSTR *szText);
 	EHND_EXPORT void J2K_GetJ2KMainDir(void);
 	EHND_EXPORT void *msvcrt_free(void *_Memory);
 	EHND_EXPORT void *msvcrt_malloc(size_t _Size);

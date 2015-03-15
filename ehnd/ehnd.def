@@ -18,4 +18,5 @@ EXPORTS
  	J2K_TranslateMM
  	J2K_TranslateMMEx
  	J2K_TranslateMMNT
+ 	J2K_TranslateMMNTW
 	?GetJ2KMainDir@@YA?AVCString@@XZ=J2K_GetJ2KMainDir

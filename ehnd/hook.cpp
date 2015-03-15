@@ -323,7 +323,31 @@ bool hook_mb2wc(void)
 	for (int i = 0; i < 4; i++)
 		p[i] = (BYTE)*(d + i);
 
-	lpfnmb2wc = d2 + 5;
+	lpfnmb2wc = d2;
+
+	// 00h: JMP XXX = (target addr - next inst addr)
+	// 005: ~~~~
+
+	BYTE Patch[5];
+	int PatchSize = _countof(Patch);
+	Patch[0] = 0xE9;
+	Patch[1] = LOBYTE(LOWORD(((LPBYTE)&_func_mb2wc - lpfnmb2wc - 5)));
+	Patch[2] = HIBYTE(LOWORD(((LPBYTE)&_func_mb2wc - lpfnmb2wc - 5)));
+	Patch[3] = LOBYTE(HIWORD(((LPBYTE)&_func_mb2wc - lpfnmb2wc - 5)));
+	Patch[4] = HIBYTE(HIWORD(((LPBYTE)&_func_mb2wc - lpfnmb2wc - 5)));
+
+	DWORD OldProtect, OldProtect2;
+	HANDLE hHandle;
+	hHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, FALSE, GetCurrentProcessId());
+	VirtualProtectEx(hHandle, (void *)lpfnmb2wc, PatchSize, PAGE_EXECUTE_READWRITE, &OldProtect);
+	memcpy(lpfnmb2wc, Patch, PatchSize);
+	hHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, FALSE, GetCurrentProcessId());
+	VirtualProtectEx(hHandle, (void *)lpfnmb2wc, PatchSize, OldProtect, &OldProtect2);
+
+	lpfnmb2wc += 5;
+
+	//lpfnwc2mb = (LPBYTE)*ref + 0x05;
+	//LPBYTE lpfnwc2mb_main = (LPBYTE)*(lpfnwc2mb);
 
 	WriteLog(NORMAL_LOG, L"lpfnmb2wc: %8x\n", lpfnmb2wc);
 
@@ -368,18 +392,29 @@ __declspec(naked) int __stdcall _func_mb2wc(UINT a, DWORD b, LPCSTR c, int d, LP
 	// 767BF830 >  8BFF            MOV EDI,EDI
 	// 767BF832    55              PUSH EBP
 	// 767BF833    8BEC            MOV EBP, ESP
-	
+
 	__asm
 	{
 		PUSH EBP
 		MOV EBP, ESP
 		POP EBP
-	}
+		/*
+		PUSH DWORD PTR SS : [EBP + 0x1C]
+		PUSH DWORD PTR SS : [EBP + 0x18]
+		PUSH DWORD PTR SS : [EBP + 0x14]
+		PUSH DWORD PTR SS : [EBP + 0x10]
+		PUSH DWORD PTR SS : [EBP + 0x0C]
+		PUSH DWORD PTR SS : [EBP + 0x08]
+		CALL func_mb2wc
+		ADD ESP, 0x18
+		POP EBP
 
-	func_mb2wc(a, b, c, d, e, f);
+		//CMP EAX, -1
+		//JE lNext
 
-	__asm
-	{
+		//RETN 0x18
+
+		lNext:*/
 		MOV EDI, EDI
 		PUSH EBP
 		MOV EBP, ESP
@@ -389,11 +424,8 @@ __declspec(naked) int __stdcall _func_mb2wc(UINT a, DWORD b, LPCSTR c, int d, LP
 
 int func_wc2mb(UINT a, DWORD b, LPCWSTR c, int d, LPSTR e, int f, LPCSTR g, LPBOOL h)
 {
-	if (d != -1 && a == 932)
-	{
-		watchStr = c;
-		WriteLog(NORMAL_LOG, L"watchStr: %s\n", c);
-	}
+	if (a == 932)
+		watchStr.assign(c);
 	return true;
 	//WriteLog(NORMAL_LOG, L"func_wc2mb: %d %d %s %d\n", a, b, c, d);
 	// Unicode -> 932
@@ -407,8 +439,28 @@ int func_wc2mb(UINT a, DWORD b, LPCWSTR c, int d, LPSTR e, int f, LPCSTR g, LPBO
 
 int func_mb2wc(UINT a, DWORD b, LPCSTR c, int d, LPWSTR e, int f)
 {
-	// 949 -> Unicode
-	return true;
+	/*
+	// EHND PADDING 문자열이 발견되면 뒤쪽에 있는 유니코드 문자열을 냅다 꺼낸다
+	if (c[strlen(c) + 1] == '#')
+	{
+		if (!strcmp(c + strlen(c) + 1, "##EHND##"))
+		{
+			char *p = (char *)c;
+			p += strlen(c) + 10;
+			int len = wcslen((wchar_t *)p);
+
+			if (f == 0)
+				return len;
+
+			if (len < f) f = len;
+			//wcscpy_s(e, f, (wchar_t *)p);
+			memcpy(e, p, (f + 1) * 2);
+
+			WriteLog(NORMAL_LOG, L"EHND_PADDING : %s\n", e);
+			return (int)e;
+		}
+	}*/
+	return -1;
 }
 
 __declspec(naked) int __stdcall _WideCharToMultiByte(UINT a, DWORD b, LPCWSTR c, int d, LPSTR e, int f, LPCSTR g, LPBOOL h)

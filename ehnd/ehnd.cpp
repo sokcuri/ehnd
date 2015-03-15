@@ -127,72 +127,27 @@ __declspec(naked) void *msvcrt_fopen(char *path, char *mode)
 {
 	__asm JMP apfnMsv[4 * 2];
 }
-void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
+
+void *__stdcall J2K_TranslateMMNTW(int data0, LPCWSTR szIn)
 {
 	DWORD dwStart, dwEnd;
-	LPSTR szOut;
-	wstring wsText, wsOriginal, wsLog, wsTemp;
+	LPWSTR szOut;
+	wstring wsText, wsOriginal, wsLog;
 	int i_len;
-	LPWSTR lpJPN, lpKOR;
-	LPSTR szJPN, szKOR, szTemp;
+	LPWSTR lpKOR;
+	LPSTR szJPN, szKOR;
 
-	lpJPN = 0;
+	wsOriginal = szIn;
+	wsText = szIn;
 
-	// 로그 크기 체크
-	CheckLogSize();
+	WriteLog(NORMAL_LOG, L"x: %s\n", szIn);
 
-	// WideCharToMultiByte intercept
-	// watchStr를 wc2mb해서 같은 결과가 나오면 이쪽을 우선적으로 쓴다
-	wsTemp = watchStr.c_str();
-	i_len = _WideCharToMultiByte(949, 0, wsTemp.c_str(), -1, NULL, NULL, NULL, NULL);
-	szTemp = (LPSTR)msvcrt_malloc((i_len + 1) * 3);
-	if (szTemp == NULL)
-	{
-		WriteLog(ERROR_LOG, L"J2K_TranslateMMNT : Memory Allocation Error.\n");
-		return 0;
-	}
-	_WideCharToMultiByte(949, 0, wsTemp.c_str(), -1, szTemp, i_len, NULL, NULL);
-	
-	if (szIn[0] == 0 || strcmp(szTemp, szIn) != 0)
-	{
-		// Normal Mode
-		WriteLog(NORMAL_LOG, L"[일반 모드]\n");
-
-		i_len = _MultiByteToWideChar(932, MB_PRECOMPOSED, szIn, -1, NULL, NULL);
-		lpJPN = (LPWSTR)msvcrt_malloc((i_len + 1) * 3);
-		if (lpJPN == NULL)
-		{
-			WriteLog(ERROR_LOG, L"J2K_TranslateMMNT : Memory Allocation Error.\n");
-			return 0;
-		}
-		_MultiByteToWideChar(932, 0, szIn, -1, lpJPN, i_len);
-
-		wsOriginal = lpJPN;
-		wsText = lpJPN;
-		msvcrt_free(lpJPN);
-	}
-	else
-	{
-		// Unicode 대체 Mode
-		WriteLog(NORMAL_LOG, L"[유니코드 대체]\n");
-
-		wsOriginal = wsTemp.c_str();
-		wsText = wsTemp.c_str();
-	}
-	msvcrt_free(szTemp);
-
-	wsLog = replace_all(wsText, L"%", L"%%");
 	wsLog = replace_all(wsText, L"%", L"%%");
 	if (wsLog.length()) WriteLog(NORMAL_LOG, L"[REQUEST] %s\n\n", wsLog.c_str());
 
 	// 넘어온 문자열의 길이가 0이거나 명령어일때 번역 프로세스 스킵
-	if (wcslen(lpJPN) && !pFilter->cmd(wsText))
+	if (wcslen(szIn) && !pFilter->cmd(wsText))
 	{
-		wsLog = wsText;
-		wsLog = replace_all(wsLog, L"%", L"%%");
-		wsLog = replace_all(wsLog, L"\t", L" ");
-		wsLog = replace_all(wsLog, L"\r\n", L"");
-
 		pFilter->pre(wsText);
 
 		wsLog = replace_all(wsText, L"%", L"%%");
@@ -243,21 +198,90 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPSTR szIn)
 
 		wsLog = replace_all(wsText, L"%", L"%%");
 		WriteLog(NORMAL_LOG, L"[POST] %s\n\n", wsLog.c_str());
-
-		wsLog = wsText;
-		wsLog = replace_all(wsLog, L"%", L"%%");
-		wsLog = replace_all(wsLog, L"\t", L" ");
-		wsLog = replace_all(wsLog, L"\r\n", L"");
 	}
 
-	i_len = _WideCharToMultiByte(949, 0, wsText.c_str(), -1, NULL, NULL, NULL, NULL);
+	szOut = (LPWSTR)msvcrt_malloc((wsText.length() + 1) * 2);
+	if (szOut == NULL)
+	{
+		WriteLog(ERROR_LOG, L"J2K_TranslateMMNT : Memory Allocation Error.\n");
+		return 0;
+	}
+	wcscpy_s(szOut, (wsText.length() + 1) * 2, wsText.c_str());
+	return (void *)szOut;
+}
+
+void *__stdcall J2K_TranslateMMNT(int data0, LPCSTR szIn)
+{
+	LPSTR szOut;
+	wstring wsText, wsOriginal, wsLog, wsTemp;
+	int i_len;
+	LPWSTR lpJPN, lpKOR;
+	LPSTR szTemp;
+
+	lpJPN = 0;
+
+	// 로그 크기 체크
+	//CheckLogSize();
+
+	// WideCharToMultiByte intercept
+	// watchStr를 wc2mb해서 같은 결과가 나오면 이쪽을 우선적으로 쓴다
+	wsTemp = watchStr;
+	WriteLog(NORMAL_LOG, L"wsTemp: %s\n", wsTemp.c_str());
+	i_len = _WideCharToMultiByte(932, 0, wsTemp.c_str(), -1, NULL, NULL, NULL, NULL);
+	szTemp = (LPSTR)msvcrt_malloc((i_len + 1) * 3);
+	if (szTemp == NULL)
+	{
+		WriteLog(ERROR_LOG, L"J2K_TranslateMMNT : Memory Allocation Error.\n");
+		return 0;
+	}
+	_WideCharToMultiByte(932, 0, wsTemp.c_str(), -1, szTemp, i_len, NULL, NULL);
+	
+	i_len = _MultiByteToWideChar(932, MB_PRECOMPOSED, szIn, -1, NULL, NULL);
+	lpJPN = (LPWSTR)msvcrt_malloc((i_len + 1) * 3);
+	if (lpJPN == NULL)
+	{
+		WriteLog(ERROR_LOG, L"J2K_TranslateMMNT : Memory Allocation Error.\n");
+		return 0;
+	}
+	_MultiByteToWideChar(932, 0, szIn, -1, lpJPN, i_len);
+
+	if (szIn[0] == 0 || strcmp(szTemp, szIn) != 0)
+	{
+		// Normal Mode
+		WriteLog(NORMAL_LOG, L"[일반 모드]\n");
+
+		wsText = lpJPN;
+	}
+	else
+	{
+		WriteLog(NORMAL_LOG, L"[유니코드 대체]\n");
+
+		wsText = wsTemp.c_str();
+	}
+	msvcrt_free(lpJPN);
+	msvcrt_free(szTemp);
+	
+	lpKOR = (LPWSTR)J2K_TranslateMMNTW(data0, wsText.c_str());
+
+	WriteLog(NORMAL_LOG, L"Result: %s\n", lpKOR);
+	// Ehnd 유니코드 지원 (문자열 뒤에 ##EHND## Padding 추가 이후 유니코드 데이터 포함)
+	// (OutputData) 0x00 "##EHND##" 0x00 (UnicodeData)
+
+	i_len = _WideCharToMultiByte(949, 0, lpKOR, -1, NULL, NULL, NULL, NULL);
+	//szOut = (LPSTR)msvcrt_malloc((i_len + 1) * 3 + 10 + wcslen(lpKOR) * 2);
 	szOut = (LPSTR)msvcrt_malloc((i_len + 1) * 3);
 	if (szOut == NULL)
 	{
 		WriteLog(ERROR_LOG, L"J2K_TranslateMMNT : Memory Allocation Error.\n");
 		return 0;
 	}
-	_WideCharToMultiByte(949, 0, wsText.c_str(), -1, szOut, i_len, NULL, NULL);
+	_WideCharToMultiByte(949, 0, lpKOR, -1, szOut, i_len, NULL, NULL);
+	msvcrt_free(lpKOR);
+
+	/*
+	char *ehnd_padding = "##EHND##";
+	memcpy(szOut + strlen(szOut) + 1, ehnd_padding, strlen(ehnd_padding)+1);
+	memcpy(szOut + strlen(szOut) + 2 + strlen(ehnd_padding), lpKOR, (wcslen(lpKOR) + 1) * 2);*/
 	return (void *)szOut;
 }
 __declspec(naked) void J2K_GetJ2KMainDir(void)
