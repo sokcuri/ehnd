@@ -28,8 +28,8 @@ bool EhndInit(void)
 	}
 	
 	CreateLogWin(g_hInst);
-	LogStartMsg();
 	ShowLogWin(pConfig->GetConsoleSwitch());
+	LogStartMsg();
 
 	hook_wc2mb();
 	hook_mb2wc();
