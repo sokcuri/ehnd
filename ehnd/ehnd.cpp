@@ -49,8 +49,10 @@ __declspec(naked) void J2K_Initialize(void)
 {
 	__asm JMP apfnEzt[4 * 0];
 }
-int __stdcall J2K_InitializeEx(int data0, LPSTR key)
+void __stdcall J2K_InitializeEx(int data0, LPSTR key)
 {
+	SetLogText(L"J2K_InitializeEx : 이지트랜스 초기화\n");
+
 	EhndInit();
 	__asm
 	{
@@ -58,8 +60,6 @@ int __stdcall J2K_InitializeEx(int data0, LPSTR key)
 		PUSH data0
 		CALL apfnEzt[4 * 1]
 	}
-	SetLogText(L"J2K_InitializeEx : 이지트랜스 초기화\n");
-	return g_initTick;
 }
 __declspec(naked) void J2K_FreeMem(void)
 {

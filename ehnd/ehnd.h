@@ -11,7 +11,7 @@
 extern "C"
 {
 	EHND_EXPORT void J2K_Initialize(void);
-	EHND_EXPORT int __stdcall J2K_InitializeEx(int data0, LPSTR key);
+	EHND_EXPORT void __stdcall J2K_InitializeEx(int data0, LPSTR key);
 	EHND_EXPORT void J2K_FreeMem(void);
 	EHND_EXPORT void J2K_GetPriorDict(void);
 	EHND_EXPORT void J2K_GetProperty(void);
