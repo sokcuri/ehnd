@@ -9,10 +9,26 @@ FARPROC apfnMsv[100];
 
 bool EhndInit(void)
 {
+	// 중복 초기화 방지
+	if (initOnce) return false;
+	else initOnce = true;
+
+	// 설정 로드
+	pConfig->LoadConfig();
+
+	// 기존 로그 삭제
+	if (pConfig->GetFileLogStartupClear())
+	{
+		wchar_t lpFileName[MAX_PATH];
+		if (pConfig->GetFileLogEztLoc())
+			GetLoadPath(lpFileName, MAX_PATH);
+		else GetExecutePath(lpFileName, MAX_PATH);
+		wcscat_s(lpFileName, L"\\ehnd_log.log");
+		DeleteFile(lpFileName);
+	}
+	
 	CreateLogWin(g_hInst);
 	LogStartMsg();
-
-	pConfig->LoadConfig();
 	ShowLogWin(pConfig->GetConsoleSwitch());
 
 	hook_wc2mb();
@@ -143,6 +159,9 @@ void *__stdcall J2K_TranslateMMNTW(int data0, LPCWSTR szIn)
 	// 로그 크기 체크
 	CheckLogSize();
 
+	// 콘솔 라인 체크
+	CheckConsoleLine();
+
 	wsLog = replace_all(wsText, L"%", L"%%");
 	if (wsLog.length()) WriteLog(NORMAL_LOG, L"[REQUEST] %s\n\n", wsLog.c_str());
 
@@ -224,7 +243,7 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPCSTR szIn)
 	// WideCharToMultiByte intercept
 	// watchStr를 wc2mb해서 같은 결과가 나오면 이쪽을 우선적으로 쓴다
 	wsTemp = watchStr;
-	WriteLog(NORMAL_LOG, L"wsTemp: %s\n", wsTemp.c_str());
+	
 	i_len = _WideCharToMultiByte(932, 0, wsTemp.c_str(), -1, NULL, NULL, NULL, NULL);
 	szTemp = (LPSTR)msvcrt_malloc((i_len + 1) * 3);
 	if (szTemp == NULL)

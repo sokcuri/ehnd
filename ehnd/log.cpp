@@ -3,7 +3,7 @@
 
 HWND hLogWin, hLogRes;
 HANDLE hLogEvent;
-
+int logLine = 0;
 
 void LogStartMsg()
 {
@@ -47,10 +47,21 @@ void CheckLogSize()
 	if (cf_size != 0 && cf_size * 1024 < fsize)
 	{
 		fclose(fp);
-		DeleteFile(L".\\ehnd_log.log");
+		DeleteFile(lpFileName);
 	}
 	else
 		fclose(fp);
+}
+
+void CheckConsoleLine()
+{
+	int cf_line = pConfig->GetConsoleMaxLine();
+
+	if (cf_line != 0 && logLine > cf_line)
+	{
+		ClearLog();
+		logLine = 0;
+	}
 }
 
 void WriteLog(int LogType, const wchar_t *format, ...)
@@ -89,6 +100,8 @@ void WriteLog(int LogType, const wchar_t *format, ...)
 	va_end(valist);
 
 	if (IsFileLog) fclose(fp);
+
+	logLine++;
 }
 
 void WriteTextLog(const wchar_t *format, ...)

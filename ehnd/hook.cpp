@@ -294,7 +294,7 @@ bool hook_wc2mb(void)
 	//lpfnwc2mb = (LPBYTE)*ref + 0x05;
 	//LPBYTE lpfnwc2mb_main = (LPBYTE)*(lpfnwc2mb);
 
-	WriteLog(NORMAL_LOG, L"lpfnwc2mb: %8x\n", lpfnwc2mb);
+	//WriteLog(NORMAL_LOG, L"lpfnwc2mb: %8x\n", lpfnwc2mb);
 
 	return true;
 }
@@ -349,7 +349,7 @@ bool hook_mb2wc(void)
 	//lpfnwc2mb = (LPBYTE)*ref + 0x05;
 	//LPBYTE lpfnwc2mb_main = (LPBYTE)*(lpfnwc2mb);
 
-	WriteLog(NORMAL_LOG, L"lpfnmb2wc: %8x\n", lpfnmb2wc);
+	//WriteLog(NORMAL_LOG, L"lpfnmb2wc: %8x\n", lpfnmb2wc);
 
 	return true;
 }

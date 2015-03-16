@@ -6,7 +6,7 @@
 #pragma once
 
 #include "targetver.h"
-#define EHND_VER "V3.00"
+#define EHND_VER "V3.01"
 // Windows 헤더 파일:
 #include <windows.h>
 #include <WinBase.h>
@@ -55,7 +55,7 @@ extern wstring watchStr;
 extern wstring resStr;
 
 extern HMODULE hEzt, hMsv;
-
+extern BOOL initOnce;
 
 #ifdef _UNICODE
 #define WIDEN2(x) L ## x

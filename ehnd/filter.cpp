@@ -1055,12 +1055,12 @@ bool filter::cmd(wstring &wsText)
 			if (pConfig->GetLogTime())
 			{
 				pConfig->SetLogTime(false);
-				wsText += L"/log_time : Time Log Off.";
+				wsText = L"/log_time : Time Log Off.";
 			}
 			else
 			{
 				pConfig->SetLogTime(true);
-				wsText += L"/log_time : Time Log On.";
+				wsText = L"/log_time : Time Log On.";
 			}
 			bChanged = true;
 		}
@@ -1069,12 +1069,26 @@ bool filter::cmd(wstring &wsText)
 			if (pConfig->GetLogSkipLayer())
 			{
 				pConfig->SetLogSkipLayer(false);
-				wsText += L"/log_skiplayer : SkipLayer Log Off.";
+				wsText = L"/log_skiplayer : SkipLayer Log Off.";
 			}
 			else
 			{
 				pConfig->SetLogSkipLayer(true);
-				wsText += L"/log_skiplayer : SkipLayer Log On.";
+				wsText = L"/log_skiplayer : SkipLayer Log On.";
+			}
+			bChanged = true;
+		}
+		else if (!wsText.compare(L"/filelog"))
+		{
+			if (pConfig->GetFileLogSwitch())
+			{
+				pConfig->SetFileLogSwitch(false);
+				wsText = L"/filelog : Write FileLog Off.";
+			}
+			else
+			{
+				pConfig->SetFileLogSwitch(true);
+				wsText = L"/filelog : Write FileLog On.";
 			}
 			bChanged = true;
 		}

@@ -6,6 +6,7 @@ void WriteTextLog(const wchar_t* format, ...);
 
 void LogStartMsg();
 void CheckLogSize();
+void CheckConsoleLine();
 
 bool CreateLogWin(HINSTANCE);
 void SetLogText(LPCWSTR);
@@ -16,3 +17,4 @@ bool IsShownLogWin(void);
 DWORD WINAPI LogThreadMain(LPVOID lpParam);
 LRESULT CALLBACK LogProc(HWND, UINT, WPARAM, LPARAM);
 extern HWND hLogRes, hLogWin;
+extern int logLine;

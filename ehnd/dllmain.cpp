@@ -8,6 +8,7 @@ HMODULE hEzt, hMsv;
 int g_initTick;
 char g_DicPath[MAX_PATH];
 wstring watchStr;
+BOOL initOnce = false;
 
 BOOL APIENTRY DllMain(HINSTANCE hInstance,
 	DWORD  ul_reason_for_call,
@@ -32,6 +33,7 @@ BOOL APIENTRY DllMain(HINSTANCE hInstance,
 		strcat_s(g_DicPath, "UserDict_");
 		strcat_s(g_DicPath, szInitTick);
 		strcat_s(g_DicPath, ".ehnd");
+
 		break;
 	case DLL_THREAD_ATTACH:
 		break;

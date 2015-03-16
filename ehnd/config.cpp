@@ -42,15 +42,20 @@ bool config::LoadConfig()
 	if (buf[0] != NULL) SetFileLogSize(_wtoi(buf));
 	ReadINI(L"FILELOG_EZTRANS_LOC", L"CONFIG", buf, (wchar_t*)INIPath);
 	if (buf[0] != NULL) (_wcsicmp(buf, L"OFF") != 0) ? SetFileLogEztLoc(true) : SetFileLogEztLoc(false);
+	ReadINI(L"FILELOG_STARTUP_CLEAR", L"CONFIG", buf, (wchar_t*)INIPath);
+	if (buf[0] != NULL) (_wcsicmp(buf, L"OFF") != 0) ? SetFileLogStartupClear(true) : SetFileLogStartupClear(false);
 
 	ReadINI(L"CONSOLE_SWITCH", L"CONFIG", buf, (wchar_t*)INIPath);
 	if (buf[0] != NULL) (_wcsicmp(buf, L"OFF") != 0) ? SetConsoleSwitch(true) : SetConsoleSwitch(false);
+	ReadINI(L"CONSOLE_MAXLINE", L"CONFIG", buf, (wchar_t*)INIPath);
+	if (buf[0] != NULL) SetConsoleMaxLine(_wtoi(buf));
 	ReadINI(L"CONSOLE_FONTNAME", L"CONFIG", buf, (wchar_t*)INIPath);
 	if (buf[0] != NULL) SetConsoleFontName(buf);
 	ReadINI(L"CONSOLE_FONTSIZE", L"CONFIG", buf, (wchar_t*)INIPath);
 	if (buf[0] != NULL) SetConsoleFontSize(_wtoi(buf));
 
-	WriteLog(NORMAL_LOG, L"LoadConfig : Success.\n");
+	if (!firstInit) WriteLog(NORMAL_LOG, L"LoadConfig : Success.\n");
+	else firstInit = false;
 	return true;
 }
 
@@ -82,9 +87,13 @@ bool config::SaveConfig()
 	WriteINI(L"FILELOG_SIZE", L"CONFIG", buf, (wchar_t*)INIPath);
 	wcscpy_s(buf, (GetFileLogEztLoc() ? L"ON" : L"OFF"));
 	WriteINI(L"FILELOG_EZTRANS_LOC", L"CONFIG", buf, (wchar_t*)INIPath);
+	wcscpy_s(buf, (GetFileLogStartupClear() ? L"ON" : L"OFF"));
+	WriteINI(L"FILELOG_STARTUP_CLEAR", L"CONFIG", buf, (wchar_t*)INIPath);
 
 	wcscpy_s(buf, (GetConsoleSwitch() ? L"ON" : L"OFF"));
 	WriteINI(L"CONSOLE_SWITCH", L"CONFIG", buf, (wchar_t*)INIPath);
+	wsprintf(buf, L"%d", GetConsoleMaxLine());
+	WriteINI(L"CONSOLE_MAXLINE", L"CONFIG", buf, (wchar_t*)INIPath);
 	wsprintf(buf, L"%s", GetConsoleFontName());
 	WriteINI(L"CONSOLE_FONTNAME", L"CONFIG", buf, (wchar_t*)INIPath);
 	wsprintf(buf, L"%d", GetConsoleFontSize());
