@@ -6,7 +6,7 @@
 #pragma once
 
 #include "targetver.h"
-#define EHND_VER "V3.01"
+#define EHND_VER "V3.02"
 // Windows 헤더 파일:
 #include <windows.h>
 #include <WinBase.h>
