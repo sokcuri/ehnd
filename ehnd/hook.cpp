@@ -246,30 +246,6 @@ bool hook_wc2mb(void)
 	HMODULE hDll = GetModuleHandle(L"kernel32.dll");
 	lpfnwc2mb = (LPBYTE)GetProcAddress(hDll, "WideCharToMultiByte");
 
-	for (int i = 0; i < 0x10; i++)
-	{
-		if (*(lpfnwc2mb + i) == 0xFF && *(lpfnwc2mb + i + 1) == 0x25)
-		{
-			lpfnwc2mb += i;
-			break;
-		}
-	}
-	if (lpfnwc2mb == NULL) return false;
-
-	// FF 15 AA BB CC DD
-	//       ^^----------
-
-	LPBYTE d, d2;
-	char *p = (char *)&d;
-	for (int i = 0; i < 4; i++)
-		p[i] = (BYTE)*(lpfnwc2mb + 2 + i);
-
-	p = (char *)&d2;
-	for (int i = 0; i < 4; i++)
-		p[i] = (BYTE)*(d + i);
-
-	lpfnwc2mb = d2;
-
 	// 00h: JMP XXX = (target addr - next inst addr)
 	// 005: ~~~~
 
@@ -304,30 +280,12 @@ bool hook_mb2wc(void)
 	HMODULE hDll = GetModuleHandle(L"kernel32.dll");
 	lpfnmb2wc = (LPBYTE)GetProcAddress(hDll, "MultiByteToWideChar");
 
-	for (int i = 0; i < 0x10; i++)
-	{
-		if (*(lpfnmb2wc + i) == 0xFF && *(lpfnmb2wc + i + 1) == 0x25)
-		{
-			lpfnmb2wc += i;
-			break;
-		}
-	}
-	if (lpfnmb2wc == NULL) return false;
-
-	LPBYTE d, d2;
-	char *p = (char *)&d;
-	for (int i = 0; i < 4; i++)
-		p[i] = (BYTE)*(lpfnmb2wc + 2 + i);
-
-	p = (char *)&d2;
-	for (int i = 0; i < 4; i++)
-		p[i] = (BYTE)*(d + i);
-
-	lpfnmb2wc = d2;
-
 	// 00h: JMP XXX = (target addr - next inst addr)
 	// 005: ~~~~
-
+	
+	// disable hook_mb2wc
+	
+	/*
 	BYTE Patch[5];
 	int PatchSize = _countof(Patch);
 	Patch[0] = 0xE9;
@@ -343,7 +301,7 @@ bool hook_mb2wc(void)
 	memcpy(lpfnmb2wc, Patch, PatchSize);
 	hHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, FALSE, GetCurrentProcessId());
 	VirtualProtectEx(hHandle, (void *)lpfnmb2wc, PatchSize, OldProtect, &OldProtect2);
-
+	*/
 	lpfnmb2wc += 5;
 
 	//lpfnwc2mb = (LPBYTE)*ref + 0x05;
@@ -467,10 +425,6 @@ __declspec(naked) int __stdcall _WideCharToMultiByte(UINT a, DWORD b, LPCWSTR c,
 {
 	__asm
 	{
-		PUSH EBP	 // kernel32
-		MOV EBP, ESP
-		POP EBP
-		
 		MOV EDI, EDI // kernelbase
 		PUSH EBP
 		MOV EBP, ESP
@@ -483,10 +437,6 @@ __declspec(naked) int __stdcall _MultiByteToWideChar(UINT a, DWORD b, LPCSTR c, 
 {
 	__asm
 	{
-		PUSH EBP
-		MOV EBP, ESP
-		POP EBP
-
 		MOV EDI, EDI // kernelbase
 		PUSH EBP
 		MOV EBP, ESP
