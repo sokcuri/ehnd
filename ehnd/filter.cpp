@@ -295,7 +295,7 @@ bool filter::jkdic_load()
 	Path = lpEztPath;
 	Path += L"\\Dat\\UserDict.jk";
 
-	if (_wfopen_s(&fp, Path.c_str(), L"rt,ccs=UTF-8") != 0)
+	if (_wfopen_s(&fp, Path.c_str(), L"rb") != 0)
 	{
 		WriteLog(NORMAL_LOG, L"JkDicLoad : DAT 사용자 사전 파일 \"UserDict.jk\"이 없습니다.\n");
 

@@ -19,7 +19,7 @@ BOOL APIENTRY DllMain(HINSTANCE hInstance,
 	case DLL_PROCESS_ATTACH:
 		g_hInst = hInstance;
 
-		// init ehnd dic path
+		// init ehnd
 		pFilter = new filter();
 		pWatch = new watch();
 		pConfig = new config();
