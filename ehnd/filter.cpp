@@ -686,7 +686,9 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 		if ((len = _WideCharToMultiByte(932, 0, Jpn.c_str(), -1, NULL, NULL, NULL, NULL)) > 31)
 		{
 			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 원문 단어의 길이는 15자(30Byte)를 초과할 수 없습니다.\n");
+			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 다음 단어가 무시됩니다. (현재: %dByte)\n", len);
 			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : [%s:%d] : <<%s>> | %s | %s | %s\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
+			continue;
 		}
 		_WideCharToMultiByte(932, 0, Jpn.c_str(), -1, szBuffer, len, NULL, NULL);
 		strcpy_s(us.jpn, szBuffer);
@@ -694,15 +696,19 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 		if ((len = _WideCharToMultiByte(949, 0, Kor.c_str(), -1, NULL, NULL, NULL, NULL)) > 31)
 		{
 			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 역문 단어의 길이는 15자(30Byte)를 초과할 수 없습니다.\n");
+			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 다음 단어가 무시됩니다. (현재: %dByte)\n", len);
 			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : [%s:%d] : %s | <<%s>> | %s | %s\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
+			continue;
 		}
 		_WideCharToMultiByte(949, 0, Kor.c_str(), -1, szBuffer, len, NULL, NULL);
 		strcpy_s(us.kor, szBuffer);
 
-		if ((len = _WideCharToMultiByte(932, 0, Attr.c_str(), -1, NULL, NULL, NULL, NULL)) > 31)
+		if ((len = _WideCharToMultiByte(932, 0, Attr.c_str(), -1, NULL, NULL, NULL, NULL)) > 43)
 		{
-			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 :  단어 속성은 42Byte를 초과할 수 없습니다.\n");
+			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 단어 속성은 42Byte를 초과할 수 없습니다.\n");
+			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 다음 단어가 무시됩니다. (현재: %dByte)\n", len);
 			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : [%s:%d] : %s | %s | %s | <<%s>>\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
+			continue;
 		}
 		_WideCharToMultiByte(932, 0, Attr.c_str(), -1, szBuffer, len, NULL, NULL);
 		strcpy_s(us.attr, szBuffer);
@@ -819,7 +825,9 @@ bool filter::anedic_load()
 		if ((len = _WideCharToMultiByte(932, 0, Jpn.c_str(), -1, NULL, NULL, NULL, NULL)) > 31)
 		{
 			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 원문 단어의 길이는 15자(30Byte)를 초과할 수 없습니다.\n");
+			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 다음 단어가 무시됩니다. (현재: %dByte)\n", len);
 			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : [%s:%d] : <<%s>> | %s | %s | %s\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
+			continue;
 		}
 		_WideCharToMultiByte(932, 0, Jpn.c_str(), -1, szBuffer, len, NULL, NULL);
 		strcpy_s(us.jpn, szBuffer);
@@ -827,15 +835,19 @@ bool filter::anedic_load()
 		if ((len = _WideCharToMultiByte(949, 0, Kor.c_str(), -1, NULL, NULL, NULL, NULL)) > 31)
 		{
 			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 역문 단어의 길이는 15자(30Byte)를 초과할 수 없습니다.\n");
+			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 다음 단어가 무시됩니다. (현재: %dByte)\n", len);
 			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : [%s:%d] : %s | <<%s>> | %s | %s\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
+			continue;
 		}
 		_WideCharToMultiByte(949, 0, Kor.c_str(), -1, szBuffer, len, NULL, NULL);
 		strcpy_s(us.kor, szBuffer);
 
-		if ((len = _WideCharToMultiByte(932, 0, Attr.c_str(), -1, NULL, NULL, NULL, NULL)) > 31)
+		if ((len = _WideCharToMultiByte(932, 0, Attr.c_str(), -1, NULL, NULL, NULL, NULL)) > 43)
 		{
-			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 :  단어 속성은 42Byte를 초과할 수 없습니다.\n");
+			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 단어 속성은 42Byte를 초과할 수 없습니다.\n");
+			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 다음 단어가 무시됩니다. (현재: %dByte)\n", len);
 			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : [%s:%d] : %s | %s | %s | <<%s>>\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
+			continue;
 		}
 		_WideCharToMultiByte(932, 0, Attr.c_str(), -1, szBuffer, len, NULL, NULL);
 		strcpy_s(us.attr, szBuffer);
