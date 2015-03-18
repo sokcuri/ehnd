@@ -14,7 +14,7 @@ filter::~filter()
 
 bool filter::load()
 {
-	if (WaitForSingleObject(hLoadEvent, 1000) == WAIT_TIMEOUT) return false;
+	WaitForSingleObject(hLoadEvent, INFINITE);
 	if (!pre_load() || !post_load() ||
 		!userdic_load() || skiplayer_load()) return false;
 	SetEvent(hLoadEvent);
@@ -23,7 +23,7 @@ bool filter::load()
 
 bool filter::load_dic()
 {
-	if (WaitForSingleObject(hLoadEvent, 1000) == WAIT_TIMEOUT) return false;
+	if (WaitForSingleObject(hLoadEvent, 10000) == WAIT_TIMEOUT) return false;
 	if (!userdic_load()) return false;
 	SetEvent(hLoadEvent);
 	return true;
@@ -169,7 +169,7 @@ bool filter::skiplayer_load()
 	WriteLog(TIME_LOG, L"SkipLayerRead : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
 	return true;
 }
-bool filter::userdic_load(BOOL aneDicLoad)
+bool filter::userdic_load()
 {
 	WCHAR lpEztPath[MAX_PATH];
 	WIN32_FIND_DATA FindFileData;
@@ -189,7 +189,7 @@ bool filter::userdic_load(BOOL aneDicLoad)
 	if (pConfig->GetJKDICSwitch()) jkdic_load();
 	
 	// load anedic.txt
-	if (aneDicLoad)	anedic_load();
+	anedic_load();
 
 	HANDLE hFind = FindFirstFile(Path.c_str(), &FindFileData);
 

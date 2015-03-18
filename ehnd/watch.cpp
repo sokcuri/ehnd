@@ -163,8 +163,7 @@ MMRESULT watch::_NotifyProc(UINT m_nTimerID, UINT uiMsg, DWORD dwUser, DWORD dw1
 	if (c_userdic == true)
 	{
 		WriteLog(NORMAL_LOG, L"UserDic : 사용자 사전 파일 변경사항 감지.\n");
-		pFilter->userdic_load(true);
-		J2K_ReloadUserDict2();
+		J2K_ReloadUserDict();
 	}
 
 	if (c_config == true)

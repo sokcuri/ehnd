@@ -42,7 +42,7 @@ public:
 
 	bool pre_load();
 	bool post_load();
-	bool userdic_load(BOOL aneDicLoad = false);
+	bool userdic_load();
 	bool jkdic_load();
 	bool skiplayer_load();
 	bool ehnddic_cleanup();

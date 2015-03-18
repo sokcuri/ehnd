@@ -79,10 +79,6 @@ void __stdcall J2K_ReloadUserDict(void)
 	__asm CALL apfnEzt[4 * 5];
 	return;
 }
-__declspec(naked) void J2K_ReloadUserDict2(void)
-{
-	__asm JMP apfnEzt[4 * 5];
-}
 __declspec(naked) void J2K_SetDelJPN(void)
 {
 	__asm JMP apfnEzt[4 * 6];
