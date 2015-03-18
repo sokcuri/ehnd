@@ -31,8 +31,8 @@ bool EhndInit(void)
 	ShowLogWin(pConfig->GetConsoleSwitch());
 	LogStartMsg();
 
-	hook_wc2mb();
-	hook_mb2wc();
+	GetRealWC2MB();
+	GetRealMB2WC();
 
 	if (!hook()) return false;
 	if (!hook_userdict()) return false;
@@ -233,26 +233,11 @@ void *__stdcall J2K_TranslateMMNTW(int data0, LPCWSTR szIn)
 void *__stdcall J2K_TranslateMMNT(int data0, LPCSTR szIn)
 {
 	LPSTR szOut;
-	wstring wsText, wsOriginal, wsLog, wsTemp;
+	wstring wsText, wsOriginal, wsLog;
 	int i_len;
 	LPWSTR lpJPN, lpKOR;
-	LPSTR szTemp;
 
 	lpJPN = 0;
-
-	// WideCharToMultiByte intercept
-	// watchStr를 wc2mb해서 같은 결과가 나오면 이쪽을 우선적으로 쓴다
-	wsTemp = watchStr;
-	
-	i_len = _WideCharToMultiByte(932, 0, wsTemp.c_str(), -1, NULL, NULL, NULL, NULL);
-	szTemp = (LPSTR)msvcrt_malloc((i_len + 1) * 3);
-	if (szTemp == NULL)
-	{
-		WriteLog(ERROR_LOG, L"J2K_TranslateMMNT : Memory Allocation Error.\n");
-		return 0;
-	}
-	_WideCharToMultiByte(932, 0, wsTemp.c_str(), -1, szTemp, i_len, NULL, NULL);
-	
 	i_len = _MultiByteToWideChar(932, MB_PRECOMPOSED, szIn, -1, NULL, NULL);
 	lpJPN = (LPWSTR)msvcrt_malloc((i_len + 1) * 3);
 	if (lpJPN == NULL)
@@ -261,23 +246,13 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPCSTR szIn)
 		return 0;
 	}
 	_MultiByteToWideChar(932, 0, szIn, -1, lpJPN, i_len);
-
-	// Input에 함수가 깨져 들어오지 않도록 해줌
-	if (szIn[0] == 0 || strcmp(szTemp, szIn) != 0)
-		wsText = lpJPN;
-	else
-		wsText = wsTemp.c_str();
-
+	wsText = lpJPN;
 	msvcrt_free(lpJPN);
-	msvcrt_free(szTemp);
 	
 	lpKOR = (LPWSTR)J2K_TranslateMMNTW(data0, wsText.c_str());
 
-	// [보류]Ehnd 유니코드 지원 (문자열 뒤에 ##EHND## Padding 추가 이후 유니코드 데이터 포함)
-	// (OutputData) 0x00 "##EHND##" 0x00 (UnicodeData)
-
+	// cp949 내보내기 
 	i_len = _WideCharToMultiByte(949, 0, lpKOR, -1, NULL, NULL, NULL, NULL);
-	//szOut = (LPSTR)msvcrt_malloc((i_len + 1) * 3 + 10 + wcslen(lpKOR) * 2);
 	szOut = (LPSTR)msvcrt_malloc((i_len + 1) * 3);
 	if (szOut == NULL)
 	{
@@ -287,10 +262,6 @@ void *__stdcall J2K_TranslateMMNT(int data0, LPCSTR szIn)
 	_WideCharToMultiByte(949, 0, lpKOR, -1, szOut, i_len, NULL, NULL);
 	msvcrt_free(lpKOR);
 
-	/*
-	char *ehnd_padding = "##EHND##";
-	memcpy(szOut + strlen(szOut) + 1, ehnd_padding, strlen(ehnd_padding)+1);
-	memcpy(szOut + strlen(szOut) + 2 + strlen(ehnd_padding), lpKOR, (wcslen(lpKOR) + 1) * 2);*/
 	return (void *)szOut;
 }
 __declspec(naked) void J2K_GetJ2KMainDir(void)

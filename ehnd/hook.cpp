@@ -4,6 +4,7 @@
 
 LPBYTE lpfnRetn, lpfnfopen;
 LPBYTE lpfnwc2mb, lpfnmb2wc;
+int wc2mb_type = 0, mb2wc_type = 0;
 
 bool hook()
 {
@@ -241,208 +242,173 @@ bool hook_userdict2(void)
 	return true;
 }
 
-bool hook_wc2mb(void)
+bool GetRealWC2MB(void)
 {
 	HMODULE hDll = GetModuleHandle(L"kernel32.dll");
 	lpfnwc2mb = (LPBYTE)GetProcAddress(hDll, "WideCharToMultiByte");
 
-	// 00h: JMP XXX = (target addr - next inst addr)
-	// 005: ~~~~
+	// KERNEL32 HOOK
+	// 756770D0 >  8BFF            MOV EDI, EDI
+	// 756770D2    55              PUSH EBP
+	// 756770D3    8BEC            MOV EBP, ESP
 
-	BYTE Patch[5];
-	int PatchSize = _countof(Patch);
-	Patch[0] = 0xE9;
-	Patch[1] = LOBYTE(LOWORD(((LPBYTE)&_func_wc2mb - lpfnwc2mb - 5)));
-	Patch[2] = HIBYTE(LOWORD(((LPBYTE)&_func_wc2mb - lpfnwc2mb - 5)));
-	Patch[3] = LOBYTE(HIWORD(((LPBYTE)&_func_wc2mb - lpfnwc2mb - 5)));
-	Patch[4] = HIBYTE(HIWORD(((LPBYTE)&_func_wc2mb - lpfnwc2mb - 5)));
+	BOOL bMatch = true;
+	WORD ptn_kernel32[] = { 0x8B, 0xFF, 0x55, 0x8B, 0xEC, 0x5D };
 
-	DWORD OldProtect, OldProtect2;
-	HANDLE hHandle;
-	hHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, FALSE, GetCurrentProcessId());
-	VirtualProtectEx(hHandle, (void *)lpfnwc2mb, PatchSize, PAGE_EXECUTE_READWRITE, &OldProtect);
-	memcpy(lpfnwc2mb, Patch, PatchSize);
-	hHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, FALSE, GetCurrentProcessId());
-	VirtualProtectEx(hHandle, (void *)lpfnwc2mb, PatchSize, OldProtect, &OldProtect2);
+	for (int i = 0; i < _countof(ptn_kernel32); i++)
+		if (*(lpfnwc2mb + i) != ptn_kernel32[i])
+		{
+			bMatch = false;
+			break;
+		}
 
-	lpfnwc2mb += 5;
+	if (bMatch)
+	{
+		lpfnwc2mb += 6;
+		wc2mb_type = 1;
+		return true;
+	}
 
-	//lpfnwc2mb = (LPBYTE)*ref + 0x05;
-	//LPBYTE lpfnwc2mb_main = (LPBYTE)*(lpfnwc2mb);
+	// AILAYER HOOK
+	// 230083D2    55              PUSH EBP
+	// 230083D3    8BEC            MOV EBP, ESP
+	// 230083D5    833D A8360123 0>CMP DWORD PTR DS : [230136A8], 0
+	// 230083DC    74 11           JE SHORT AlLayer.230083EF
+	// 230083DE    817D 08 E9FD000>CMP DWORD PTR SS : [EBP + 8], 0FDE9
+	// 230083E5    74 08           JE SHORT AlLayer.230083EF
 
-	//WriteLog(NORMAL_LOG, L"lpfnwc2mb: %8x\n", lpfnwc2mb);
 
+	bMatch = true;
+	WORD ptn_ailayer[] = { 0x55, 0x8B, 0xEC, 0x83, 0x3D };
+
+	for (int i = 0; i < _countof(ptn_ailayer); i++)
+		if (*(lpfnwc2mb + i) != ptn_ailayer[i])
+		{
+			bMatch = false;
+			break;
+		}
+
+	if (bMatch)
+	{
+		if (*(lpfnwc2mb + 0x1E) == 0xA1)
+		{
+			LPBYTE l1, l2, l3;
+			char *p = (char *)&l1;
+			for (int i = 0; i < 4; i++)
+				p[i] = *(lpfnwc2mb + 0x1F + i);
+			p = (char *)&l2;
+			for (int i = 0; i < 4; i++)
+				p[i] = *(l1 + i);
+			l2 += 0x15C;
+			p = (char *)&l3;
+			for (int i = 0; i < 4; i++)
+				p[i] = *(l2 + i);
+
+			lpfnwc2mb = l3 + 6;
+			wc2mb_type = 1;
+			return true;
+		}
+	}
 	return true;
 }
 
-bool hook_mb2wc(void)
+bool GetRealMB2WC(void)
 {
 	HMODULE hDll = GetModuleHandle(L"kernel32.dll");
 	lpfnmb2wc = (LPBYTE)GetProcAddress(hDll, "MultiByteToWideChar");
 
-	// 00h: JMP XXX = (target addr - next inst addr)
-	// 005: ~~~~
-	
-	// disable hook_mb2wc
-	
-	/*
-	BYTE Patch[5];
-	int PatchSize = _countof(Patch);
-	Patch[0] = 0xE9;
-	Patch[1] = LOBYTE(LOWORD(((LPBYTE)&_func_mb2wc - lpfnmb2wc - 5)));
-	Patch[2] = HIBYTE(LOWORD(((LPBYTE)&_func_mb2wc - lpfnmb2wc - 5)));
-	Patch[3] = LOBYTE(HIWORD(((LPBYTE)&_func_mb2wc - lpfnmb2wc - 5)));
-	Patch[4] = HIBYTE(HIWORD(((LPBYTE)&_func_mb2wc - lpfnmb2wc - 5)));
+	// KERNEL32 HOOK
+	// 756770D0 >  8BFF            MOV EDI, EDI
+	// 756770D2    55              PUSH EBP
+	// 756770D3    8BEC            MOV EBP, ESP
 
-	DWORD OldProtect, OldProtect2;
-	HANDLE hHandle;
-	hHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, FALSE, GetCurrentProcessId());
-	VirtualProtectEx(hHandle, (void *)lpfnmb2wc, PatchSize, PAGE_EXECUTE_READWRITE, &OldProtect);
-	memcpy(lpfnmb2wc, Patch, PatchSize);
-	hHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, FALSE, GetCurrentProcessId());
-	VirtualProtectEx(hHandle, (void *)lpfnmb2wc, PatchSize, OldProtect, &OldProtect2);
-	*/
-	lpfnmb2wc += 5;
+	BOOL bMatch = true;
+	WORD ptn_kernel32[] = { 0x8B, 0xFF, 0x55, 0x8B, 0xEC, 0x5D };
 
-	//lpfnwc2mb = (LPBYTE)*ref + 0x05;
-	//LPBYTE lpfnwc2mb_main = (LPBYTE)*(lpfnwc2mb);
-
-	//WriteLog(NORMAL_LOG, L"lpfnmb2wc: %8x\n", lpfnmb2wc);
-
-	return true;
-}
-
-__declspec(naked) int _func_wc2mb(void)
-{
-	// stdcall head
-	// 767BF830 >  8BFF            MOV EDI,EDI
-	// 767BF832    55              PUSH EBP
-	// 767BF833    8BEC            MOV EBP, ESP
-
-	__asm
-	{
-		PUSH EBP
-		MOV EBP, ESP
-		//POP EBP
-	
-		PUSH DWORD PTR SS : [EBP + 0x24]
-		PUSH DWORD PTR SS : [EBP + 0x20]
-		PUSH DWORD PTR SS : [EBP + 0x1C]
-		PUSH DWORD PTR SS : [EBP + 0x18]
-		PUSH DWORD PTR SS : [EBP + 0x14]
-		PUSH DWORD PTR SS : [EBP + 0x10]
-		PUSH DWORD PTR SS : [EBP + 0x0C]
-		PUSH DWORD PTR SS : [EBP + 0x08]
-		CALL func_wc2mb
-		ADD ESP, 0x20
-		POP EBP
-
-		MOV EDI, EDI
-		PUSH EBP
-		MOV EBP, ESP
-		JMP [lpfnwc2mb]
-	}
-}
-
-__declspec(naked) int __stdcall _func_mb2wc(UINT a, DWORD b, LPCSTR c, int d, LPWSTR e, int f)
-{
-	// stdcall head
-	// 767BF830 >  8BFF            MOV EDI,EDI
-	// 767BF832    55              PUSH EBP
-	// 767BF833    8BEC            MOV EBP, ESP
-
-	__asm
-	{
-		PUSH EBP
-		MOV EBP, ESP
-		POP EBP
-		/*
-		PUSH DWORD PTR SS : [EBP + 0x1C]
-		PUSH DWORD PTR SS : [EBP + 0x18]
-		PUSH DWORD PTR SS : [EBP + 0x14]
-		PUSH DWORD PTR SS : [EBP + 0x10]
-		PUSH DWORD PTR SS : [EBP + 0x0C]
-		PUSH DWORD PTR SS : [EBP + 0x08]
-		CALL func_mb2wc
-		ADD ESP, 0x18
-		POP EBP
-
-		//CMP EAX, -1
-		//JE lNext
-
-		//RETN 0x18
-
-		lNext:*/
-		MOV EDI, EDI
-		PUSH EBP
-		MOV EBP, ESP
-		JMP [lpfnmb2wc]
-	}
-}
-
-int func_wc2mb(UINT a, DWORD b, LPCWSTR c, int d, LPSTR e, int f, LPCSTR g, LPBOOL h)
-{
-	if (a == 932)
-		watchStr.assign(c);
-	return true;
-	//WriteLog(NORMAL_LOG, L"func_wc2mb: %d %d %s %d\n", a, b, c, d);
-	// Unicode -> 932
-	/*if (a == 932)
-	{
-		watchStr = c;
-		WriteLog(NORMAL_LOG, L"watchStr: %s\n", c);
-	}
-	return true;*/
-}
-
-int func_mb2wc(UINT a, DWORD b, LPCSTR c, int d, LPWSTR e, int f)
-{
-	/*
-	// EHND PADDING 문자열이 발견되면 뒤쪽에 있는 유니코드 문자열을 냅다 꺼낸다
-	if (c[strlen(c) + 1] == '#')
-	{
-		if (!strcmp(c + strlen(c) + 1, "##EHND##"))
+	for (int i = 0; i < _countof(ptn_kernel32); i++)
+		if (*(lpfnmb2wc + i) != ptn_kernel32[i])
 		{
-			char *p = (char *)c;
-			p += strlen(c) + 10;
-			int len = wcslen((wchar_t *)p);
-
-			if (f == 0)
-				return len;
-
-			if (len < f) f = len;
-			//wcscpy_s(e, f, (wchar_t *)p);
-			memcpy(e, p, (f + 1) * 2);
-
-			WriteLog(NORMAL_LOG, L"EHND_PADDING : %s\n", e);
-			return (int)e;
+			bMatch = false;
+			break;
 		}
-	}*/
-	return -1;
+
+	if (bMatch)
+	{
+		lpfnmb2wc += 6;
+		mb2wc_type = 1;
+		return true;
+	}
+
+	// AILAYER HOOK
+	// 230083D2    55              PUSH EBP
+	// 230083D3    8BEC            MOV EBP, ESP
+	// 230083D5    833D A8360123 0>CMP DWORD PTR DS : [230136A8], 0
+	// 230083DC    74 11           JE SHORT AlLayer.230083EF
+	// 230083DE    817D 08 E9FD000>CMP DWORD PTR SS : [EBP + 8], 0FDE9
+	// 230083E5    74 08           JE SHORT AlLayer.230083EF
+
+	bMatch = true;
+	WORD ptn_ailayer[] = { 0x55, 0x8B, 0xEC, 0x83, 0x3D };
+
+	for (int i = 0; i < _countof(ptn_ailayer); i++)
+		if (*(lpfnmb2wc + i) != ptn_ailayer[i])
+		{
+			bMatch = false;
+			break;
+		}
+
+	if (bMatch)
+	{
+		if (*(lpfnmb2wc + 0x40) == 0xA1)
+		{
+			LPBYTE l1, l2, l3;
+			char *p = (char*)&l1;
+			for (int i = 0; i < 4; i++)
+				p[i] = *(lpfnmb2wc + 0x41 + i);
+			p = (char*)&l2;
+			for (int i = 0; i < 4; i++)
+				p[i] = *(l1 + i);
+			l2 += 0x144;
+			p = (char*)&l3;
+			for (int i = 0; i < 4; i++)
+				p[i] = *(l2 + i);
+
+			lpfnmb2wc = l3 + 6;
+			mb2wc_type = 1;
+			return true;
+		}
+	}
+	return true;
 }
 
 __declspec(naked) int __stdcall _WideCharToMultiByte(UINT a, DWORD b, LPCWSTR c, int d, LPSTR e, int f, LPCSTR g, LPBOOL h)
 {
-	__asm
+	if (wc2mb_type == 1)
 	{
-		MOV EDI, EDI // kernelbase
-		PUSH EBP
-		MOV EBP, ESP
-
-		JMP lpfnwc2mb
+		__asm
+		{
+			MOV EDI, EDI // kernelbase
+			PUSH EBP
+			MOV EBP, ESP
+			POP EBP
+		}
 	}
+	__asm JMP lpfnwc2mb
 }
 
 __declspec(naked) int __stdcall _MultiByteToWideChar(UINT a, DWORD b, LPCSTR c, int d, LPWSTR e, int f)
 {
-	__asm
+	if (mb2wc_type == 1)
 	{
-		MOV EDI, EDI // kernelbase
-		PUSH EBP
-		MOV EBP, ESP
-
-		JMP lpfnmb2wc
+		__asm
+		{
+			MOV EDI, EDI // kernelbase
+			PUSH EBP
+			MOV EBP, ESP
+			POP EBP
+		}
 	}
+	__asm JMP lpfnmb2wc
 }
 
 void *fopen_patch(char *path, char *mode)

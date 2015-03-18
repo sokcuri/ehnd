@@ -43,7 +43,7 @@ bool filter::pre_load()
 	Path = lpEztPath;
 	Path += L"\\Ehnd\\PreFilter*.txt";
 
-	int pre_line = 0;
+	int pre_line = 1;
 	bool IsUnicode;
 
 	vector<FILTERSTRUCT> Filter;
@@ -95,7 +95,7 @@ bool filter::post_load()
 	Path = lpEztPath;
 	Path += L"\\Ehnd\\PostFilter*.txt";
 
-	int post_line = 0;
+	int post_line = 1;
 	bool IsUnicode;
 
 	vector<FILTERSTRUCT> Filter;
@@ -147,7 +147,7 @@ bool filter::skiplayer_load()
 	Path = lpEztPath;
 	Path += L"\\Ehnd\\SkipLayer*.txt";
 
-	int skiplayer_line = 0;
+	int skiplayer_line = 1;
 
 	vector<SKIPLAYERSTRUCT> _SkipLayer;
 
@@ -179,7 +179,7 @@ bool filter::skiplayer_load()
 	WriteLog(TIME_LOG, L"SkipLayerRead : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
 	return true;
 }
-bool filter::userdic_load()
+bool filter::userdic_load(BOOL aneDicLoad)
 {
 	WCHAR lpEztPath[MAX_PATH];
 	WIN32_FIND_DATA FindFileData;
@@ -192,63 +192,14 @@ bool filter::userdic_load()
 	Path = lpEztPath;
 	Path += L"\\Ehnd\\UserDict*.txt";
 
-	int userdic_line = 0;
+	int userdic_line = 1;
 	UserDic.clear();
 
 	// load userdict.jk
 	if (pConfig->GetJKDICSwitch()) jkdic_load();
-	HANDLE hFind = FindFirstFile(Path.c_str(), &FindFileData);
-
-	do
-	{
-		if (hFind == INVALID_HANDLE_VALUE) break;
-		else if (FindFileData.dwFileAttributes == FILE_ATTRIBUTE_DIRECTORY)
-			continue;
-
-		Path = lpEztPath;
-		Path += L"\\Ehnd\\";
-
-		userdic_load2(Path.c_str(), FindFileData.cFileName, userdic_line);
-
-	} while (FindNextFile(hFind, &FindFileData));
-
-	// 정렬
-	sort(UserDic.begin(), UserDic.end());
-	//WriteLog(NORMAL_LOG, L"UserDicRead : 사용자 사전 정렬을 완료했습니다.\n");
-
-	// 소요시간 계산
-	dwEnd = GetTickCount();
-	WriteLog(TIME_LOG, L"UserDicRead : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
-
-	// 엔드 임시파일 삭제
-	ehnddic_cleanup();
-
-	// 엔드 임시파일 생성
-	ehnddic_create();
-
-	return true;
-}
-
-bool filter::userdic_anedic_load()
-{
-	WCHAR lpEztPath[MAX_PATH];
-	WIN32_FIND_DATA FindFileData;
-	wstring Path;
-
-	DWORD dwStart, dwEnd;
-	dwStart = GetTickCount();
-
-	GetLoadPath(lpEztPath, MAX_PATH);
-	Path = lpEztPath;
-	Path += L"\\Ehnd\\UserDict*.txt";
-
-	int userdic_line = 0;
-	UserDic.clear();
-
-	// load userdict.jk
-	bool use_jkdic = true;
-	if (use_jkdic) jkdic_load();
-	anedic_load();
+	
+	// load anedic.txt
+	if (aneDicLoad)	anedic_load();
 
 	HANDLE hFind = FindFirstFile(Path.c_str(), &FindFileData);
 

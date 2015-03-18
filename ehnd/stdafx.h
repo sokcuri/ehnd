@@ -6,7 +6,7 @@
 #pragma once
 
 #include "targetver.h"
-#define EHND_VER "V3.04"
+#define EHND_VER "V3.05"
 // Windows 헤더 파일:
 #include <windows.h>
 #include <WinBase.h>
@@ -47,12 +47,9 @@ extern char g_DicPath[MAX_PATH];
 extern LPBYTE lpfnRetn;
 extern LPBYTE lpfnfopen;
 extern LPBYTE lpfnwc2mb;
-extern LPBYTE lpfnwc2mb_main;
+extern int wc2mb_type;
 extern LPBYTE lpfnmb2wc;
-extern LPBYTE lpfnmb2wc_main;
-
-extern wstring watchStr;
-extern wstring resStr;
+extern int mb2wc_type;
 
 extern HMODULE hEzt, hMsv;
 extern BOOL initOnce;

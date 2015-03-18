@@ -7,7 +7,6 @@ config *pConfig;
 HMODULE hEzt, hMsv;
 int g_initTick;
 char g_DicPath[MAX_PATH];
-wstring watchStr;
 BOOL initOnce = false;
 
 BOOL APIENTRY DllMain(HINSTANCE hInstance,
