@@ -44,7 +44,6 @@ bool filter::pre_load()
 	Path += L"\\Ehnd\\PreFilter*.txt";
 
 	int pre_line = 1;
-	bool IsUnicode;
 
 	vector<FILTERSTRUCT> Filter;
 
@@ -56,14 +55,10 @@ bool filter::pre_load()
 		else if (FindFileData.dwFileAttributes == FILE_ATTRIBUTE_DIRECTORY)
 			continue;
 
-		if (!wcsncmp(FindFileData.cFileName, L"PreFilterU", 10))
-			IsUnicode = true;
-		else IsUnicode = false;
-
 		Path = lpEztPath;
 		Path += L"\\Ehnd\\";
 
-		filter_load(Filter, Path.c_str(), FindFileData.cFileName, PREFILTER, IsUnicode, pre_line);
+		filter_load(Filter, Path.c_str(), FindFileData.cFileName, PREFILTER, pre_line);
 
 	} while (FindNextFile(hFind, &FindFileData));
 
@@ -96,7 +91,6 @@ bool filter::post_load()
 	Path += L"\\Ehnd\\PostFilter*.txt";
 
 	int post_line = 1;
-	bool IsUnicode;
 
 	vector<FILTERSTRUCT> Filter;
 
@@ -108,14 +102,10 @@ bool filter::post_load()
 		else if (FindFileData.dwFileAttributes == FILE_ATTRIBUTE_DIRECTORY)
 			continue;
 
-		if (!wcsncmp(FindFileData.cFileName, L"PostFilterU", 11))
-			IsUnicode = true;
-		else IsUnicode = false;
-
 		Path = lpEztPath;
 		Path += L"\\Ehnd\\";
 
-		filter_load(Filter, Path.c_str(), FindFileData.cFileName, POSTFILTER, IsUnicode, post_line);
+		filter_load(Filter, Path.c_str(), FindFileData.cFileName, POSTFILTER, post_line);
 
 	} while (FindNextFile(hFind, &FindFileData));
 
@@ -459,7 +449,7 @@ bool filter::skiplayer_load2(vector<SKIPLAYERSTRUCT> &SkipLayer, LPCWSTR lpPath,
 	return true;
 }
 
-bool filter::filter_load(vector<FILTERSTRUCT> &Filter, LPCWSTR lpPath, LPCWSTR lpFileName, int FilterType, bool IsUnicode, int &g_line)
+bool filter::filter_load(vector<FILTERSTRUCT> &Filter, LPCWSTR lpPath, LPCWSTR lpFileName, int FilterType, int &g_line)
 {
 	FILE *fp;
 	WCHAR Buffer[1024], Context[1024];
@@ -471,10 +461,8 @@ bool filter::filter_load(vector<FILTERSTRUCT> &Filter, LPCWSTR lpPath, LPCWSTR l
 
 	if (_wfopen_s(&fp, Path.c_str(), L"rt,ccs=UTF-8") != 0)
 	{
-		if (FilterType == PREFILTER && IsUnicode) WriteLog(NORMAL_LOG, L"PreFilterRead : 전처리 유니코드 전용 필터 '%s' 로드 실패!\n", lpFileName);
-		else if (FilterType == PREFILTER && !IsUnicode) WriteLog(NORMAL_LOG, L"PreFilterRead : 전처리 필터 '%s' 로드 실패!\n", lpFileName);
-		else if (FilterType == POSTFILTER && IsUnicode) WriteLog(NORMAL_LOG, L"PostFilterRead : 후처리 유니코드 전용 필터 '%s' 로드 실패!\n", lpFileName);
-		else if (FilterType == POSTFILTER && !IsUnicode) WriteLog(NORMAL_LOG, L"PostFilterRead : 후처리 필터 '%s' 로드 실패!\n", lpFileName);
+		if (FilterType == PREFILTER) WriteLog(NORMAL_LOG, L"PreFilterRead : 전처리 필터 '%s' 로드 실패!\n", lpFileName);
+		if (FilterType == POSTFILTER) WriteLog(NORMAL_LOG, L"PostFilterRead : 후처리 필터 '%s' 로드 실패!\n", lpFileName);
 		return false;
 	}
 
@@ -492,7 +480,6 @@ bool filter::filter_load(vector<FILTERSTRUCT> &Filter, LPCWSTR lpPath, LPCWSTR l
 		fs.g_line = g_line;
 		fs.line = line;
 		fs.db = lpFileName;
-		fs.unicode = IsUnicode;
 		fs.src = L"";
 		fs.dest = L"";
 		
@@ -554,10 +541,8 @@ bool filter::filter_load(vector<FILTERSTRUCT> &Filter, LPCWSTR lpPath, LPCWSTR l
 		Filter.push_back(fs);
 	}
 	fclose(fp);
-	if (FilterType == PREFILTER && IsUnicode) WriteLog(NORMAL_LOG, L"PreFilterRead : %d개의 유니코드 전용 전처리 필터 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
-	if (FilterType == PREFILTER && !IsUnicode) WriteLog(NORMAL_LOG, L"PreFilterRead : %d개의 전처리 필터 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
-	else if (FilterType == POSTFILTER && IsUnicode) WriteLog(NORMAL_LOG, L"PostFilterRead : %d개의 유니코드 전용 후처리 필터 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
-	else if (FilterType == POSTFILTER && !IsUnicode) WriteLog(NORMAL_LOG, L"PostFilterRead : %d개의 후처리 필터 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
+	if (FilterType == PREFILTER) WriteLog(NORMAL_LOG, L"PreFilterRead : %d개의 전처리 필터 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
+	else if (FilterType == POSTFILTER) WriteLog(NORMAL_LOG, L"PostFilterRead : %d개의 후처리 필터 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
 	return true;
 }
 
@@ -838,7 +823,6 @@ bool filter::post(wstring &wsText)
 bool filter::filter_proc(vector<FILTERSTRUCT> &Filter, const int FilterType, wstring &wsText)
 {
 	DWORD dwStart, dwEnd;
-	bool g_UnicodeMode = false;
 	wstring Str = wsText;
 	int layer_prev = -1;
 	bool layer_pass = false;
@@ -849,9 +833,6 @@ bool filter::filter_proc(vector<FILTERSTRUCT> &Filter, const int FilterType, wst
 
 	for (UINT i = 0; i < Filter.size(); i++)
 	{
-		// 유니코드 모드일떄 유니코드 전용 필터 사용 가능
-		if (Filter[i].unicode && !g_UnicodeMode) continue;
-
 		// 저장된 차수와 현재 필터의 차수가 다를 때 조건식을 돌려 PASS 여부 확인
 		if (Filter[i].layer != layer_prev)
 		{

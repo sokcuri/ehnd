@@ -8,7 +8,6 @@ struct FILTERSTRUCT
 	int layer;
 	int regex;
 	wstring db;
-	bool unicode;
 	int operator<(FILTERSTRUCT fs) { return (layer) < (fs.layer) || ((layer) == (fs.layer) && (g_line < fs.g_line)); }
 };
 struct USERDICSTRUCT
@@ -55,7 +54,7 @@ public:
 
 private:
 	bool skiplayer_load2(vector<SKIPLAYERSTRUCT> &SkipLayer, LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line);
-	bool filter_load(vector<FILTERSTRUCT> &Filter, LPCWSTR lpPath, LPCWSTR lpFileName, int FilterType, bool IsUnicode, int &g_line);
+	bool filter_load(vector<FILTERSTRUCT> &Filter, LPCWSTR lpPath, LPCWSTR lpFileName, int FilterType, int &g_line);
 	bool userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line);
 	bool filter_proc(vector<FILTERSTRUCT> &Filter, const int FilterType, wstring &wsText);
 
