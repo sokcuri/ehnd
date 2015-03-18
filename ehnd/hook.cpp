@@ -304,9 +304,21 @@ bool GetRealWC2MB(void)
 			for (int i = 0; i < 4; i++)
 				p[i] = *(l2 + i);
 
-			lpfnwc2mb = l3 + 6;
-			wc2mb_type = 1;
-			return true;
+			bMatch = true;
+			for (int i = 0; i < _countof(ptn_kernel32); i++)
+				if (*(l3 + i) != ptn_kernel32[i])
+				{
+					bMatch = false;
+					break;
+				}
+
+			if (bMatch)
+			{
+				lpfnwc2mb = l3 + 6;
+				wc2mb_type = 1;
+				WriteLog(NORMAL_LOG, L"lpfnwc2mb: %x\n", lpfnwc2mb);
+				return true;
+			}
 		}
 	}
 	return true;
@@ -373,9 +385,21 @@ bool GetRealMB2WC(void)
 			for (int i = 0; i < 4; i++)
 				p[i] = *(l2 + i);
 
-			lpfnmb2wc = l3 + 6;
-			mb2wc_type = 1;
-			return true;
+			bMatch = true;
+			for (int i = 0; i < _countof(ptn_kernel32); i++)
+				if (*(l3 + i) != ptn_kernel32[i])
+				{
+					bMatch = false;
+					break;
+				}
+
+			if (bMatch)
+			{
+				lpfnmb2wc = l3 + 6;
+				mb2wc_type = 1;
+				WriteLog(NORMAL_LOG, L"lpfnlpfnmb2wc: %x\n", lpfnmb2wc);
+				return true;
+			}
 		}
 	}
 	return true;
