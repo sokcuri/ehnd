@@ -503,15 +503,19 @@ __declspec(naked) void userdict_patch(void)
 		XOR ECX, ECX
 	lCompare:
 		CMP CL, 31
-		JAE lHigh
+		JAE lLow
 		MOV AL, BYTE PTR DS : [ESI+ECX]
 		MOV DL, BYTE PTR DS : [EDI+ECX]
 		INC CL
-		CMP AL, 0x7E
+		CMP AL, 0x7F
 		JBE lC1
 		JMP lC2
 
-		// 0x00~0x7E
+		// 사용자사전은 내림차순 정렬이 되어있으므로
+		// AL>DL, DL LEFT SEL (lLow)
+		// DL>AL, DL RIGHT SEL (lHigh)
+
+		// 0x00~0x7F
 	lC1:
 		CMP AL, 0
 		JE lLow
@@ -520,7 +524,7 @@ __declspec(naked) void userdict_patch(void)
 		JA lLow
 		JB lHigh
 
-		// 0x7F~0xFF
+		// 0x80~0xFF
 	lC2:
 		CMP AL, DL
 		JA lLow
@@ -560,19 +564,19 @@ __declspec(naked) void userdict_patch(void)
 		MOV AL, BYTE PTR DS : [ESI+ECX]
 		MOV DL, BYTE PTR DS : [EDI+ECX]
 		INC CL
-		CMP AL, 0x7E
+		CMP DL, 0x7F
 		JBE lMC1
 		JMP lMC2
 
-		// 0x00~0x7E
+		// 0x00~0x7F
 	lMC1:
+		CMP DL, 0
+		JE lMatchEnd
 		CMP AL, DL
 		JNE lFinish
-		CMP AL, 0
-		JE lMatchEnd
 		JMP lMCompare
 
-		// 0x7F~0xFF
+		// 0x80~0xFF
 	lMC2:
 		CMP AL, DL
 		JNE lFinish
