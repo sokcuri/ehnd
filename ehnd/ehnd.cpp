@@ -223,7 +223,7 @@ void *__stdcall J2K_TranslateMMNTW(int data0, LPCWSTR szIn)
 	else if (wcslen(szIn))
 	{
 		wsLog = replace_all(wsText, L"%", L"%%");
-		WriteLog(NORMAL_LOG, L"[COMMAND] %s\n", wsLog.c_str());
+		WriteLog(NORMAL_LOG, L"[COMMAND] %s\n\n", wsLog.c_str());
 	}
 
 	szOut = (LPWSTR)msvcrt_malloc((wsText.length() + 1) * 2);
