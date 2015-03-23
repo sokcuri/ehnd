@@ -445,44 +445,6 @@ void *fopen_patch(char *path, char *mode)
 	return msvcrt_fopen(path, mode);
 }
 
-unsigned int CalHash(const char *str)
-{
-	unsigned int hash = 5381;
-
-	unsigned int test = 0;
-	int c = 0;
-
-	while (c = *str++)
-	{
-		hash = ((hash << 5) + hash) + c;
-	}
-
-	return (hash & 0x7FFFFFFF);
-}
-unsigned int CalHashC(const char *str, int count)
-{
-	unsigned int hash = 5381;
-
-	unsigned int test = 0;
-	int c = 0;
-	int i = 0;
-
-	while (c = *str++)
-	{
-		hash = ((hash << 5) + hash) + c;
-		i++;
-		if (i == count) break;
-	}
-
-	return (hash & 0x7FFFFFFF);
-}
-size_t strlen_inline(const char *str)
-{
-	register const char* i;
-	for (i = str; *i; ++i);
-	return (i - str);
-}
-
 __declspec(naked) void userdict_patch(void)
 {
 
