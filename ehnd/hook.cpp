@@ -514,7 +514,7 @@ __declspec(naked) void userdict_patch(void)
 		MOV AL, BYTE PTR DS : [ESI+ECX]
 		MOV DL, BYTE PTR DS : [EDI+ECX]
 		INC CL
-		CMP AL, 0x7F
+		CMP DL, 0x7F
 		JBE lC1
 		JMP lC2
 
@@ -524,7 +524,7 @@ __declspec(naked) void userdict_patch(void)
 
 		// 0x00~0x7F
 	lC1:
-		CMP AL, 0
+		CMP DL, 0
 		JE lLow
 		CMP AL, DL
 		JE lCompare

@@ -301,12 +301,10 @@ bool filter::jkdic_load(int &g_line)
 		if (!strcmp(us.part, "A9D0"))
 		{
 			us.w_part = L"상용어구";
-			us.priority = true;
 		}
 		else
 		{
 			us.w_part = L"명사";
-			us.priority = false;
 		}
 
 		us.g_line = g_line;
@@ -391,10 +389,10 @@ bool filter::ehnddic_create()
 	for (UINT i = 0; i < UserDic.size(); i++)
 	{
 		// 사용자사전 중복 제거
-		if (i > 0 && !strcmp(UserDic[i-1].jpn, UserDic[i].jpn)) continue;
+		//if (i > 0 && !strcmp(UserDic[i-1].jpn, UserDic[i].jpn)) continue;
 		
 		// 공백 제거
-		if (UserDic[i].jpn == 0) continue;
+		//if (UserDic[i].jpn == 0) continue;
 
 		fwrite(&UserDic[i].hidden, sizeof(char), 1, fp);
 		fwrite(&UserDic[i].jpn, sizeof(char), 31, fp);
@@ -655,13 +653,11 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 					{
 						Part = L"A9D0";
 						us.w_part = L"상용어구";
-						us.priority = true;
 					}
 					else
 					{
 						Part = L"I110";
 						us.w_part = L"명사";
-						us.priority = false;
 					}
 					break;
 				case 3:
@@ -741,19 +737,33 @@ bool filter::anedic_load(int &g_line)
 	hwnd = FindWindow(L"AneParentClass", NULL);
 	if (hwnd)
 	{
+		WriteLog(NORMAL_LOG, L"[AneDicLoad] AneParentClass Found.\n");
+
 		GetWindowThreadProcessId(hwnd, &pid);
 		if (GetCurrentProcessId() != pid)
+		{
+			WriteLog(NORMAL_LOG, L"[AneDicLoad] GetCurrentProcessId() != pid.\n");
 			return false;
+		}
 	}
 	else
 	{
 		hwnd = FindWindow(L"AnemoneParentWndClass", NULL);
 		if (hwnd)
 		{
+			WriteLog(NORMAL_LOG, L"[AneDicLoad] AnemoneParentWndClass Found.\n");
 			GetWindowThreadProcessId(hwnd, &pid);
 			if (GetCurrentProcessId() != pid)
+			{
+				WriteLog(NORMAL_LOG, L"[AneDicLoad] GetCurrentProcessId() != pid.\n");
 				return false;
-		} else return false;
+			}
+		}
+		else
+		{
+			WriteLog(NORMAL_LOG, L"[AneDicLoad] Anemone Not Found\n");
+			return false;
+		}
 	}
 
 	GetExecutePath(lpFileName, MAX_PATH);
@@ -812,13 +822,11 @@ bool filter::anedic_load(int &g_line)
 					{
 						Part = L"A9D0"; // 상용어구
 						us.w_part = L"상용어구";
-						us.priority = true;
 					}
 					else
 					{
 						Part = L"I110"; // 명사
 						us.w_part = L"명사";
-						us.priority = false;
 					}
 					break;
 				case 3:

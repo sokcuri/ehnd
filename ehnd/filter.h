@@ -20,12 +20,11 @@ struct USERDICSTRUCT
 	wstring w_part;
 	wstring w_attr;
 	char hidden;
-	bool priority;
 	char jpn[31];
 	char kor[31];
 	char part[5];
 	char attr[42];
-	int operator<(USERDICSTRUCT uds) { return ((priority < uds.priority) || (priority == uds.priority) && (strcmp(jpn, uds.jpn) > 0) || (priority == uds.priority) && (strcmp(jpn, uds.jpn) == 0) && (g_line < uds.g_line)); }
+	int operator<(USERDICSTRUCT uds) { return ((strcmp(jpn, uds.jpn) > 0) || (strcmp(jpn, uds.jpn) == 0) && (g_line < uds.g_line)); }
 };
 struct SKIPLAYERSTRUCT
 {
