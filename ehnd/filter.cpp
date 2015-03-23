@@ -16,15 +16,23 @@ bool filter::load()
 {
 	WaitForSingleObject(hLoadEvent, INFINITE);
 	if (!pre_load() || !post_load() ||
-		!userdic_load() || skiplayer_load()) return false;
+		!userdic_load() || skiplayer_load())
+	{
+		SetEvent(hLoadEvent);
+		return false;
+	}
 	SetEvent(hLoadEvent);
 	return true;
 }
 
 bool filter::load_dic()
 {
-	if (WaitForSingleObject(hLoadEvent, 10000) == WAIT_TIMEOUT) return false;
-	if (!userdic_load()) return false;
+	WaitForSingleObject(hLoadEvent, INFINITE);
+	if (!userdic_load())
+	{
+		SetEvent(hLoadEvent);
+		return false;
+	}
 	SetEvent(hLoadEvent);
 	return true;
 }
