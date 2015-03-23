@@ -12,6 +12,7 @@ private:
 	bool cfg_log_detail = true;
 	bool cfg_log_time = true;
 	bool cfg_log_skiplayer = true;
+	bool cfg_log_userdic = true;
 	bool cfg_filelog_switch = false;
 	int cfg_filelog_size = 300;
 	bool cfg_filelog_eztrans_loc = true;
@@ -52,6 +53,9 @@ public:
 
 	bool GetLogSkipLayer() { return cfg_log_skiplayer; }
 	void SetLogSkipLayer(bool b) { cfg_log_skiplayer = b; }
+
+	bool GetLogUserDic() { return cfg_log_userdic; }
+	void SetLogUserDic(bool b) { cfg_log_userdic = b; }
 
 	bool GetFileLogSwitch() { return cfg_filelog_switch; }
 	void SetFileLogSwitch(bool b) { cfg_filelog_switch = b; }

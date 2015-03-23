@@ -69,6 +69,7 @@ void WriteLog(int LogType, const wchar_t *format, ...)
 	if (!pConfig->GetLogTime() && LogType == TIME_LOG) return;
 	if (!pConfig->GetLogDetail() && LogType == DETAIL_LOG) return;
 	if (!pConfig->GetLogSkipLayer() && LogType == SKIPLAYER_LOG) return;
+	if (!pConfig->GetLogUserDic() && LogType == USERDIC_LOG) return;
 
 	va_list valist;
 	FILE *fp = NULL;

@@ -26,7 +26,7 @@ bool EhndInit(void)
 		wcscat_s(lpFileName, L"\\ehnd_log.log");
 		DeleteFile(lpFileName);
 	}
-	
+
 	CreateLogWin(g_hInst);
 	ShowLogWin(pConfig->GetConsoleSwitch());
 	LogStartMsg();
@@ -39,6 +39,9 @@ bool EhndInit(void)
 	if (!hook_userdict2()) return false;
 
 	WriteLog(NORMAL_LOG, L"HookUserDict : 사용자사전 알고리즘 최적화.\n");
+
+	// 엔드 임시파일 삭제
+	pFilter->ehnddic_cleanup();
 
 	pFilter->load();
 	return true;

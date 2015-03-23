@@ -12,13 +12,19 @@ struct FILTERSTRUCT
 };
 struct USERDICSTRUCT
 {
+	int g_line;
 	int line;
+	wstring db;
+	wstring w_jpn;
+	wstring w_kor;
+	wstring w_part;
+	wstring w_attr;
 	char hidden;
 	char jpn[31];
 	char kor[31];
 	char part[5];
 	char attr[42];
-	int operator<(USERDICSTRUCT uds) { return ((strcmp(jpn, uds.jpn) > 0) || (strcmp(jpn, uds.jpn) == 0) && (line < uds.line)); }
+	int operator<(USERDICSTRUCT uds) { return ((strcmp(jpn, uds.jpn) > 0) || (strcmp(jpn, uds.jpn) == 0) && (g_line < uds.g_line)); }
 };
 struct SKIPLAYERSTRUCT
 {
@@ -43,14 +49,21 @@ public:
 	bool pre_load();
 	bool post_load();
 	bool userdic_load();
-	bool jkdic_load();
+	bool jkdic_load(int &g_line);
+	bool anedic_load(int &g_line);
 	bool skiplayer_load();
 	bool ehnddic_cleanup();
 	bool ehnddic_create();
-	bool anedic_load();
 	bool pre(wstring &wsText);
 	bool post(wstring &wsText);
 	bool cmd(wstring &wsText);
+
+	const wchar_t *GetDicDB(int idx) { return UserDic[idx].db.c_str(); }
+	const int GetDicLine(int idx) { return UserDic[idx].line; }
+	const wchar_t *GetDicJPN(int idx) { return UserDic[idx].w_jpn.c_str(); }
+	const wchar_t *GetDicKOR(int idx) { return UserDic[idx].w_kor.c_str(); }
+	const wchar_t *GetDicTYPE(int idx) { return UserDic[idx].w_part.c_str(); }
+	const wchar_t *GetDicATTR(int idx) { return UserDic[idx].w_attr.c_str(); }
 
 private:
 	bool skiplayer_load2(vector<SKIPLAYERSTRUCT> &SkipLayer, LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line);
@@ -62,6 +75,6 @@ private:
 	vector<FILTERSTRUCT> PostFilter;
 	vector<USERDICSTRUCT> UserDic;
 	vector<SKIPLAYERSTRUCT> SkipLayer;
-	
+
 	HANDLE hLoadEvent;
 };

@@ -6,7 +6,7 @@
 #pragma once
 
 #include "targetver.h"
-#define EHND_VER "V3.06"
+#define EHND_VER "V3.07"
 // Windows 헤더 파일:
 #include <windows.h>
 #include <WinBase.h>
@@ -25,10 +25,11 @@ using namespace std;
 #define POSTFILTER 2
 
 #define NORMAL_LOG 0
-#define DETAIL_LOG 10
-#define TIME_LOG 20
-#define SKIPLAYER_LOG 30
-#define ERROR_LOG 40
+#define ERROR_LOG 10
+#define DETAIL_LOG 20
+#define TIME_LOG 30
+#define SKIPLAYER_LOG 40
+#define USERDIC_LOG 50
 
 // TODO: 프로그램에 필요한 추가 헤더는 여기에서 참조합니다.
 #include "ehnd.h"

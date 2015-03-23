@@ -186,10 +186,10 @@ bool filter::userdic_load()
 	UserDic.clear();
 
 	// load userdict.jk
-	if (pConfig->GetJKDICSwitch()) jkdic_load();
+	if (pConfig->GetJKDICSwitch()) jkdic_load(userdic_line);
 	
 	// load anedic.txt
-	anedic_load();
+	anedic_load(userdic_line);
 
 	HANDLE hFind = FindFirstFile(Path.c_str(), &FindFileData);
 
@@ -214,20 +214,18 @@ bool filter::userdic_load()
 	dwEnd = GetTickCount();
 	WriteLog(TIME_LOG, L"UserDicRead : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
 
-	// 엔드 임시파일 삭제
-	ehnddic_cleanup();
-
 	// 엔드 임시파일 생성
 	ehnddic_create();
 
 	return true;
 }
 
-bool filter::jkdic_load()
+bool filter::jkdic_load(int &g_line)
 {
 	WCHAR lpEztPath[MAX_PATH], Buffer[1024];
 	FILE *fp;
 	wstring Path;
+	wchar_t lpBuffer[128];
 
 	DWORD dwStart, dwEnd;
 	dwStart = GetTickCount();
@@ -277,8 +275,30 @@ bool filter::jkdic_load()
 		else
 			memcpy(us.attr, Buffer, 42);
 
+		int len;
+		len = _MultiByteToWideChar(932, MB_PRECOMPOSED, us.jpn, -1, NULL, NULL);
+		_MultiByteToWideChar(932, 0, us.jpn, -1, lpBuffer, len);
+		us.w_jpn = lpBuffer;
+
+		len = _MultiByteToWideChar(949, MB_PRECOMPOSED, us.kor, -1, NULL, NULL);
+		_MultiByteToWideChar(949, 0, us.kor, -1, lpBuffer, len);
+		us.w_kor = lpBuffer;
+
+		len = _MultiByteToWideChar(949, MB_PRECOMPOSED, us.attr, -1, NULL, NULL);
+		_MultiByteToWideChar(949, 0, us.attr, -1, lpBuffer, len);
+		us.w_attr = lpBuffer;
+
+		us.db = L"UserDict.jk";
+
+		if (!strcmp(us.part, "A9D0")) us.w_part = L"상용어구";
+		else us.w_part = L"명사";
+
+		us.g_line = g_line;
+		us.line = vaild_line;
+
 		UserDic.push_back(us);
 		vaild_line++;
+		g_line++;
 	}
 	fclose(fp);
 
@@ -354,11 +374,22 @@ bool filter::ehnddic_create()
 
 	for (UINT i = 0; i < UserDic.size(); i++)
 	{
+		// 사용자사전 중복 제거
+		if (i > 0 && !strcmp(UserDic[i-1].jpn, UserDic[i].jpn)) continue;
+		
+		// 공백 제거
+		if (UserDic[i].jpn == 0) continue;
+
 		fwrite(&UserDic[i].hidden, sizeof(char), 1, fp);
 		fwrite(&UserDic[i].jpn, sizeof(char), 31, fp);
 		fwrite(&UserDic[i].kor, sizeof(char), 31, fp);
 		fwrite(&UserDic[i].part, sizeof(char), 5, fp);
-		fwrite(&UserDic[i].attr, sizeof(char), 42, fp);
+		fwrite(&UserDic[i].attr, sizeof(char), 37, fp);
+
+		// UserDic_Log 구현을 위해 NULL+attr 끝 네자리를 활용
+		// 기존 attr 배열은 42자까지 허용되었으나 끝자리를 사용하는 관계로 36자까지만 허용 (1자는 여유)
+		fwrite(L"", sizeof(char), 1, fp);
+		fwrite(&i, sizeof(char), 4, fp);
 	}
 	WriteLog(NORMAL_LOG, L"EhndDicCreate : 사용자사전 바이너리 \"UserDict_%s.ehnd\" 생성.\n", lpText);
 	fclose(fp);
@@ -564,7 +595,7 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 
 	//WriteLog(NORMAL_LOG, L"UserDicRead : 사용자 사전 \"%s\" 로드.\n", lpFileName);
 
-	for (int line = 0; fgetws(Buffer, 1000, fp) != NULL; line++, g_line++)
+	for (int line = 1; fgetws(Buffer, 1000, fp) != NULL; line++, g_line++)
 	{
 		if (Buffer[0] == L'/' && Buffer[1] == L'/') continue;	// 주석
 
@@ -576,6 +607,10 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 		memset(us.attr, 0, sizeof(us.attr));
 		Part = L"I110";
 		Attr = L"";
+
+		us.db = lpFileName;
+		us.w_part = L"명사";
+		us.line = line;
 
 		int tab = 0;
 		for (UINT i = 0, prev = 0; i <= wcslen(Buffer); i++)
@@ -601,9 +636,15 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 					prev = i + 1;
 					tab++;
 					if (Context[0] == L'0' || Context[0] == L'2')
+					{
 						Part = L"A9D0";
+						us.w_part = L"상용어구";
+					}
 					else
+					{
 						Part = L"I110";
+						us.w_part = L"명사";
+					}
 					break;
 				case 3:
 					wcsncpy_s(Context, Buffer + prev, i - prev);
@@ -639,9 +680,9 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 		_WideCharToMultiByte(949, 0, Kor.c_str(), -1, szBuffer, len, NULL, NULL);
 		strcpy_s(us.kor, szBuffer);
 
-		if ((len = _WideCharToMultiByte(932, 0, Attr.c_str(), -1, NULL, NULL, NULL, NULL)) > 43)
+		if ((len = _WideCharToMultiByte(932, 0, Attr.c_str(), -1, NULL, NULL, NULL, NULL)) > 37)
 		{
-			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 단어 속성은 42Byte를 초과할 수 없습니다.\n");
+			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 단어 속성은 36Byte를 초과할 수 없습니다.\n");
 			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 다음 단어가 무시됩니다. (현재: %dByte)\n", len);
 			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : [%s:%d] : %s | %s | %s | <<%s>>\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
 			continue;
@@ -653,8 +694,14 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 		_WideCharToMultiByte(932, 0, Part.c_str(), -1, szBuffer, len, NULL, NULL);
 		strcpy_s(us.part, szBuffer);
 
-		vaild_line++;
+		us.w_jpn = Jpn;
+		us.w_kor = Kor;
+		us.w_part = Part;
+
+		us.g_line = g_line;
 		UserDic.push_back(us);
+		vaild_line++;
+		g_line++;
 	}
 	WriteLog(NORMAL_LOG, L"UserDictRead : %d개의 사용자 사전 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
 	fclose(fp);
@@ -663,7 +710,7 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 
 // anedic.txt 호환을 위한 함수
 // 필터가 변경이 되면 anedic.txt 파일을 찾아 읽는다
-bool filter::anedic_load()
+bool filter::anedic_load(int &g_line)
 {
 	WCHAR lpFileName[MAX_PATH];
 	FILE *fp;
@@ -715,6 +762,10 @@ bool filter::anedic_load()
 
 		Part = L"I110";
 		Attr = L"";
+
+		us.db = L"anedic.txt";
+		us.w_part = L"명사";
+		us.line = line;
 
 		int tab = 0;
 		for (UINT i = 0, prev = 0; i <= wcslen(Buffer); i++)
@@ -778,9 +829,9 @@ bool filter::anedic_load()
 		_WideCharToMultiByte(949, 0, Kor.c_str(), -1, szBuffer, len, NULL, NULL);
 		strcpy_s(us.kor, szBuffer);
 
-		if ((len = _WideCharToMultiByte(932, 0, Attr.c_str(), -1, NULL, NULL, NULL, NULL)) > 43)
+		if ((len = _WideCharToMultiByte(932, 0, Attr.c_str(), -1, NULL, NULL, NULL, NULL)) > 37)
 		{
-			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 단어 속성은 42Byte를 초과할 수 없습니다.\n");
+			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 단어 속성은 36Byte를 초과할 수 없습니다.\n");
 			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 다음 단어가 무시됩니다. (현재: %dByte)\n", len);
 			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : [%s:%d] : %s | %s | %s | <<%s>>\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
 			continue;
@@ -792,8 +843,14 @@ bool filter::anedic_load()
 		_WideCharToMultiByte(932, 0, Part.c_str(), -1, szBuffer, len, NULL, NULL);
 		strcpy_s(us.part, szBuffer);
 
-		vaild_line++;
+		us.w_jpn = Jpn;
+		us.w_kor = Kor;
+		us.w_part = Part;
+
+		us.g_line = g_line;
 		UserDic.push_back(us);
+		vaild_line++;
+		g_line++;
 	}
 	WriteLog(NORMAL_LOG, L"UserDictRead : %d개의 사용자 사전 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
 	fclose(fp);

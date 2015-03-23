@@ -7,6 +7,7 @@ bool GetRealWC2MB();
 bool GetRealMB2WC();
 void *fopen_patch(char *path, char *mode);
 void userdict_patch();
+void userdict_log(int idx);
 UINT calculate_hash(LPCSTR s, int n);
 size_t strlen_inline(LPCSTR str);
 int __stdcall _WideCharToMultiByte(UINT a, DWORD b, LPCWSTR c, int d, LPSTR e, int f, LPCSTR g, LPBOOL h);

@@ -34,6 +34,8 @@ bool config::LoadConfig()
 	if (buf[0] != NULL) (_wcsicmp(buf, L"OFF") != 0) ? SetLogTime(true) : SetLogTime(false);
 	ReadINI(L"LOG_SKIPLAYER", L"CONFIG", buf, (wchar_t*)INIPath);
 	if (buf[0] != NULL) (_wcsicmp(buf, L"OFF") != 0) ? SetLogSkipLayer(true) : SetLogSkipLayer(false);
+	ReadINI(L"LOG_USERDIC", L"CONFIG", buf, (wchar_t*)INIPath);
+	if (buf[0] != NULL) (_wcsicmp(buf, L"OFF") != 0) ? SetLogUserDic(true) : SetLogUserDic(false);
 
 
 	ReadINI(L"FILELOG_SWITCH", L"CONFIG", buf, (wchar_t*)INIPath);
@@ -80,6 +82,8 @@ bool config::SaveConfig()
 	WriteINI(L"LOG_TIME", L"CONFIG", buf, (wchar_t*)INIPath);
 	wcscpy_s(buf, (GetLogSkipLayer() ? L"ON" : L"OFF"));
 	WriteINI(L"LOG_SKIPLAYER", L"CONFIG", buf, (wchar_t*)INIPath);
+	wcscpy_s(buf, (GetLogUserDic() ? L"ON" : L"OFF"));
+	WriteINI(L"LOG_USERDIC", L"CONFIG", buf, (wchar_t*)INIPath);
 
 	wcscpy_s(buf, (GetFileLogSwitch() ? L"ON" : L"OFF"));
 	WriteINI(L"FILELOG_SWITCH", L"CONFIG", buf, (wchar_t*)INIPath);

@@ -592,8 +592,13 @@ __declspec(naked) void userdict_patch(void)
 		MOV ECX, 0x6E
 		MUL ECX
 		MOV DWORD PTR SS : [ESP+0x10], EAX
-		ADD EAX, DWORD PTR SS : [EBP + 0x04]
-		MOV EBX, DWORD PTR SS : [ESP + 0x38]
+		ADD EAX, DWORD PTR SS : [EBP+0x04]
+		PUSH EAX
+		ADD EAX, 0x6A
+		PUSH DWORD PTR DS : [EAX]
+		CALL userdict_log
+		ADD ESP, 0x04
+		POP EAX
 		MOV CL, 1
 		TEST CL, CL
 		JMP lpfnRetn
@@ -605,5 +610,10 @@ __declspec(naked) void userdict_patch(void)
 		TEST CL, CL
 		JMP lpfnRetn
 	}
+}
 
+void userdict_log(int idx)
+{
+	WriteLog(USERDIC_LOG, L"UserDic : [%s:%d] %s | %s | (%s) | %s\n", pFilter->GetDicDB(idx), pFilter->GetDicLine(idx),  
+		pFilter->GetDicJPN(idx), pFilter->GetDicKOR(idx), pFilter->GetDicTYPE(idx), pFilter->GetDicATTR(idx));
 }
