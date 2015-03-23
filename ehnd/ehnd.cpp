@@ -181,6 +181,8 @@ void *__stdcall J2K_TranslateMMNTW(int data0, LPCWSTR szIn)
 		}
 		_WideCharToMultiByte(932, 0, wsText.c_str(), -1, szJPN, i_len, NULL, NULL);
 
+		if (!pConfig->GetUserDicSwitch()) WriteLog(NORMAL_LOG, L"UserDic : 사용자 사전이 꺼져 있습니다.\n");
+
 		dwStart = GetTickCount();
 
 		__asm

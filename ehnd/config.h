@@ -6,6 +6,7 @@ private:
 
 	bool cfg_prefilter_switch = true;
 	bool cfg_postfilter_switch = true;
+	bool cfg_userdic_switch = true;
 	bool cfg_jkdic_switch = true;
 	bool cfg_ehndwatch_switch = true;
 	bool cfg_command_switch = true;
@@ -38,6 +39,9 @@ public:
 
 	bool GetJKDICSwitch() { return cfg_jkdic_switch; }
 	void SetJKDICSwitch(bool b) { cfg_jkdic_switch = b; }
+
+	bool GetUserDicSwitch() { return cfg_userdic_switch; }
+	void SetUserDicSwitch(bool b) { cfg_userdic_switch = b; }
 
 	bool GetEhndWatchSwitch() { return cfg_ehndwatch_switch; }
 	void SetEhndWatchSwitch(bool b) { cfg_ehndwatch_switch = b; }

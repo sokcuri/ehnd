@@ -457,8 +457,15 @@ __declspec(naked) void userdict_patch(void)
 	// [EBP + 0x04] + 0x6E * cnt + 0x01 = USERDICT_JPN
 	//
 
-	// 일치하는 단어가 나오면 단어 등록을 하고 다시 돌아옴
+	// UserDic이 켜져있는지 확인. 꺼져있으면 처리를 하지 않는다
+	__asm
+	{
+		CALL userdict_check
+		CMP AL, 0
+		JE lFinish
+	}
 
+	// 일치하는 단어가 나오면 단어 등록을 하고 다시 돌아옴
 	__asm
 	{
 		// word_str
@@ -616,4 +623,9 @@ void userdict_log(int idx)
 {
 	WriteLog(USERDIC_LOG, L"UserDic : [%s:%d] %s | %s | (%s) | %s\n", pFilter->GetDicDB(idx), pFilter->GetDicLine(idx),  
 		pFilter->GetDicJPN(idx), pFilter->GetDicKOR(idx), pFilter->GetDicTYPE(idx), pFilter->GetDicATTR(idx));
+}
+
+bool userdict_check()
+{
+	return pConfig->GetUserDicSwitch();
 }

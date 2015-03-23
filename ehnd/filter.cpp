@@ -988,7 +988,8 @@ bool filter::filter_proc(vector<FILTERSTRUCT> &Filter, const int FilterType, wst
 
 bool filter::cmd(wstring &wsText)
 {
-	BOOL bChanged = false;
+	BOOL bCommand = false;
+	BOOL bSaveINI = false;
 	if (wsText[0] != L'/') return false;
 	if (!wsText.compare(L"/ver") || !wsText.compare(L"/version"))
 	{
@@ -1015,7 +1016,7 @@ bool filter::cmd(wstring &wsText)
 			pConfig->SetConsoleSwitch(true);
 			wsText = L"/log : Log Window On.";
 		}
-		bChanged = true;
+		bCommand = true;
 	}
 	else if (!wsText.compare(L"/command"))
 	{
@@ -1029,11 +1030,13 @@ bool filter::cmd(wstring &wsText)
 			pConfig->SetCommandSwitch(true);
 			wsText = L"/command : Command On.";
 		}
-		bChanged = true;
+		bCommand = true;
+		bSaveINI = true;
 	}
 	else if (!wsText.compare(L"/reload"))
 	{
 		pFilter->load();
+		bCommand = true;
 	}
 	else if (pConfig->GetCommandSwitch())
 	{
@@ -1049,7 +1052,8 @@ bool filter::cmd(wstring &wsText)
 				pConfig->SetLogDetail(true);
 				wsText = L"/log_detail : Detail Log On.";
 			}
-			bChanged = true;
+			bCommand = true;
+			bSaveINI = true;
 		}
 		else if (!wsText.compare(L"/log_time"))
 		{
@@ -1063,7 +1067,8 @@ bool filter::cmd(wstring &wsText)
 				pConfig->SetLogTime(true);
 				wsText = L"/log_time : Time Log On.";
 			}
-			bChanged = true;
+			bCommand = true;
+			bSaveINI = true;
 		}
 		else if (!wsText.compare(L"/log_skiplayer"))
 		{
@@ -1077,7 +1082,23 @@ bool filter::cmd(wstring &wsText)
 				pConfig->SetLogSkipLayer(true);
 				wsText = L"/log_skiplayer : SkipLayer Log On.";
 			}
-			bChanged = true;
+			bCommand = true;
+			bSaveINI = true;
+		}
+		else if (!wsText.compare(L"/log_userdic"))
+		{
+			if (pConfig->GetLogUserDic())
+			{
+				pConfig->SetLogUserDic(false);
+				wsText = L"/log_userdic : UserDic Log Off.";
+			}
+			else
+			{
+				pConfig->SetLogUserDic(true);
+				wsText = L"/log_userdic : UserDic Log On.";
+			}
+			bCommand = true;
+			bSaveINI = true;
 		}
 		else if (!wsText.compare(L"/filelog"))
 		{
@@ -1091,52 +1112,53 @@ bool filter::cmd(wstring &wsText)
 				pConfig->SetFileLogSwitch(true);
 				wsText = L"/filelog : Write FileLog On.";
 			}
-			bChanged = true;
+			bCommand = true;
+			bSaveINI = true;
 		}
-		else if (!wsText.compare(L"/pre"))
+		else if (!wsText.compare(L"/preon") || !wsText.compare(L"/pre") && !pConfig->GetPreSwitch())
 		{
-			if (pConfig->GetPreSwitch())
-			{
-				pConfig->SetPreSwitch(false);
-				wsText = L"/pre : PreFilter Off.";
-			}
-			else
-			{
-				pConfig->SetPreSwitch(true);
-				wsText = L"/pre : PreFilter On.";
-			}
-			bChanged = true;
+			pConfig->SetPreSwitch(true);
+			wsText += L" : PreFilter On.";
+			bCommand = true;
 		}
-		else if (!wsText.compare(L"/post"))
+
+		else if (!wsText.compare(L"/preoff") || !wsText.compare(L"/pre") && pConfig->GetPreSwitch())
 		{
-			if (pConfig->GetPostSwitch())
-			{
-				pConfig->SetPostSwitch(false);
-				wsText = L"/post : PostFilter Off.";
-			}
-			else
-			{
-				pConfig->SetPostSwitch(true);
-				wsText = L"/post : PostFilter On.";
-			}
-			bChanged = true;
+			pConfig->SetPreSwitch(false);
+			wsText += L" : PreFilter Off.";
+			bCommand = true;
 		}
-		else if (!wsText.compare(L"/jkdic"))
+
+		else if (!wsText.compare(L"/poston") || !wsText.compare(L"/post") && !pConfig->GetPostSwitch())
 		{
-			if (pConfig->GetJKDICSwitch())
-			{
-				pConfig->SetJKDICSwitch(false);
-				wsText = L"/jkdic : JKDIC Off.";
-			}
-			else
-			{
-				pConfig->SetJKDICSwitch(true);
-				wsText = L"/jkdic : JKDIC On.";
-			}
-			bChanged = true;
+			pConfig->SetPostSwitch(true);
+			wsText += L" : PostFilter On.";
+			bCommand = true;
+		}
+
+		else if (!wsText.compare(L"/postoff") || !wsText.compare(L"/post") && pConfig->GetPostSwitch())
+		{
+			pConfig->SetPostSwitch(false);
+			wsText += L" : PostFilter Off.";
+			bCommand = true;
+		}
+
+		else if (!wsText.compare(L"/dicon") || !wsText.compare(L"/dic") && !pConfig->GetUserDicSwitch())
+		{
+			pConfig->SetUserDicSwitch(true);
+			wsText += L" : UserDic On.";
+			bCommand = true;
+		}
+
+		else if (!wsText.compare(L"/dicoff") || !wsText.compare(L"/dic") && pConfig->GetUserDicSwitch())
+		{
+			pConfig->SetUserDicSwitch(false);
+			wsText += L" : UserDic Off.";
+			bCommand = true;
 		}
 	}
 
-	if (bChanged) pConfig->SaveConfig();
+	if (bSaveINI) pConfig->SaveConfig();
+	if (bCommand) return true;
 	return false;
 }

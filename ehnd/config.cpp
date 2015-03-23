@@ -23,6 +23,8 @@ bool config::LoadConfig()
 	if (buf[0] != NULL) (_wcsicmp(buf, L"OFF") != 0) ? SetPostSwitch(true) : SetPostSwitch(false);
 	ReadINI(L"JKDIC_SWITCH", L"CONFIG", buf, (wchar_t*)INIPath);
 	if (buf[0] != NULL) (_wcsicmp(buf, L"OFF") != 0) ? SetJKDICSwitch(true) : SetJKDICSwitch(false);
+	ReadINI(L"USERDIC_SWITCH", L"CONFIG", buf, (wchar_t*)INIPath);
+	if (buf[0] != NULL) (_wcsicmp(buf, L"OFF") != 0) ? SetUserDicSwitch(true) : SetUserDicSwitch(false);
 	ReadINI(L"EHNDWATCH_SWITCH", L"CONFIG", buf, (wchar_t*)INIPath);
 	if (buf[0] != NULL) (_wcsicmp(buf, L"OFF") != 0) ? SetEhndWatchSwitch(true) : SetEhndWatchSwitch(false);
 	ReadINI(L"COMMAND_SWITCH", L"CONFIG", buf, (wchar_t*)INIPath);
@@ -67,12 +69,12 @@ bool config::SaveConfig()
 	GetLoadPath(INIPath, MAX_PATH);
 	wcscat_s(INIPath, L"\\Ehnd\\ehnd_conf.ini");
 
-	wcscpy_s(buf, (GetPreSwitch() ? L"ON" : L"OFF"));
-	WriteINI(L"PREFILTER_SWITCH", L"CONFIG", buf, (wchar_t*)INIPath);
-	wcscpy_s(buf, (GetPostSwitch() ? L"ON" : L"OFF"));
-	WriteINI(L"POSTFILTER_SWITCH", L"CONFIG", buf, (wchar_t*)INIPath);
-	wcscpy_s(buf, (GetJKDICSwitch() ? L"ON" : L"OFF"));
-	WriteINI(L"JKDIC_SWITCH", L"CONFIG", buf, (wchar_t*)INIPath);
+	//wcscpy_s(buf, (GetPreSwitch() ? L"ON" : L"OFF"));
+	//WriteINI(L"PREFILTER_SWITCH", L"CONFIG", buf, (wchar_t*)INIPath);
+	//wcscpy_s(buf, (GetPostSwitch() ? L"ON" : L"OFF"));
+	//WriteINI(L"POSTFILTER_SWITCH", L"CONFIG", buf, (wchar_t*)INIPath);
+	//wcscpy_s(buf, (GetJKDICSwitch() ? L"ON" : L"OFF"));
+	//WriteINI(L"JKDIC_SWITCH", L"CONFIG", buf, (wchar_t*)INIPath);
 	wcscpy_s(buf, (GetCommandSwitch() ? L"ON" : L"OFF"));
 	WriteINI(L"COMMAND_SWITCH", L"CONFIG", buf, (wchar_t*)INIPath);
 
