@@ -290,8 +290,16 @@ bool filter::jkdic_load(int &g_line)
 
 		us.db = L"UserDict.jk";
 
-		if (!strcmp(us.part, "A9D0")) us.w_part = L"상용어구";
-		else us.w_part = L"명사";
+		if (!strcmp(us.part, "A9D0"))
+		{
+			us.w_part = L"상용어구";
+			us.priority = true;
+		}
+		else
+		{
+			us.w_part = L"명사";
+			us.priority = false;
+		}
 
 		us.g_line = g_line;
 		us.line = vaild_line;
@@ -639,11 +647,13 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 					{
 						Part = L"A9D0";
 						us.w_part = L"상용어구";
+						us.priority = true;
 					}
 					else
 					{
 						Part = L"I110";
 						us.w_part = L"명사";
+						us.priority = false;
 					}
 					break;
 				case 3:
@@ -696,7 +706,7 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 
 		us.w_jpn = Jpn;
 		us.w_kor = Kor;
-		us.w_part = Part;
+		us.w_attr = Attr;
 
 		us.g_line = g_line;
 		UserDic.push_back(us);
@@ -791,9 +801,17 @@ bool filter::anedic_load(int &g_line)
 					prev = i + 1;
 					tab++;
 					if (Context[0] == L'0' || Context[2] == L'2')
+					{
 						Part = L"A9D0"; // 상용어구
+						us.w_part = L"상용어구";
+						us.priority = true;
+					}
 					else
+					{
 						Part = L"I110"; // 명사
+						us.w_part = L"명사";
+						us.priority = false;
+					}
 					break;
 				case 3:
 					wcsncpy_s(Context, Buffer + prev, i - prev);
@@ -845,7 +863,7 @@ bool filter::anedic_load(int &g_line)
 
 		us.w_jpn = Jpn;
 		us.w_kor = Kor;
-		us.w_part = Part;
+		us.w_attr = Attr;
 
 		us.g_line = g_line;
 		UserDic.push_back(us);
