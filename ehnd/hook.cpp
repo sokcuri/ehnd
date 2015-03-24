@@ -513,34 +513,63 @@ bool userdict_check()
 {
 	return pConfig->GetUserDicSwitch();
 }
+inline unsigned int userdict_calhash(const char *str, int count)
+{
+	unsigned int hash = 5381;
+	int c = 0;
+	int i = 0;
 
+	while (c = *str++)
+	{
+		hash = ((hash << 5) + hash) + c;
+		i++;
+		if (i == count) break;
+	}
+
+	return (hash & 0x7FFFFFFF);
+}
+inline bool userdict_compare(const char *src, const char *dest, int len)
+{
+	return (userdict_calhash(src, len) == userdict_calhash(dest, len));
+}
 int userdict_proc(char *word_str, char *base, int cur, int total)
 {
 	int idx = -1;
-	int s = cur, e = total + 1, m;
+	int s = cur, e = total, m, min, max;
 	char *dic_str;
 
+	// Upper Bonund
 	while (e - s > 0)
 	{
 		m = (s + e) / 2;
 		dic_str = (char *)base + (0x6E * m) + 0x01;
 
-		if (strncmp(word_str, dic_str, strlen(dic_str)) >= 0)
-			e = m;
-		else s = m + 1;
+		if (word_str[0] <= dic_str[0])
+			s = m + 1;
+		else e = m;
 	}
-	
-	dic_str = (char *)base + (0x6E * s) + 0x01;
-	//char *p = (char *)&idx;
-	//for (int i = 0; i < 4; i++)
-	//	p[i] = *(base + (0x6E * s) + 0x6A + i);
+	max = s;
 
-	//WriteLog(USERDIC_LOG, L">>> [%s:%d] %s | %s | (%s) | %s\n", pFilter->GetDicDB(idx), pFilter->GetDicLine(idx),
-	//	pFilter->GetDicJPN(idx), pFilter->GetDicKOR(idx), pFilter->GetDicTYPE(idx), pFilter->GetDicATTR(idx));
-	if (!strncmp(dic_str, word_str, strlen(dic_str)))
-		return s;
-	else return total + 1;
+	// Lower Bound
+	s = cur, e = max;
+	while (e - s > 0)
+	{
+		m = (s + e) / 2;
+		dic_str = (char *)base + (0x6E * m) + 0x01;
 
+		if (word_str[0] < dic_str[0])
+			s = m + 1;
+		else e = m;
+	}
+	min = s;
 
-	return s;
+	for (int i = min; i < max; i++)
+	{
+		dic_str = (char *)base + (0x6E * i) + 0x01;
+
+		if (userdict_compare(dic_str, word_str, strlen(dic_str)) &&
+			!strncmp(word_str, dic_str, strlen(dic_str)))
+			return i;
+	}
+	return total + 1;
 }
