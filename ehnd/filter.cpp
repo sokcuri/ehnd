@@ -695,7 +695,6 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 			us.g_line = g_line;
 			g_line++, count++;
 			UserDic.push_back(us);
-			WriteLog(NORMAL_LOG, L"UserDicRead : 등록 : [%s:%d] : %s | %s | %x | %s\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), us._type, Attr.c_str());
 		}
 	}
 	WriteLog(NORMAL_LOG, L"UserDicRead : %d개의 사용자 사전 \"%s\"를 읽었습니다.\n", count, lpFileName);
