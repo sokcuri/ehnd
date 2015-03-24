@@ -642,7 +642,7 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 			{
 				wcsncpy_s(Context, pStr - n, n);
 
-				if (t < 3)
+				if (t < 4)
 				{
 					if (t == 0)
 						Jpn = Context;
