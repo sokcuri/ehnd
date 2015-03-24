@@ -230,9 +230,12 @@ bool filter::userdic_load()
 
 bool filter::jkdic_load(int &g_line)
 {
-	WCHAR lpEztPath[MAX_PATH], Buffer[1024];
+	WCHAR lpEztPath[MAX_PATH];
+	CHAR Jpn[32], Kor[32], Part[6], Attr[38], Hidden;
+	CHAR Buffer[1024];
 	FILE *fp;
 	wstring Path;
+	int line = 1;
 	wchar_t lpBuffer[128];
 
 	DWORD dwStart, dwEnd;
@@ -263,60 +266,54 @@ bool filter::jkdic_load(int &g_line)
 	int vaild_line = 0;
 	while (1)
 	{
+		Jpn[31] = 0, Kor[31] = 0, Part[5] = 0, Attr[37] = 0;
+
 		if (!fread(Buffer, sizeof(char), 1, fp)) break;
-		else
-			(Buffer[0] == 0x00) ? us.hidden = false : us.hidden = true;
+		else (Buffer[0] == 0x00) ? Hidden = false : Hidden = true;
 
 		if (!fread(Buffer, sizeof(char), 31, fp)) break;
-		else
-			memcpy(us.jpn, Buffer, 31);
+		else memcpy(Jpn, Buffer, 31);
 
 		if (!fread(Buffer, sizeof(char), 31, fp)) break;
-		else
-			memcpy(us.kor, Buffer, 31);
+		else memcpy(Kor, Buffer, 31);
 
 		if (!fread(Buffer, sizeof(char), 5, fp)) break;
-		else
-			memcpy(us.part, Buffer, 5);
+		else memcpy(Part, Buffer, 5);
 
-		if (!fread(Buffer, sizeof(char), 42, fp)) break;
-		else
-			memcpy(us.attr, Buffer, 42);
+		if (!fread(Buffer, sizeof(char), 37, fp)) break;
+		else memcpy(Attr, Buffer, 37);
+
+		if (!fread(Buffer, sizeof(char), 5, fp)) break;
 
 		int len;
-		len = _MultiByteToWideChar(932, MB_PRECOMPOSED, us.jpn, -1, NULL, NULL);
-		_MultiByteToWideChar(932, 0, us.jpn, -1, lpBuffer, len);
-		us.w_jpn = lpBuffer;
+		len = _MultiByteToWideChar(932, MB_PRECOMPOSED, Jpn, -1, NULL, NULL);
+		_MultiByteToWideChar(932, 0, Jpn, -1, lpBuffer, len);
+		wcsncpy_s(us._jpn, lpBuffer, len);
 
-		len = _MultiByteToWideChar(949, MB_PRECOMPOSED, us.kor, -1, NULL, NULL);
-		_MultiByteToWideChar(949, 0, us.kor, -1, lpBuffer, len);
-		us.w_kor = lpBuffer;
+		len = _MultiByteToWideChar(949, MB_PRECOMPOSED, Kor, -1, NULL, NULL);
+		_MultiByteToWideChar(949, 0, Kor, -1, lpBuffer, len);
+		wcsncpy_s(us._kor, lpBuffer, len);
 
-		len = _MultiByteToWideChar(949, MB_PRECOMPOSED, us.attr, -1, NULL, NULL);
-		_MultiByteToWideChar(949, 0, us.attr, -1, lpBuffer, len);
-		us.w_attr = lpBuffer;
+		len = _MultiByteToWideChar(949, MB_PRECOMPOSED, Attr, -1, NULL, NULL);
+		_MultiByteToWideChar(949, 0, Attr, -1, lpBuffer, len);
+		wcsncpy_s(us._attr, lpBuffer, len);
 
-		us.db = L"UserDict.jk";
+		wcscpy_s(us._db, L"UserDict.jk");
 
-		if (!strcmp(us.part, "A9D0"))
-		{
-			us.w_part = L"상용어구";
-		}
+		if (!strcmp(Part, "A9D0"))
+			us._type = USERDIC_COMM;
 		else
-		{
-			us.w_part = L"명사";
-		}
+			us._type = USERDIC_NOUN;
 
 		us.g_line = g_line;
-		us.line = vaild_line;
+		us.line = line;
 
-		UserDic.push_back(us);
-		vaild_line++;
-		g_line++;
+		if (!Hidden) UserDic.push_back(us);
+		line++, g_line++;
 	}
 	fclose(fp);
 
-	WriteLog(NORMAL_LOG, L"JkDicRead : %d개의 DAT 사용자 사전 \"UserDict.jk\"를 읽었습니다.\n", vaild_line);
+	WriteLog(NORMAL_LOG, L"JkDicRead : %d개의 DAT 사용자 사전 \"UserDict.jk\"를 읽었습니다.\n", line-1);
 
 	// 소요시간 계산
 	dwEnd = GetTickCount();
@@ -371,6 +368,7 @@ bool filter::ehnddic_cleanup()
 bool filter::ehnddic_create()
 {
 	WCHAR lpTmpPath[MAX_PATH], lpText[12];
+	CHAR Jpn[32], Kor[32], Part[6], Attr[38];
 	wstring Path;
 	FILE *fp;
 	DWORD dwStart, dwEnd;
@@ -388,17 +386,33 @@ bool filter::ehnddic_create()
 
 	for (UINT i = 0; i < UserDic.size(); i++)
 	{
-		// 사용자사전 중복 제거
-		//if (i > 0 && !strcmp(UserDic[i-1].jpn, UserDic[i].jpn)) continue;
-		
 		// 공백 제거
-		//if (UserDic[i].jpn == 0) continue;
+		if (UserDic[i]._jpn == 0) continue;
 
-		fwrite(&UserDic[i].hidden, sizeof(char), 1, fp);
-		fwrite(&UserDic[i].jpn, sizeof(char), 31, fp);
-		fwrite(&UserDic[i].kor, sizeof(char), 31, fp);
-		fwrite(&UserDic[i].part, sizeof(char), 5, fp);
-		fwrite(&UserDic[i].attr, sizeof(char), 37, fp);
+		memset(Jpn, 0, sizeof(Jpn));
+		memset(Kor, 0, sizeof(Kor));
+		memset(Attr, 0, sizeof(Attr));
+
+		int len;
+
+		// 유니코드 -> 932/949
+		len = _WideCharToMultiByte(932, 0, UserDic[i]._jpn, -1, NULL, NULL, NULL, NULL);
+		_WideCharToMultiByte(932, 0, UserDic[i]._jpn, -1, Jpn, len, NULL, NULL);
+		len = _WideCharToMultiByte(949, 0, UserDic[i]._kor, -1, NULL, NULL, NULL, NULL);
+		_WideCharToMultiByte(949, 0, UserDic[i]._kor, -1, Kor, len, NULL, NULL);
+		len = _WideCharToMultiByte(949, 0, UserDic[i]._attr, -1, NULL, NULL, NULL, NULL);
+		_WideCharToMultiByte(949, 0, UserDic[i]._attr, -1, Attr, len, NULL, NULL);
+
+		// 단어 타입
+		if (UserDic[i]._type == USERDIC_COMM)
+			strcpy_s(Part, "A9D0");
+		else strcpy_s(Part, "I110");
+
+		fwrite(L"", sizeof(char), 1, fp);
+		fwrite(Jpn, sizeof(char), 31, fp);
+		fwrite(Kor, sizeof(char), 31, fp);
+		fwrite(Part, sizeof(char), 5, fp);
+		fwrite(Attr, sizeof(char), 37, fp);
 
 		// UserDic_Log 구현을 위해 NULL+attr 끝 네자리를 활용
 		// 기존 attr 배열은 42자까지 허용되었으나 끝자리를 사용하는 관계로 36자까지만 허용 (1자는 여유)
@@ -595,9 +609,8 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 {
 	FILE *fp;
 	WCHAR Buffer[1024], Context[1024];
-	char szBuffer[128];
-	wstring Path, Jpn, Kor, Part, Attr;
-	int vaild_line = 0;
+	wstring Path, Jpn, Kor, Attr;
+	int count, len;
 	Path = lpPath;
 	Path += lpFileName;
 
@@ -609,115 +622,83 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 
 	//WriteLog(NORMAL_LOG, L"UserDicRead : 사용자 사전 \"%s\" 로드.\n", lpFileName);
 
-	for (int line = 1; fgetws(Buffer, 1000, fp) != NULL; line++, g_line++)
+	count = 0;
+	for (int line = 1; fgetws(Buffer, 1000, fp) != NULL; line++)
 	{
-		if (Buffer[0] == L'/' && Buffer[1] == L'/') continue;	// 주석
+		if (!wcsncmp(Buffer, L"//", 2)) continue;
 
 		USERDICSTRUCT us;
-		us.hidden = 0x00;
-		memset(us.jpn, 0, sizeof(us.jpn));
-		memset(us.kor, 0, sizeof(us.kor));
-		memset(us.part, 0, sizeof(us.part));
-		memset(us.attr, 0, sizeof(us.attr));
-		Part = L"I110";
-		Attr = L"";
+		memset(us._jpn, 0, sizeof(us._jpn));
+		memset(us._kor, 0, sizeof(us._kor));
+		memset(us._attr, 0, sizeof(us._attr));
+		memset(us._db, 0, sizeof(us._db));
 
-		us.db = lpFileName;
-		us.w_part = L"명사";
-		us.line = line;
-
-		int tab = 0;
-		for (UINT i = 0, prev = 0; i <= wcslen(Buffer); i++)
+		int t = 0, n = 0;
+		wchar_t *pStr = Buffer;
+		while (*pStr != 0)
 		{
-			if (Buffer[i] == L'\t' || Buffer[i] == L'\n' || (Buffer[i] == L'/' && Buffer[i - 1] == L'/') || i == wcslen(Buffer))
+			if (*pStr == L'\n' || *pStr == L'\t' ||
+				(!wcsncmp(pStr, L"//", 2) || *(pStr + 1) == 0))
 			{
-				switch (tab)
+				wcsncpy_s(Context, pStr - n, n);
+
+				if (t < 3)
 				{
-				case 0:
-					wcsncpy_s(Context, Buffer + prev, i - prev);
-					prev = i + 1;
-					tab++;
-					Jpn = Context;
-					break;
-				case 1:
-					wcsncpy_s(Context, Buffer + prev, i - prev);
-					prev = i + 1;
-					tab++;
-					Kor = Context;
-					break;
-				case 2:
-					wcsncpy_s(Context, Buffer + prev, i - prev);
-					prev = i + 1;
-					tab++;
-					if (Context[0] == L'0' || Context[0] == L'2')
-					{
-						Part = L"A9D0";
-						us.w_part = L"상용어구";
-					}
-					else
-					{
-						Part = L"I110";
-						us.w_part = L"명사";
-					}
-					break;
-				case 3:
-					wcsncpy_s(Context, Buffer + prev, i - prev);
-					prev = i + 1;
-					tab++;
-					Attr = Context;
-					break;
+					if (t == 0)
+						Jpn = Context;
+					else if (t == 1)
+						Kor = Context;
+					else if (t == 2)
+						if (Context[0] == L'0' || Context[0] == L'2') us._type = USERDIC_COMM;
+						else us._type = USERDIC_NOUN;
+					else if (t == 3)
+						Attr = Context;
+
+					if (!wcsncmp(pStr, L"//", 2)) break;
 				}
-				if (Buffer[i] == L'/' && Buffer[i - 1] == L'/') break;
+
+				pStr++, n = 0, t++;
 			}
+			else
+				pStr++, n++;
 		}
 
-		if (tab < 3) continue;
-		int len;
-
-		if ((len = _WideCharToMultiByte(932, 0, Jpn.c_str(), -1, NULL, NULL, NULL, NULL)) > 31)
+		if (t > 1)
 		{
-			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 원문 단어의 길이는 15자(30Byte)를 초과할 수 없습니다.\n");
-			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 다음 단어가 무시됩니다. (현재: %dByte)\n", len);
-			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : [%s:%d] : <<%s>> | %s | %s | %s\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
-			continue;
+			if ((len = _WideCharToMultiByte(932, 0, Jpn.c_str(), -1, NULL, NULL, NULL, NULL)) > 31)
+			{
+				WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 원문 단어의 길이는 15자(30Byte)를 초과할 수 없습니다.\n");
+				WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 다음 단어가 무시됩니다. (현재: %dByte)\n", len);
+				WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : [%s:%d] : <<%s>> | %s | %x | %s\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), us._type, Attr.c_str());
+				t = 0; break;
+			}
+			wcscpy_s(us._jpn, Jpn.c_str());
+			if ((len = _WideCharToMultiByte(949, 0, Kor.c_str(), -1, NULL, NULL, NULL, NULL)) > 31)
+			{
+				WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 역문 단어의 길이는 15자(30Byte)를 초과할 수 없습니다.\n");
+				WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 다음 단어가 무시됩니다. (현재: %dByte)\n", len);
+				WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : [%s:%d] : %s | <<%s>> | %x | %s\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), us._type, Attr.c_str());
+				t = 0; break;
+			}
+			wcscpy_s(us._kor, Kor.c_str());
+			if ((len = _WideCharToMultiByte(949, 0, Attr.c_str(), -1, NULL, NULL, NULL, NULL)) > 37)
+			{
+				WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 단어 속성은 36Byte를 초과할 수 없습니다.\n");
+				WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 다음 단어가 무시됩니다. (현재: %dByte)\n", len);
+				WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : [%s:%d] : %s | %s | %x | <<%s>>\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), us._type, Attr.c_str());
+				t = 0; break;
+			}
+			wcscpy_s(us._attr, Attr.c_str());
+
+			wcscpy_s(us._db, lpFileName);
+			us.line = line;
+			us.g_line = g_line;
+			g_line++, count++;
+			UserDic.push_back(us);
+			WriteLog(NORMAL_LOG, L"UserDicRead : 등록 : [%s:%d] : %s | %s | %x | %s\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), us._type, Attr.c_str());
 		}
-		_WideCharToMultiByte(932, 0, Jpn.c_str(), -1, szBuffer, len, NULL, NULL);
-		strcpy_s(us.jpn, szBuffer);
-
-		if ((len = _WideCharToMultiByte(949, 0, Kor.c_str(), -1, NULL, NULL, NULL, NULL)) > 31)
-		{
-			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 역문 단어의 길이는 15자(30Byte)를 초과할 수 없습니다.\n");
-			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 다음 단어가 무시됩니다. (현재: %dByte)\n", len);
-			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : [%s:%d] : %s | <<%s>> | %s | %s\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
-			continue;
-		}
-		_WideCharToMultiByte(949, 0, Kor.c_str(), -1, szBuffer, len, NULL, NULL);
-		strcpy_s(us.kor, szBuffer);
-
-		if ((len = _WideCharToMultiByte(932, 0, Attr.c_str(), -1, NULL, NULL, NULL, NULL)) > 37)
-		{
-			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 단어 속성은 36Byte를 초과할 수 없습니다.\n");
-			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 다음 단어가 무시됩니다. (현재: %dByte)\n", len);
-			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : [%s:%d] : %s | %s | %s | <<%s>>\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
-			continue;
-		}
-		_WideCharToMultiByte(932, 0, Attr.c_str(), -1, szBuffer, len, NULL, NULL);
-		strcpy_s(us.attr, szBuffer);
-
-		len = _WideCharToMultiByte(932, 0, Part.c_str(), -1, NULL, NULL, NULL, NULL);
-		_WideCharToMultiByte(932, 0, Part.c_str(), -1, szBuffer, len, NULL, NULL);
-		strcpy_s(us.part, szBuffer);
-
-		us.w_jpn = Jpn;
-		us.w_kor = Kor;
-		us.w_attr = Attr;
-
-		us.g_line = g_line;
-		UserDic.push_back(us);
-		vaild_line++;
-		g_line++;
 	}
-	WriteLog(NORMAL_LOG, L"UserDictRead : %d개의 사용자 사전 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
+	WriteLog(NORMAL_LOG, L"UserDicRead : %d개의 사용자 사전 \"%s\"를 읽었습니다.\n", count, lpFileName);
 	fclose(fp);
 	return true;
 }
@@ -726,15 +707,11 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 // 필터가 변경이 되면 anedic.txt 파일을 찾아 읽는다
 bool filter::anedic_load(int &g_line)
 {
-	WCHAR lpFileName[MAX_PATH];
-	FILE *fp;
-	WCHAR Buffer[1024], Context[1024];
-	char szBuffer[128];
-	wstring Path, Jpn, Kor, Part, Attr;
-	int vaild_line = 0;
-	HWND hwnd;
+	wstring Jpn, Kor, Attr;
+	WCHAR lpPathName[MAX_PATH], lpFileName[MAX_PATH];
+
 	DWORD pid;
-	hwnd = FindWindow(L"AneParentClass", NULL);
+	HWND hwnd = FindWindow(L"AneParentClass", NULL);
 	if (hwnd)
 	{
 		WriteLog(NORMAL_LOG, L"[AneDicLoad] AneParentClass Found.\n");
@@ -766,129 +743,11 @@ bool filter::anedic_load(int &g_line)
 		}
 	}
 
-	GetExecutePath(lpFileName, MAX_PATH);
-	wcscat_s(lpFileName, L"\\anedic.txt");
+	GetExecutePath(lpPathName, MAX_PATH);
+	wcscat_s(lpPathName, L"\\");
+	wcscpy_s(lpFileName, L"anedic.txt");
 
-	if (_wfopen_s(&fp, lpFileName, L"rt,ccs=UTF-8") != 0)
-	{
-		WriteLog(NORMAL_LOG, L"UserDicRead : 사용자 사전 '%s' 로드 실패!\n", lpFileName);
-		return false;
-	}
-
-	//WriteLog(NORMAL_LOG, L"UserDicRead : 사용자 사전 \"%s\" 로드.\n", lpFileName);
-
-	for (int line = 0; fgetws(Buffer, 1000, fp) != NULL; line++)
-	{
-		if (Buffer[0] == L'/' && Buffer[1] == L'/') continue;	// 주석
-
-		USERDICSTRUCT us;
-		us.hidden = 0x00;
-		memset(us.jpn, 0, sizeof(us.jpn));
-		memset(us.kor, 0, sizeof(us.kor));
-		memset(us.part, 0, sizeof(us.part));
-		memset(us.attr, 0, sizeof(us.attr));
-
-		Part = L"I110";
-		Attr = L"";
-
-		us.db = L"anedic.txt";
-		us.w_part = L"명사";
-		us.line = line;
-
-		int tab = 0;
-		for (UINT i = 0, prev = 0; i <= wcslen(Buffer); i++)
-		{
-			if (Buffer[i] == L'\t' || Buffer[i] == L'\n' || (Buffer[i] == L'/' && Buffer[i - 1] == L'/') || i == wcslen(Buffer))
-			{
-				switch (tab)
-				{
-				case 0:
-					wcsncpy_s(Context, Buffer + prev, i - prev);
-					prev = i + 1;
-					tab++;
-					Jpn = Context;
-					break;
-				case 1:
-					wcsncpy_s(Context, Buffer + prev, i - prev);
-					prev = i + 1;
-					tab++;
-					Kor = Context;
-					break;
-				case 2:
-					wcsncpy_s(Context, Buffer + prev, i - prev);
-					prev = i + 1;
-					tab++;
-					if (Context[0] == L'0' || Context[2] == L'2')
-					{
-						Part = L"A9D0"; // 상용어구
-						us.w_part = L"상용어구";
-					}
-					else
-					{
-						Part = L"I110"; // 명사
-						us.w_part = L"명사";
-					}
-					break;
-				case 3:
-					wcsncpy_s(Context, Buffer + prev, i - prev);
-					prev = i + 1;
-					tab++;
-					Attr = Context;
-					break;
-				}
-				if (Buffer[i] == L'/' && Buffer[i - 1] == L'/') break;
-			}
-		}
-
-		if (tab < 2) continue;
-		int len;
-
-		if ((len = _WideCharToMultiByte(932, 0, Jpn.c_str(), -1, NULL, NULL, NULL, NULL)) > 31)
-		{
-			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 원문 단어의 길이는 15자(30Byte)를 초과할 수 없습니다.\n");
-			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 다음 단어가 무시됩니다. (현재: %dByte)\n", len);
-			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : [%s:%d] : <<%s>> | %s | %s | %s\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
-			continue;
-		}
-		_WideCharToMultiByte(932, 0, Jpn.c_str(), -1, szBuffer, len, NULL, NULL);
-		strcpy_s(us.jpn, szBuffer);
-
-		if ((len = _WideCharToMultiByte(949, 0, Kor.c_str(), -1, NULL, NULL, NULL, NULL)) > 31)
-		{
-			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 역문 단어의 길이는 15자(30Byte)를 초과할 수 없습니다.\n");
-			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 다음 단어가 무시됩니다. (현재: %dByte)\n", len);
-			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : [%s:%d] : %s | <<%s>> | %s | %s\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
-			continue;
-		}
-		_WideCharToMultiByte(949, 0, Kor.c_str(), -1, szBuffer, len, NULL, NULL);
-		strcpy_s(us.kor, szBuffer);
-
-		if ((len = _WideCharToMultiByte(932, 0, Attr.c_str(), -1, NULL, NULL, NULL, NULL)) > 37)
-		{
-			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 단어 속성은 36Byte를 초과할 수 없습니다.\n");
-			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : 다음 단어가 무시됩니다. (현재: %dByte)\n", len);
-			WriteLog(NORMAL_LOG, L"UserDicRead : 오류 : [%s:%d] : %s | %s | %s | <<%s>>\n", lpFileName, line, Jpn.c_str(), Kor.c_str(), Part.c_str(), Attr.c_str());
-			continue;
-		}
-		_WideCharToMultiByte(932, 0, Attr.c_str(), -1, szBuffer, len, NULL, NULL);
-		strcpy_s(us.attr, szBuffer);
-
-		len = _WideCharToMultiByte(932, 0, Part.c_str(), -1, NULL, NULL, NULL, NULL);
-		_WideCharToMultiByte(932, 0, Part.c_str(), -1, szBuffer, len, NULL, NULL);
-		strcpy_s(us.part, szBuffer);
-
-		us.w_jpn = Jpn;
-		us.w_kor = Kor;
-		us.w_attr = Attr;
-
-		us.g_line = g_line;
-		UserDic.push_back(us);
-		vaild_line++;
-		g_line++;
-	}
-	WriteLog(NORMAL_LOG, L"UserDictRead : %d개의 사용자 사전 \"%s\"를 읽었습니다.\n", vaild_line, lpFileName);
-	fclose(fp);
-	return true;
+	return userdic_load2(lpPathName, lpFileName, g_line);
 }
 
 bool filter::pre(wstring &wsText)

@@ -468,134 +468,18 @@ __declspec(naked) void userdict_patch(void)
 	// 일치하는 단어가 나오면 단어 등록을 하고 다시 돌아옴
 	__asm
 	{
-		// word_str
-		MOV ESI, DWORD PTR SS : [ESP+0x38]
+		PUSH DWORD PTR SS : [EBP+0x08] // total count
+		PUSH DWORD PTR SS : [ESP+0x1C] // current_count
+		PUSH DWORD PTR SS : [EBP+0x04] // base
+		PUSH DWORD PTR SS : [ESP+0x44] // word_str
+		CALL userdict_proc
+		ADD ESP, 0x10
 
-		CMP DWORD PTR SS : [EBP+0x08], 0
-		JE lFinish
-
-		MOV EAX, DWORD PTR SS : [ESP+0x18]
-		MOV DWORD PTR SS : [ESP+0x10], EAX // start
-		MOV EAX, DWORD PTR SS : [EBP+0x08]
-		DEC EAX
-		MOV DWORD PTR SS : [ESP+0x18], EAX // end
-		//MOV DWORD PTR SS : [ESP+0x08], 0 // index
-
-	lLoop:
-		// start < end, loop
-		MOV EAX, DWORD PTR SS : [ESP+0x10]
-		MOV ECX, DWORD PTR SS : [ESP+0x18]
-		CMP EAX, ECX
-		JE lMatch
+		CMP EAX, DWORD PTR SS : [EBP+0x08]
 		JA lFinish
 
-		// check = (start+end)/2
-		ADD EAX, ECX
-		XOR EDX, EDX
-		MOV ECX, 2
-		DIV ECX
-
-		// EDX = check
-		MOV EBX, EAX
-
-		// dic_str = base + 0x6E * check + 0x01
-		MOV ECX, 0x6E
-		MUL ECX
-		ADD EAX, DWORD PTR SS : [EBP+0x04]
-		ADD EAX, 1
-
-		// EDI = dic_str
-		MOV EDI, EAX
-
-		XOR ECX, ECX
-	lCompare:
-		CMP CL, 31
-		JAE lLow
-		MOV AL, BYTE PTR DS : [ESI+ECX]
-		MOV DL, BYTE PTR DS : [EDI+ECX]
-		INC CL
-		CMP DL, 0x7F
-		JBE lC1
-		JMP lC2
-
-		// 사용자사전은 내림차순 정렬이 되어있으므로
-		// AL>DL, DL LEFT SEL (lLow)
-		// DL>AL, DL RIGHT SEL (lHigh)
-
-		// 0x00~0x7F
-	lC1:
-		CMP DL, 0
-		JE lLow
-		CMP AL, DL
-		JE lCompare
-		JA lLow
-		JB lHigh
-
-		// 0x80~0xFF
-	lC2:
-		CMP AL, DL
-		JA lLow
-		JB lHigh
-		
-		MOV AL, BYTE PTR DS : [ESI+ECX]
-		MOV DL, BYTE PTR DS : [EDI+ECX]
-		INC CL
-		
-		JMP lC1
-
-	lHigh:
-		INC EBX
-		MOV DWORD PTR SS : [ESP+0x10], EBX
-		JMP lLoop	
-	lLow:
-		MOV DWORD PTR SS : [ESP+0x18], EBX
-		JMP lLoop
-	lMatch:
-		// start = key
-		MOV EAX, DWORD PTR SS : [ESP+0x10]
-
-		// dic_str = base+key*0x6E+0x01
-		MOV ECX, 0x6E
-		MUL ECX
-		ADD EAX, DWORD PTR SS : [EBP+0x04]
-		ADD EAX, 1
-
-		// ESI=word_str
-		// EDI=dic_str
-		MOV EDI, EAX
-
-		XOR ECX, ECX
-	lMCompare:
-		CMP CL, 31
-		JAE lMatchEnd
-		MOV AL, BYTE PTR DS : [ESI+ECX]
-		MOV DL, BYTE PTR DS : [EDI+ECX]
-		INC CL
-		CMP DL, 0x7F
-		JBE lMC1
-		JMP lMC2
-
-		// 0x00~0x7F
-	lMC1:
-		CMP DL, 0
-		JE lMatchEnd
-		CMP AL, DL
-		JNE lFinish
-		JMP lMCompare
-
-		// 0x80~0xFF
-	lMC2:
-		CMP AL, DL
-		JNE lFinish
-		
-		MOV AL, BYTE PTR DS : [ESI+ECX]
-		MOV DL, BYTE PTR DS : [EDI+ECX]
-		INC CL
-		
-		JMP lMC1
-	lMatchEnd:
 		// addr=base+point*0x6E
-		MOV EAX, DWORD PTR SS : [ESP+0x10]
+		MOV DWORD PTR SS : [ESP+0x18], EAX
 		MOV ECX, 0x6E
 		MUL ECX
 		MOV DWORD PTR SS : [ESP+0x10], EAX
@@ -628,4 +512,35 @@ void userdict_log(int idx)
 bool userdict_check()
 {
 	return pConfig->GetUserDicSwitch();
+}
+
+int userdict_proc(char *word_str, char *base, int cur, int total)
+{
+	int idx = -1;
+	int s = cur, e = total + 1, m;
+	char *dic_str;
+
+	while (e - s > 0)
+	{
+		m = (s + e) / 2;
+		dic_str = (char *)base + (0x6E * m) + 0x01;
+
+		if (strncmp(word_str, dic_str, strlen(dic_str)) >= 0)
+			e = m;
+		else s = m + 1;
+	}
+	
+	dic_str = (char *)base + (0x6E * s) + 0x01;
+	//char *p = (char *)&idx;
+	//for (int i = 0; i < 4; i++)
+	//	p[i] = *(base + (0x6E * s) + 0x6A + i);
+
+	//WriteLog(USERDIC_LOG, L">>> [%s:%d] %s | %s | (%s) | %s\n", pFilter->GetDicDB(idx), pFilter->GetDicLine(idx),
+	//	pFilter->GetDicJPN(idx), pFilter->GetDicKOR(idx), pFilter->GetDicTYPE(idx), pFilter->GetDicATTR(idx));
+	if (!strncmp(dic_str, word_str, strlen(dic_str)))
+		return s;
+	else return total + 1;
+
+
+	return s;
 }

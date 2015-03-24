@@ -6,7 +6,7 @@
 #pragma once
 
 #include "targetver.h"
-#define EHND_VER "V3.07c"
+#define EHND_VER "V3.08"
 // Windows 헤더 파일:
 #include <windows.h>
 #include <WinBase.h>
@@ -30,6 +30,9 @@ using namespace std;
 #define TIME_LOG 30
 #define SKIPLAYER_LOG 40
 #define USERDIC_LOG 50
+
+#define USERDIC_COMM 0
+#define USERDIC_NOUN 1
 
 // TODO: 프로그램에 필요한 추가 헤더는 여기에서 참조합니다.
 #include "ehnd.h"

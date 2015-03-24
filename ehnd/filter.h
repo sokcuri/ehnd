@@ -14,17 +14,21 @@ struct USERDICSTRUCT
 {
 	int g_line;
 	int line;
-	wstring db;
-	wstring w_jpn;
-	wstring w_kor;
-	wstring w_part;
-	wstring w_attr;
-	char hidden;
-	char jpn[31];
-	char kor[31];
-	char part[5];
-	char attr[42];
-	int operator<(USERDICSTRUCT uds) { return ((strcmp(jpn, uds.jpn) > 0) || (strcmp(jpn, uds.jpn) == 0) && (g_line < uds.g_line)); }
+	wchar_t _type;
+	wchar_t _jpn[31];
+	wchar_t _kor[31];
+	wchar_t _attr[37];
+	wchar_t _db[260];
+
+	int operator<(USERDICSTRUCT uds) {
+		char s1[31], s2[31];
+		int len;
+		len = _WideCharToMultiByte(932, 0, _jpn, -1, NULL, NULL, NULL, NULL);
+		_WideCharToMultiByte(932, 0, _jpn, -1, s1, len, NULL, NULL);
+		len = _WideCharToMultiByte(932, 0, uds._jpn, -1, NULL, NULL, NULL, NULL);
+		_WideCharToMultiByte(932, 0, uds._jpn, -1, s2, len, NULL, NULL);
+
+		return ((strcmp(s1, s2) > 0) || (strcmp(s1, s2) == 0) && (g_line < uds.g_line)); }
 };
 struct SKIPLAYERSTRUCT
 {
@@ -58,12 +62,12 @@ public:
 	bool post(wstring &wsText);
 	bool cmd(wstring &wsText);
 
-	const wchar_t *GetDicDB(int idx) { return UserDic[idx].db.c_str(); }
+	const wchar_t *GetDicDB(int idx) { return UserDic[idx]._db; }
 	const int GetDicLine(int idx) { return UserDic[idx].line; }
-	const wchar_t *GetDicJPN(int idx) { return UserDic[idx].w_jpn.c_str(); }
-	const wchar_t *GetDicKOR(int idx) { return UserDic[idx].w_kor.c_str(); }
-	const wchar_t *GetDicTYPE(int idx) { return UserDic[idx].w_part.c_str(); }
-	const wchar_t *GetDicATTR(int idx) { return UserDic[idx].w_attr.c_str(); }
+	const wchar_t *GetDicJPN(int idx) { return UserDic[idx]._jpn; }
+	const wchar_t *GetDicKOR(int idx) { return UserDic[idx]._kor; }
+	const wchar_t *GetDicTYPE(int idx) { return (UserDic[idx]._type ? L"명사" : L"상용어구"); }
+	const wchar_t *GetDicATTR(int idx) { return UserDic[idx]._attr; }
 
 private:
 	bool skiplayer_load2(vector<SKIPLAYERSTRUCT> &SkipLayer, LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line);
