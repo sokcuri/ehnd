@@ -640,7 +640,10 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 			if (*pStr == L'\n' || *pStr == L'\t' ||
 				(!wcsncmp(pStr, L"//", 2) || *(pStr + 1) == 0))
 			{
-				wcsncpy_s(Context, pStr - n, n);
+				if (*(pStr + 1) == 0)
+					wcsncpy_s(Context, pStr - n, n + 1);
+				else
+					wcsncpy_s(Context, pStr - n, n);
 
 				if (t < 4)
 				{

@@ -643,10 +643,6 @@ int userdict_proc(char *word_str, char *base, int cur, int total)
 	int s = cur, e = total, m, min, max;
 	char *dic_str;
 
-	// cur가 0이 아니면 total+1을 return
-	// pre sort로 처음 나오는 단어가 최종 선택 단어가 되도록 맞췄기 때문
-	if (cur != 0) return total + 1;
-
 	// Upper bound로 최대값 산출
 	while (e - s > 0)
 	{
