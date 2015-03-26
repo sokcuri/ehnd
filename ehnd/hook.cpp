@@ -567,6 +567,20 @@ __declspec(naked) void userdict_patch(void)
 		CMP EAX, DWORD PTR SS : [EBP+0x08]
 		JA lFinish
 
+		// word_string 출력
+		// ESP+0x14를 count용으로 사용
+		// count는 자동으로 올라가니 건들 필요가 없다
+		CMP DWORD PTR SS : [ESP+0x18], 0
+		JNZ lNext
+
+		PUSH EAX
+		PUSH DWORD PTR SS : [ESP+0x3C]
+		CALL userdict_log
+		ADD ESP, 0x04
+		POP EAX
+
+	lNext:
+
 		// addr=base+point*0x6E
 		MOV DWORD PTR SS : [ESP+0x18], EAX
 		MOV ECX, 0x6E
@@ -575,9 +589,10 @@ __declspec(naked) void userdict_patch(void)
 		ADD EAX, DWORD PTR SS : [EBP+0x04]
 		PUSH EAX
 		ADD EAX, 0x6A
+		PUSH DWORD PTR SS : [ESP+0x18] // ESP+0x14 + 0x04
 		PUSH DWORD PTR DS : [EAX]
-		CALL userdict_log
-		ADD ESP, 0x04
+		CALL userdict_log2
+		ADD ESP, 0x08
 		POP EAX
 		MOV CL, 1
 		TEST CL, CL
@@ -608,12 +623,22 @@ __declspec(naked) void user_wordinfo()
 	}
 }
 
-void userdict_log(int idx)
+void userdict_log(char *s)
 {
-	WriteLog(USERDIC_LOG, L"UserDic : [%s:%d] %s | %s | (%s) | %s\n", pFilter->GetDicDB(idx), pFilter->GetDicLine(idx),  
-		pFilter->GetDicJPN(idx), pFilter->GetDicKOR(idx), pFilter->GetDicTYPE(idx), pFilter->GetDicATTR(idx));
+	int len;
+	len = _MultiByteToWideChar(932, MB_PRECOMPOSED, s, -1, NULL, NULL);
+	wchar_t *str = (wchar_t *)msvcrt_malloc((len + 1) * 2);
+	_MultiByteToWideChar(932, 0, s, -1, str, len);
+	
+	WriteLog(USERDIC_LOG, L"UserDic_Req : %s\n", str);
+	msvcrt_free(str);
 }
 
+void userdict_log2(int idx, int num)
+{
+	WriteLog(USERDIC_LOG, L"UserDic (%d) : [%s:%d] %s | %s | (%s) | %s\n", num+1, pFilter->GetDicDB(idx), pFilter->GetDicLine(idx),
+		pFilter->GetDicJPN(idx), pFilter->GetDicKOR(idx), pFilter->GetDicTYPE(idx), pFilter->GetDicATTR(idx));
+}
 bool userdict_check()
 {
 	return pConfig->GetUserDicSwitch();
