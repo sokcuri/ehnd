@@ -2,6 +2,8 @@
 bool hook();
 bool hook_userdict();
 bool hook_userdict2();
+bool hook_getwordinfo();
+void user_wordinfo();
 
 bool GetRealWC2MB();
 bool GetRealMB2WC();

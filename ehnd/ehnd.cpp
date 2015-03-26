@@ -37,6 +37,7 @@ bool EhndInit(void)
 	if (!hook()) return false;
 	if (!hook_userdict()) return false;
 	if (!hook_userdict2()) return false;
+	if (!hook_getwordinfo()) return false;
 
 	WriteLog(NORMAL_LOG, L"HookUserDict : 사용자사전 알고리즘 최적화.\n");
 

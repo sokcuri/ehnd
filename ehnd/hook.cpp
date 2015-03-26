@@ -4,6 +4,7 @@
 
 LPBYTE lpfnRetn, lpfnfopen;
 LPBYTE lpfnwc2mb, lpfnmb2wc;
+LPBYTE lpfnWordInfo;
 int wc2mb_type = 0, mb2wc_type = 0;
 
 bool hook()
@@ -237,6 +238,94 @@ bool hook_userdict2(void)
 		VirtualProtectEx(hHandle, (void *)addr, PatchSize, OldProtect, &OldProtect2);
 
 		WriteLog(NORMAL_LOG, L"HookUserDict2 : Success.\n");
+	}
+
+	return true;
+}
+
+bool hook_getwordinfo(void)
+{
+	/*
+	05BBF270    6A FF           PUSH -1
+	05BBF272    68 1B59BF05     PUSH j2keng_1.05BF591B
+	05BBF277    64:A1 00000000  MOV EAX,DWORD PTR FS:[0]
+	05BBF27D    50              PUSH EAX
+	05BBF27E    64:8925 0000000>MOV DWORD PTR FS:[0],ESP
+	05BBF285    83EC 18         SUB ESP,18
+	05BBF288    53              PUSH EBX
+	05BBF289    8B5C24 30       MOV EBX,DWORD PTR SS:[ESP+30]
+	05BBF28D    55              PUSH EBP
+	05BBF28E    56              PUSH ESI
+	05BBF28F    8B7424 34       MOV ESI,DWORD PTR SS:[ESP+34]
+	05BBF293    57              PUSH EDI
+	05BBF294    8D4424 18       LEA EAX,DWORD PTR SS:[ESP+18]
+	05BBF298    8BF9            MOV EDI,ECX
+	05BBF29A    50              PUSH EAX
+	05BBF29B    51              PUSH ECX
+	05BBF29C    33ED            XOR EBP,EBP
+	05BBF29E    8BCC            MOV ECX,ESP
+	05BBF2A0    896424 2C       MOV DWORD PTR SS:[ESP+2C],ESP
+	05BBF2A4    56              PUSH ESI
+	05BBF2A5    897C24 28       MOV DWORD PTR SS:[ESP+28],EDI
+	05BBF2A9    892B            MOV DWORD PTR DS:[EBX],EBP
+	05BBF2AB    896C24 24       MOV DWORD PTR SS:[ESP+24],EBP
+	*/
+
+	WORD ptn[] = { 0x6A, 0xFF, 0x68, -1, -1, -1, -1, 0x64, 0xA1, 0x00, 0x00, 0x00, 0x00,
+				   0x50, 0x64, 0x89, 0x25, 0x00, 0x00, 0x00, 0x00, 0x83, 0xEC, 0x18,
+				   0x53, 0x8B, 0x5C, 0x24, 0x30, 0x55, 0x56};
+
+	LPBYTE addr = 0;
+	int r = search_ptn(ptn, _countof(ptn), &addr);
+
+	if (r == 0)
+	{
+		WriteLog(NORMAL_LOG, L"HookGetWordInfo : J2KEngine Pattern Search Failed\n");
+		return false;
+	}
+	else if (r > 1)
+	{
+		WriteLog(NORMAL_LOG, L"HookGetWordInfo : J2kEngine Pattern Search Failed\n");
+		return false;
+	}
+	else
+	{
+		lpfnWordInfo = addr;
+		BYTE Patch[5];
+		int PatchSize = 2;
+		Patch[0] = 0xEB;
+		Patch[1] = 0x05;
+		//Patch[2] = (WORD)LOBYTE(HIWORD(&lpfnWordInfo));
+		//Patch[3] = (WORD)HIBYTE(HIWORD(&lpfnWordInfo));
+
+		DWORD OldProtect, OldProtect2;
+		HANDLE hHandle;
+		hHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, FALSE, GetCurrentProcessId());
+		VirtualProtectEx(hHandle, (void *)addr, PatchSize, PAGE_EXECUTE_READWRITE, &OldProtect);
+		memcpy(addr, Patch, PatchSize);
+		hHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, FALSE, GetCurrentProcessId());
+		VirtualProtectEx(hHandle, (void *)addr, PatchSize, OldProtect, &OldProtect2);
+		
+		// 0x07
+		PatchSize = 5;
+		addr += 7;
+
+		Patch[0] = 0xE9;
+		LPBYTE Offset = (LPBYTE)((LPBYTE)&user_wordinfo - (addr + 5));
+		Patch[1] = (WORD)LOBYTE(LOWORD(Offset));
+		Patch[2] = (WORD)HIBYTE(LOWORD(Offset));
+		Patch[3] = (WORD)LOBYTE(HIWORD(Offset));
+		Patch[4] = (WORD)HIBYTE(HIWORD(Offset));
+
+		hHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, FALSE, GetCurrentProcessId());
+		VirtualProtectEx(hHandle, (void *)addr, PatchSize, PAGE_EXECUTE_READWRITE, &OldProtect);
+		memcpy(addr, Patch, PatchSize);
+		hHandle = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE, FALSE, GetCurrentProcessId());
+		VirtualProtectEx(hHandle, (void *)addr, PatchSize, OldProtect, &OldProtect2);
+
+		// 0x0D
+
+		WriteLog(NORMAL_LOG, L"HookWordInfo : Success.\n");
 	}
 
 	return true;
@@ -503,6 +592,22 @@ __declspec(naked) void userdict_patch(void)
 	}
 }
 
+__declspec(naked) void user_wordinfo()
+{
+	__asm
+	{
+		MOV EAX, lpfnWordInfo
+		ADD EAX, 0x03
+		PUSH -1
+		PUSH DWORD PTR DS:[EAX]
+		MOV EAX, DWORD PTR DS : [lpfnWordInfo]
+		ADD EAX, 0x0D
+		PUSH EAX
+		MOV EAX, DWORD PTR FS : [0]
+		RETN
+	}
+}
+
 void userdict_log(int idx)
 {
 	WriteLog(USERDIC_LOG, L"UserDic : [%s:%d] %s | %s | (%s) | %s\n", pFilter->GetDicDB(idx), pFilter->GetDicLine(idx),  
@@ -538,7 +643,11 @@ int userdict_proc(char *word_str, char *base, int cur, int total)
 	int s = cur, e = total, m, min, max;
 	char *dic_str;
 
-	// Upper Bonund
+	// cur가 0이 아니면 total+1을 return
+	// pre sort로 처음 나오는 단어가 최종 선택 단어가 되도록 맞췄기 때문
+	if (cur != 0) return total + 1;
+
+	// Upper bound로 최대값 산출
 	while (e - s > 0)
 	{
 		m = (s + e) / 2;
@@ -550,7 +659,7 @@ int userdict_proc(char *word_str, char *base, int cur, int total)
 	}
 	max = s;
 
-	// Lower Bound
+	// Lower bound로 최소값 산출
 	s = cur, e = max;
 	while (e - s > 0)
 	{

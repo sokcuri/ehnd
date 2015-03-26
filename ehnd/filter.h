@@ -28,7 +28,7 @@ struct USERDICSTRUCT
 		len = _WideCharToMultiByte(932, 0, uds._jpn, -1, NULL, NULL, NULL, NULL);
 		_WideCharToMultiByte(932, 0, uds._jpn, -1, s2, len, NULL, NULL);
 
-		return ((strcmp(s1, s2) > 0) || (strcmp(s1, s2) == 0) && (g_line < uds.g_line)); }
+		return ((strcmp(s1, s2) > 0) || ((strcmp(s1, s2) == 0) && _type < uds._type) || ((strcmp(s1, s2) == 0) && (_type == uds._type) && (g_line < uds.g_line))); }
 };
 struct SKIPLAYERSTRUCT
 {
