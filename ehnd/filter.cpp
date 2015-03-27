@@ -224,7 +224,6 @@ bool filter::userdic_load()
 
 	// 엔드 임시파일 생성
 	ehnddic_create();
-
 	return true;
 }
 
@@ -626,6 +625,8 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 	for (int line = 1; fgetws(Buffer, 1000, fp) != NULL; line++)
 	{
 		if (!wcsncmp(Buffer, L"//", 2)) continue;
+		if (Buffer[wcslen(Buffer) - 1] == 0x0A) Buffer[wcslen(Buffer) - 1] = 0;
+		if (Buffer[wcslen(Buffer) - 1] == 0x0D) Buffer[wcslen(Buffer) - 1] = 0;
 
 		USERDICSTRUCT us;
 		memset(us._jpn, 0, sizeof(us._jpn));
@@ -633,15 +634,16 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 		memset(us._attr, 0, sizeof(us._attr));
 		memset(us._db, 0, sizeof(us._db));
 
+		us._type = USERDIC_NOUN;
+		
 		int t = 0, n = 0;
 		wchar_t *pStr = Buffer;
 		while (*pStr != 0)
 		{
-			if (*pStr == L'\n' || *pStr == L'\t' ||
-				(!wcsncmp(pStr, L"//", 2) || *(pStr + 1) == 0))
+			if (*pStr == L'\t' || (!wcsncmp(pStr, L"//", 2)) || *(pStr + 1) == 0)
 			{
 				if (*(pStr + 1) == 0)
-					wcsncpy_s(Context, pStr - n, n + 1);
+					wcsncpy_s(Context, pStr - n, n+1);
 				else
 					wcsncpy_s(Context, pStr - n, n);
 
@@ -652,7 +654,7 @@ bool filter::userdic_load2(LPCWSTR lpPath, LPCWSTR lpFileName, int &g_line)
 					else if (t == 1)
 						Kor = Context;
 					else if (t == 2)
-						if (Context[0] == L'0' || Context[0] == L'2') us._type = USERDIC_COMM;
+						if ((Context[0] == L'0' || Context[0] == L'2') && Context[1] == 0) us._type = USERDIC_COMM;
 						else us._type = USERDIC_NOUN;
 					else if (t == 3)
 						Attr = Context;
@@ -712,37 +714,41 @@ bool filter::anedic_load(int &g_line)
 	wstring Jpn, Kor, Attr;
 	WCHAR lpPathName[MAX_PATH], lpFileName[MAX_PATH];
 
-	DWORD pid;
-	HWND hwnd = FindWindow(L"AneParentClass", NULL);
-	if (hwnd)
+	if (!g_bAnemone)
 	{
-		WriteLog(NORMAL_LOG, L"[AneDicLoad] AneParentClass Found.\n");
-
-		GetWindowThreadProcessId(hwnd, &pid);
-		if (GetCurrentProcessId() != pid)
-		{
-			WriteLog(NORMAL_LOG, L"[AneDicLoad] GetCurrentProcessId() != pid.\n");
-			return false;
-		}
-	}
-	else
-	{
-		hwnd = FindWindow(L"AnemoneParentWndClass", NULL);
+		DWORD pid;
+		HWND hwnd = FindWindow(L"AneParentClass", NULL);
 		if (hwnd)
 		{
-			WriteLog(NORMAL_LOG, L"[AneDicLoad] AnemoneParentWndClass Found.\n");
+			//WriteLog(NORMAL_LOG, L"[AneDicLoad] AneParentClass Found.\n");
+
 			GetWindowThreadProcessId(hwnd, &pid);
 			if (GetCurrentProcessId() != pid)
 			{
-				WriteLog(NORMAL_LOG, L"[AneDicLoad] GetCurrentProcessId() != pid.\n");
+				//WriteLog(NORMAL_LOG, L"[AneDicLoad] GetCurrentProcessId() != pid.\n");
 				return false;
 			}
 		}
 		else
 		{
-			WriteLog(NORMAL_LOG, L"[AneDicLoad] Anemone Not Found\n");
-			return false;
+			hwnd = FindWindow(L"AnemoneParentWndClass", NULL);
+			if (hwnd)
+			{
+				//WriteLog(NORMAL_LOG, L"[AneDicLoad] AnemoneParentWndClass Found.\n");
+				GetWindowThreadProcessId(hwnd, &pid);
+				if (GetCurrentProcessId() != pid)
+				{
+					//WriteLog(NORMAL_LOG, L"[AneDicLoad] GetCurrentProcessId() != pid.\n");
+					return false;
+				}
+			}
+			else
+			{
+				//WriteLog(NORMAL_LOG, L"[AneDicLoad] Anemone Not Found\n");
+				return false;
+			}
 		}
+		g_bAnemone = true;
 	}
 
 	GetExecutePath(lpPathName, MAX_PATH);

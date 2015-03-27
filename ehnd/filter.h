@@ -25,8 +25,10 @@ struct USERDICSTRUCT
 		int len;
 		len = _WideCharToMultiByte(932, 0, _jpn, -1, NULL, NULL, NULL, NULL);
 		_WideCharToMultiByte(932, 0, _jpn, -1, s1, len, NULL, NULL);
+		s1[len] = 0;
 		len = _WideCharToMultiByte(932, 0, uds._jpn, -1, NULL, NULL, NULL, NULL);
 		_WideCharToMultiByte(932, 0, uds._jpn, -1, s2, len, NULL, NULL);
+		s2[len] = 0;
 
 		return ((strcmp(s1, s2) > 0) || ((strcmp(s1, s2) == 0) && _type < uds._type) || ((strcmp(s1, s2) == 0) && (_type == uds._type) && (g_line < uds.g_line))); }
 };
@@ -66,7 +68,7 @@ public:
 	const int GetDicLine(int idx) { return UserDic[idx].line; }
 	const wchar_t *GetDicJPN(int idx) { return UserDic[idx]._jpn; }
 	const wchar_t *GetDicKOR(int idx) { return UserDic[idx]._kor; }
-	const wchar_t *GetDicTYPE(int idx) { return (UserDic[idx]._type ? L"명사" : L"상용어구"); }
+	const wchar_t *GetDicTYPE(int idx) { return (UserDic[idx]._type == USERDIC_NOUN ? L"명사" : (UserDic[idx]._type == USERDIC_COMM ? L"상용어구" : L"Unknown")); }
 	const wchar_t *GetDicATTR(int idx) { return UserDic[idx]._attr; }
 
 private:

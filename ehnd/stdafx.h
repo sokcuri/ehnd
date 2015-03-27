@@ -6,7 +6,7 @@
 #pragma once
 
 #include "targetver.h"
-#define EHND_VER "V3.09"
+#define EHND_VER "V3.10"
 // Windows 헤더 파일:
 #include <windows.h>
 #include <WinBase.h>
@@ -31,8 +31,8 @@ using namespace std;
 #define SKIPLAYER_LOG 40
 #define USERDIC_LOG 50
 
-#define USERDIC_COMM 0
-#define USERDIC_NOUN 1
+#define USERDIC_COMM 1
+#define USERDIC_NOUN 2
 
 // TODO: 프로그램에 필요한 추가 헤더는 여기에서 참조합니다.
 #include "ehnd.h"
@@ -48,6 +48,7 @@ extern watch *pWatch;
 extern config *pConfig;
 extern int g_initTick;
 extern char g_DicPath[MAX_PATH];
+extern BOOL g_bAnemone;
 
 extern LPBYTE lpfnRetn;
 extern LPBYTE lpfnfopen;
