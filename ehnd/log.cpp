@@ -168,8 +168,11 @@ bool CreateLogWin(HINSTANCE hInst)
 DWORD WINAPI LogThreadMain(LPVOID lpParam)
 {
 	HINSTANCE hInst = g_hInst;
+	wchar_t wszTitle[255];
 
-	hLogWin = CreateWindowEx(0, L"EhndLogWin", L"title", WS_OVERLAPPEDWINDOW, 64, 64, 640, 480, 0, 0, hInst, 0);
+	wsprintf(wszTitle, L"Ehnd Log Window :: VER. %s (%s, %s)", WIDEN(EHND_VER), WIDEN(__DATE__), WIDEN(__TIME__));
+
+	hLogWin = CreateWindowEx(0, L"EhndLogWin", wszTitle, WS_OVERLAPPEDWINDOW, 64, 64, 640, 480, 0, 0, hInst, 0);
 	if (!hLogWin)
 	{
 		WriteLog(ERROR_LOG, L"LogThreadMain : Log Window Create Failed");

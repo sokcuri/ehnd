@@ -218,6 +218,8 @@ bool filter::userdic_load()
 	sort(UserDic.begin(), UserDic.end());
 	//WriteLog(NORMAL_LOG, L"UserDicRead : 사용자 사전 정렬을 완료했습니다.\n");
 
+	WriteLog(NORMAL_LOG, L"UserDicRead : 총 %d개의 사용자 사전 파일을 읽었습니다.\n", UserDic.size());
+
 	// 소요시간 계산
 	dwEnd = GetTickCount();
 	WriteLog(TIME_LOG, L"UserDicRead : --- Elasped Time : %dms ---\n", dwEnd - dwStart);
