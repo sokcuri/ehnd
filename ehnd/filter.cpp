@@ -281,6 +281,7 @@ bool filter::jkdic_load(int &g_line)
 
 		if (!fread(Buffer, sizeof(char), 37, fp)) break;
 		else memcpy(Attr, Buffer, 37);
+		memcpy(Attr+37, L"", 1);
 
 		if (!fread(Buffer, sizeof(char), 5, fp)) break;
 
