@@ -405,7 +405,6 @@ bool GetRealWC2MB(void)
 			{
 				lpfnwc2mb = l3 + 6;
 				wc2mb_type = 1;
-				WriteLog(NORMAL_LOG, L"lpfnwc2mb: %x\n", lpfnwc2mb);
 				return true;
 			}
 		}
@@ -486,7 +485,6 @@ bool GetRealMB2WC(void)
 			{
 				lpfnmb2wc = l3 + 6;
 				mb2wc_type = 1;
-				WriteLog(NORMAL_LOG, L"lpfnlpfnmb2wc: %x\n", lpfnmb2wc);
 				return true;
 			}
 		}
@@ -630,14 +628,14 @@ void userdict_log(char *s)
 	wchar_t *str = (wchar_t *)msvcrt_malloc((len + 1) * 2);
 	_MultiByteToWideChar(932, 0, s, -1, str, len);
 	
-	WriteLog(USERDIC_LOG, L"UserDic_Req : %s\n", str);
+	WriteLog(USERDIC_LOG, L"UserDic_Req : %s\n", D(str));
 	msvcrt_free(str);
 }
 
 void userdict_log2(int idx, int num)
 {
-	WriteLog(USERDIC_LOG, L"UserDic (%d) : [%s:%d] %s | %s | (%s) | %s\n", num+1, pFilter->GetDicDB(idx), pFilter->GetDicLine(idx),
-		pFilter->GetDicJPN(idx), pFilter->GetDicKOR(idx), pFilter->GetDicTYPE(idx), pFilter->GetDicATTR(idx));
+	WriteLog(USERDIC_LOG, L"UserDic (%d) : [%s:%d] %s | %s | (%s) | %s\n", num+1, D(pFilter->GetDicDB(idx)), pFilter->GetDicLine(idx),
+		D(pFilter->GetDicJPN(idx)), D(pFilter->GetDicKOR(idx)), D(pFilter->GetDicTYPE(idx)), D(pFilter->GetDicATTR(idx)));
 }
 bool userdict_check()
 {

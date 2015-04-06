@@ -45,8 +45,6 @@ DWORD watch::_NotifyThread(LPVOID lpParam)
 	Path = lpEztPath;
 	Path += L"\\Ehnd";
 
-	WriteLog(NORMAL_LOG, L"watch to %s directory\n", Path.c_str());
-
 	HANDLE hDir = CreateFile(Path.c_str(), GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
 		0, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
 	CONST DWORD cbBuffer = 1024;

@@ -6,7 +6,7 @@
 #pragma once
 
 #include "targetver.h"
-#define EHND_VER "V3.10"
+#define EHND_VER "V3.11"
 // Windows 헤더 파일:
 #include <windows.h>
 #include <WinBase.h>
@@ -17,6 +17,7 @@
 
 #include <iostream>
 #include <vector>
+#include <boost/format.hpp>
 #include <boost/regex.hpp>
 using namespace boost;
 
@@ -66,3 +67,5 @@ extern BOOL initOnce;
 #else
 #define WIDEN(x)
 #endif
+
+#define D(x) deformatted_string(x).c_str()

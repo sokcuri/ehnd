@@ -95,7 +95,9 @@ void WriteLog(int LogType, const wchar_t *format, ...)
 	if (wcslen(lpBuffer) > 1000)
 		wcscpy_s(lpBuffer + 1000, 1024, L"...\r\n");
 
-	if (IsShownLogWin()) SetLogText(lpBuffer);
+	std::wstring t = lpBuffer;
+	t = replace_all(t, L"%%", L"%");
+	if (IsShownLogWin()) SetLogText(t.c_str());
 	if (IsFileLog) fwprintf_s(fp, lpBuffer);
 
 	va_end(valist);

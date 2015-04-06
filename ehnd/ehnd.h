@@ -42,3 +42,4 @@ bool EhndInit();
 bool GetLoadPath(LPWSTR Path, int Size);
 bool GetExecutePath(LPWSTR Path, int Size);
 wstring replace_all(const wstring &str, const wstring &pattern, const wstring &replace);
+wstring deformatted_string(const wstring &str);

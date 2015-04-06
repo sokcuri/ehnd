@@ -148,7 +148,7 @@ void *__stdcall J2K_TranslateMMNTW(int data0, LPCWSTR szIn)
 {
 	DWORD dwStart, dwEnd;
 	LPWSTR szOut;
-	wstring wsText, wsOriginal, wsLog;
+	wstring wsText, wsOriginal;
 	int i_len;
 	LPWSTR lpKOR;
 	LPSTR szJPN, szKOR;
@@ -162,16 +162,14 @@ void *__stdcall J2K_TranslateMMNTW(int data0, LPCWSTR szIn)
 	// 콘솔 라인 체크
 	CheckConsoleLine();
 
-	wsLog = replace_all(wsText, L"%", L"%%");
-	if (wsLog.length()) WriteLog(NORMAL_LOG, L"[REQUEST] %s\n\n", wsLog.c_str());
+	if (wsText.length()) WriteLog(NORMAL_LOG, L"[REQUEST] %s\n\n", D(wsText));
 
 	// 넘어온 문자열의 길이가 0이거나 명령어일때 번역 프로세스 스킵
 	if (wcslen(szIn) && !pFilter->cmd(wsText))
 	{
 		pFilter->pre(wsText);
 
-		wsLog = replace_all(wsText, L"%", L"%%");
-		WriteLog(NORMAL_LOG, L"[PRE] %s\n\n", wsLog.c_str());
+		WriteLog(NORMAL_LOG, L"[PRE] %s\n\n", D(wsText));
 
 		i_len = _WideCharToMultiByte(932, 0, wsText.c_str(), -1, NULL, NULL, NULL, NULL);
 		szJPN = (LPSTR)msvcrt_malloc((i_len + 1) * 3);
@@ -213,18 +211,15 @@ void *__stdcall J2K_TranslateMMNTW(int data0, LPCWSTR szIn)
 		msvcrt_free(szKOR);
 		msvcrt_free(lpKOR);
 
-		wsLog = replace_all(wsText, L"%", L"%%");
-		WriteLog(NORMAL_LOG, L"[TRANS] %s\n\n", wsLog.c_str());
+		WriteLog(NORMAL_LOG, L"[TRANS] %s\n\n", D(wsText));
 
 		pFilter->post(wsText);
 
-		wsLog = replace_all(wsText, L"%", L"%%");
-		WriteLog(NORMAL_LOG, L"[POST] %s\n\n", wsLog.c_str());
+		WriteLog(NORMAL_LOG, L"[POST] %s\n\n", D(wsText));
 	}
 	else if (wcslen(szIn))
 	{
-		wsLog = replace_all(wsText, L"%", L"%%");
-		WriteLog(NORMAL_LOG, L"[COMMAND] %s\n\n", wsLog.c_str());
+		WriteLog(NORMAL_LOG, L"[COMMAND] %s\n\n", D(wsText));
 	}
 
 	szOut = (LPWSTR)msvcrt_malloc((wsText.length() + 1) * 2);
@@ -240,7 +235,7 @@ void *__stdcall J2K_TranslateMMNTW(int data0, LPCWSTR szIn)
 void *__stdcall J2K_TranslateMMNT(int data0, LPCSTR szIn)
 {
 	LPSTR szOut;
-	wstring wsText, wsOriginal, wsLog;
+	wstring wsText, wsOriginal;
 	int i_len;
 	LPWSTR lpJPN, lpKOR;
 
@@ -317,6 +312,24 @@ wstring replace_all(const wstring &str, const wstring &pattern, const wstring &r
 	{
 		result.replace(result.begin() + pos, result.begin() + pos + pattern.size(), replace);
 		offset = pos + replace.size();
+	}
+	return result;
+}
+
+wstring deformatted_string(const wstring &str)
+{
+	wchar_t pattern[][2] = { L"%", L"\\" };
+	wchar_t replace[][3] = { L"%%", L"\\\\" };
+	wstring result = str;
+	wstring::size_type pos = 0, offset = 0;
+
+	for (int i = 0; i < 1; i++)
+	{
+		while ((pos = result.find(pattern[i], offset)) != wstring::npos)
+		{
+			result.replace(result.begin() + pos, result.begin() + pos + 1, replace[i]);
+			offset = pos + 2;
+		}
 	}
 	return result;
 }
