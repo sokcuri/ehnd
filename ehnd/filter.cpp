@@ -599,9 +599,15 @@ bool filter::filter_load(vector<FILTERSTRUCT> &Filter, LPCWSTR lpPath, LPCWSTR l
 			}
 		}
 		vaild_line++;
+
+		// initialize cound and elasped time variable
+		fs._ecount = 0;
+		fs._etime = 0;
+
 		Filter.push_back(fs);
 	}
 	fclose(fp);
+
 	if (FilterType == PREFILTER) WriteLog(NORMAL_LOG, L"PreFilterRead : %d개의 전처리 필터 \"%s\"를 읽었습니다.\n", vaild_line, D(lpFileName));
 	else if (FilterType == POSTFILTER) WriteLog(NORMAL_LOG, L"PostFilterRead : %d개의 후처리 필터 \"%s\"를 읽었습니다.\n", vaild_line, D(lpFileName));
 	return true;
@@ -784,10 +790,13 @@ bool filter::post(wstring &wsText)
 bool filter::filter_proc(vector<FILTERSTRUCT> &Filter, const int FilterType, wstring &wsText)
 {
 	DWORD dwStart, dwEnd;
+	system_clock::time_point start, end;
+	typedef duration<double, milli> doubleMilli;
 	wstring Str = wsText;
 	int layer_prev = -1;
 	bool layer_pass = false;
 	bool pass_once = false;
+	wregex ex;
 
 	wstring pass_log;
 	dwStart = GetTickCount();
@@ -807,7 +816,7 @@ bool filter::filter_proc(vector<FILTERSTRUCT> &Filter, const int FilterType, wst
 				{
 					try
 					{
-						wregex ex(SkipLayer[j].cond);
+						ex.assign(SkipLayer[j].cond);
 
 						if (!regex_search(wsText, ex))
 						{
@@ -834,6 +843,9 @@ bool filter::filter_proc(vector<FILTERSTRUCT> &Filter, const int FilterType, wst
 
 		if (!Filter[i].regex)
 		{
+			start = system_clock::now();
+			Filter[i]._ecount++;
+
 			Str = wsText;
 			wsText = replace_all(wsText, Filter[i].src, Filter[i].dest);
 			if (Str.compare(wsText))
@@ -841,7 +853,9 @@ bool filter::filter_proc(vector<FILTERSTRUCT> &Filter, const int FilterType, wst
 				if (FilterType == PREFILTER) WriteLog(DETAIL_LOG, L"PreFilter : [%s:%d] | %s | %s | %d | %d\n", D(Filter[i].db), Filter[i].line, D(Filter[i].src), D(Filter[i].dest), Filter[i].layer, Filter[i].regex);
 				else if (FilterType == POSTFILTER) WriteLog(DETAIL_LOG, L"PostFIlter : [%s:%d] | %s | %s | %d | %d\n", D(Filter[i].db), Filter[i].line, D(Filter[i].src), D(Filter[i].dest), Filter[i].layer, Filter[i].regex);
 			}
-				
+
+			end = system_clock::now();
+			Filter[i]._etime += duration_cast<doubleMilli>(end - start).count();
 		}
 		else
 		{
@@ -849,12 +863,17 @@ bool filter::filter_proc(vector<FILTERSTRUCT> &Filter, const int FilterType, wst
 
 			try
 			{
-				wregex ex(Filter[i].src);
+				start = system_clock::now();
+				ex.assign(Filter[i].src);
 
 				if (regex_search(wsText, ex))
 				{
+					Filter[i]._ecount++;
 					wsText = regex_replace(wsText, ex, Filter[i].dest, regex_constants::match_default);
+
 				}
+				end = system_clock::now();
+				Filter[i]._etime += duration_cast<doubleMilli>(end - start).count();
 			}
 			catch (regex_error ex)
 			{
@@ -1058,6 +1077,55 @@ bool filter::cmd(wstring &wsText)
 		{
 			pConfig->SetUserDicSwitch(false);
 			wsText += L" : UserDic Off.";
+			bCommand = true;
+		}
+
+		else if (!wsText.compare(L"/eout") && pConfig->GetUserDicSwitch())
+		{
+			FILE *fp;
+			wchar_t lpFileName[MAX_PATH];
+
+			if (pConfig->GetFileLogEztLoc())
+				GetLoadPath(lpFileName, MAX_PATH);
+			else GetExecutePath(lpFileName, MAX_PATH);
+			wcscat_s(lpFileName, L"\\ehnd_eout.log");
+
+			if (!_wfopen_s(&fp, lpFileName, L"wt,ccs=UTF-8"))
+			{
+
+				for (size_t i = 0; i < PreFilter.size(); i++)
+				{
+					auto &Filter = PreFilter;
+					fwprintf_s(fp, L"%s\t%d\t%d\t%f\t%s\t%s\t%d\t%d\n", D(Filter[i].db), Filter[i].line, Filter[i]._ecount, Filter[i]._etime, D(Filter[i].src), D(Filter[i].dest), Filter[i].layer, Filter[i].regex);
+				}
+
+				for (size_t i = 0; i < PostFilter.size(); i++)
+				{
+					auto &Filter = PostFilter;
+					fwprintf_s(fp, L"%s\t%d\t%d\t%f\t%s\t%s\t%d\t%d\n", D(Filter[i].db), Filter[i].line, Filter[i]._ecount, Filter[i]._etime, D(Filter[i].src), D(Filter[i].dest), Filter[i].layer, Filter[i].regex);
+				}
+				fclose(fp);
+
+				wsText += L" : Elasped Info Output.";
+				bCommand = true;
+			}
+		}
+
+		else if (!wsText.compare(L"/eclear") && pConfig->GetUserDicSwitch())
+		{
+			for (size_t i = 0; i < PreFilter.size(); i++)
+			{
+				PreFilter[i]._ecount = 0;
+				PreFilter[i]._etime = 0;
+			}
+
+			for (size_t i = 0; i < PostFilter.size(); i++)
+			{
+				PostFilter[i]._ecount = 0;
+				PostFilter[i]._etime = 0;
+			}
+
+			wsText += L" : Elasped Info Clear.";
 			bCommand = true;
 		}
 	}

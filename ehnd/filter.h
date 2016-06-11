@@ -9,6 +9,8 @@ struct FILTERSTRUCT
 	int regex;
 	wstring db;
 	int operator<(FILTERSTRUCT fs) { return (layer) < (fs.layer) || ((layer) == (fs.layer) && (g_line < fs.g_line)); }
+	int _ecount;
+	double _etime;
 };
 struct USERDICSTRUCT
 {

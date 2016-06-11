@@ -6,7 +6,10 @@
 #pragma once
 
 #include "targetver.h"
-#define EHND_VER "V3.11"
+#define EHND_VER "V3.20"
+
+#pragma warning(disable: 4838)
+
 // Windows 헤더 파일:
 #include <windows.h>
 #include <WinBase.h>
@@ -19,9 +22,10 @@
 #include <vector>
 #include <boost/format.hpp>
 #include <boost/regex.hpp>
-using namespace boost;
-
+#include <chrono>
 using namespace std;
+using namespace boost;
+using namespace chrono;
 #define PREFILTER 1
 #define POSTFILTER 2
 
